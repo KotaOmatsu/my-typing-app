@@ -14,8 +14,6 @@ const TypingGame: React.FC = () => {
     flashCorrect,
     isGameStarted,
     lastTypedKey,
-    mistakes,
-    handleKeyDown,
   } = useTypingGame();
 
   const renderText = () => {

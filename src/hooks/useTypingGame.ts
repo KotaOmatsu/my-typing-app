@@ -170,7 +170,7 @@ export const useTypingGame = () => {
       setMistakes(prev => [...prev, { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar, kanaIndex: currentKanaIndex }]);
       setInputBuffer(''); // エラー時はバッファをクリア
     }
-  }, [calculateResult, checkRomajiMatch, currentKana, currentKanaIndex, currentTextIndex, inputBuffer, isMapLoaded, mistakes, router, isGameStarted, typingUnits]);
+  }, [calculateResult, checkRomajiMatch, currentKana, currentKanaIndex, currentTextIndex, inputBuffer, isMapLoaded, router, isGameStarted, typingUnits]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);

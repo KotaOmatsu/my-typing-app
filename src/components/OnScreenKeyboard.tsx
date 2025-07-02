@@ -35,7 +35,6 @@ const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey, misty
     if (key === activeKey) {
       baseClass += ' bg-blue-400 text-white'; // アクティブなキーの色
     } else if (mistakeCount > 0) {
-      const maxMistakes = Math.max(...Object.values(mistypedKeys), 1);
       baseClass += ` bg-red-500`
       baseClass = `${baseClass} text-white`
     } else {
