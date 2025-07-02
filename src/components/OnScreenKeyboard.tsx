@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface OnScreenKeyboardProps {
-  lastTypedKey: string | null;
+  lastTypedKey?: string | null;
   mistypedKeys?: { [key: string]: number };
 }
 
