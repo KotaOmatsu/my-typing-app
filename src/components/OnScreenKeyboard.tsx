@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface OnScreenKeyboardProps {
-  lastTypedKey?: string | null;
+  lastTypedKey: string | null;
   mistypedKeys?: { [key: string]: number };
 }
 
@@ -55,16 +55,16 @@ const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey, misty
       case 'tab':
       case 'capslock':
       case 'enter':
-        return `${baseClass} w-20`; // 幅広のキー
+        return `${baseClass} w-28 h-14 text-lg`;
       case 'shift':
-        return `${baseClass} w-24`; // さらに幅広のキー
+        return `${baseClass} w-[8.75rem] h-14 text-lg`;
       case 'space':
-        return `${baseClass} w-96`; // スペースキー
+        return `${baseClass} w-[32.5rem] h-14 text-lg`;
       case 'ctrl':
       case 'alt':
-        return `${baseClass} w-16`;
+        return `${baseClass} w-20 h-14 text-lg`;
       default:
-        return `${baseClass} w-10 h-10`; // 通常のキー
+        return `${baseClass} w-14 h-14 text-xl`;
     }
   };
 

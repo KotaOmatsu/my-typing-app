@@ -16,12 +16,13 @@ const TYPING_TEXTS = [
 interface TypingResult {
   accuracy: number;
   wpm: number;
-  mistakes: { char: string; expected: string; actual: string; typedKey: string }[];
+  mistakes: { char: string; expected: string; actual: string; typedKey: string; kanaIndex: number }[];
   startTime: number;
   endTime: number;
   totalKeystrokes: number; // 総打鍵数
   correctKeystrokes: number; // 正解打鍵数
   correctKanaUnits: number; // 正解仮名数
+  typedText: string; // タイプした全文
 }
 
 // Helper function to break down text into typing units (handling 拗音 and 促音)
@@ -70,7 +71,7 @@ const TypingGame: React.FC = () => {
   const [totalKeystrokes, setTotalKeystrokes] = useState(0); // 総打鍵数
   const [correctKeystrokes, setCorrectKeystrokes] = useState(0); // 正解打鍵数
   const [correctKanaUnits, setCorrectKanaUnits] = useState(0); // 正解仮名数
-  const [mistakes, setMistakes] = useState<{ char: string; expected: string; actual: string; typedKey: string }[]>([]);
+  const [mistakes, setMistakes] = useState<{ char: string; expected: string; actual: string; typedKey: string; kanaIndex: number }[]>([]);
   const [isGameStarted, setIsGameStarted] = useState(false); // ゲーム開始状態
   const [flashCorrect, setFlashCorrect] = useState(false); // 正解時のフラッシュ
   const [lastTypedKey, setLastTypedKey] = useState<string | null>(null); // 最後に打たれたキー
@@ -102,6 +103,7 @@ const TypingGame: React.FC = () => {
       totalKeystrokes,
       correctKeystrokes,
       correctKanaUnits,
+      typedText: TYPING_TEXTS.join(""), // 全文を結合
     };
     localStorage.setItem('typingResult', JSON.stringify(result));
     router.push('/result');
@@ -200,7 +202,7 @@ const TypingGame: React.FC = () => {
     } else if (!isPartialMatch) {
       setError(true);
       const expectedRomajiForError = currentKana === 'っ' ? '次の子音' : getRomajiCandidates(currentKana).join('/');
-      setMistakes(prev => [...prev, { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar }]);
+      setMistakes(prev => [...prev, { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar, kanaIndex: currentKanaIndex }]);
       setInputBuffer(''); // エラー時はバッファをクリア
     }
   }, [calculateResult, checkRomajiMatch, currentKana, currentKanaIndex, currentTextIndex, inputBuffer, isMapLoaded, mistakes, router, isGameStarted, typingUnits]);
