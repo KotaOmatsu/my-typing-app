@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 
 interface OnScreenKeyboardProps {
-  lastTypedKey: string | null;
+  lastTypedKey?: string | null;
+  mistypedKeys?: { [key: string]: number };
 }
 
 const keyboardLayout = [
@@ -14,7 +15,7 @@ const keyboardLayout = [
   ['ctrl', 'alt', 'space', 'alt', 'ctrl'],
 ];
 
-const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey }) => {
+const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey, mistypedKeys = {} }) => {
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,10 +28,24 @@ const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey }) => 
     }
   }, [lastTypedKey]);
 
+  const getMistakeColor = (count: number) => {
+    if (count === 0) return 'bg-gray-200';
+    const maxMistakes = Math.max(...Object.values(mistypedKeys), 1);
+    const opacity = Math.min(0.8, (count / maxMistakes) * 0.8);
+    return `bg-red-500 bg-opacity-${Math.floor(opacity * 10) * 10}`;
+  };
+
   const getKeyClass = (key: string) => {
     let baseClass = 'flex items-center justify-center rounded-md shadow-sm text-gray-800 font-semibold';
+    const mistakeCount = mistypedKeys[key.toLowerCase()] || 0;
+
     if (key === activeKey) {
       baseClass += ' bg-blue-400 text-white'; // アクティブなキーの色
+    } else if (mistakeCount > 0) {
+      const maxMistakes = Math.max(...Object.values(mistypedKeys), 1);
+      const opacity = 0.2 + (mistakeCount / maxMistakes) * 0.6; // 0.2から0.8の範囲
+      baseClass += ` bg-red-500`
+      baseClass = `${baseClass} text-white`
     } else {
       baseClass += ' bg-gray-200 hover:bg-gray-300';
     }
@@ -58,7 +73,7 @@ const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey }) => 
       {keyboardLayout.map((row, rowIndex) => (
         <div key={rowIndex} className="flex justify-center space-x-1 mb-1">
           {row.map((key, keyIndex) => (
-            <div key={keyIndex} className={getKeyClass(key)}>
+            <div key={keyIndex} className={getKeyClass(key)} style={mistypedKeys[key.toLowerCase()] > 0 ? { backgroundColor: `rgba(239, 68, 68, ${0.2 + (mistypedKeys[key.toLowerCase()] / Math.max(...Object.values(mistypedKeys))) * 0.6})` } : {}}>
               {key === 'backspace' ? '←' : key === 'tab' ? 'Tab' : key === 'capslock' ? 'Caps' : key === 'enter' ? 'Enter' : key === 'shift' ? 'Shift' : key === 'ctrl' ? 'Ctrl' : key === 'alt' ? 'Alt' : key === 'space' ? 'Space' : key}
             </div>
           ))}

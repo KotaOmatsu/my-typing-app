@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import OnScreenKeyboard from './OnScreenKeyboard';
 
 interface TypingResult {
   accuracy: number;
   wpm: number;
-  mistakes: { char: string; expected: string; actual: string; }[];
+  mistakes: { char: string; expected: string; actual: string; typedKey: string }[];
   startTime: number;
   endTime: number;
   totalKeystrokes: number; // 総打鍵数
@@ -19,6 +20,10 @@ interface MistakeAnalysis {
     count: number;
     patterns: { [pattern: string]: number };
   };
+}
+
+interface MistypedKeys {
+  [key: string]: number;
 }
 
 const analyzeMistakes = (mistakes: TypingResult['mistakes']): MistakeAnalysis => {
@@ -41,9 +46,24 @@ const analyzeMistakes = (mistakes: TypingResult['mistakes']): MistakeAnalysis =>
   return analysis;
 };
 
+const analyzeMistypedKeys = (mistakes: TypingResult['mistakes']): MistypedKeys => {
+  const analysis: MistypedKeys = {};
+
+  mistakes.forEach(mistake => {
+    const key = mistake.typedKey.toLowerCase();
+    if (!analysis[key]) {
+      analysis[key] = 0;
+    }
+    analysis[key]++;
+  });
+
+  return analysis;
+};
+
 const ResultDisplay: React.FC = () => {
   const [result, setResult] = useState<TypingResult | null>(null);
   const [mistakeAnalysis, setMistakeAnalysis] = useState<MistakeAnalysis | null>(null);
+  const [mistypedKeys, setMistypedKeys] = useState<MistypedKeys | null>(null);
 
   useEffect(() => {
     const storedResult = localStorage.getItem('typingResult');
@@ -51,6 +71,7 @@ const ResultDisplay: React.FC = () => {
       const parsedResult: TypingResult = JSON.parse(storedResult);
       setResult(parsedResult);
       setMistakeAnalysis(analyzeMistakes(parsedResult.mistakes));
+      setMistypedKeys(analyzeMistypedKeys(parsedResult.mistakes));
     }
   }, []);
 
@@ -77,6 +98,13 @@ const ResultDisplay: React.FC = () => {
         <p className="text-xl text-gray-700 mb-2">正確性: {accuracyPercentage}%</p>
         <p className="text-xl text-gray-700 mb-2">タイピング速度 (WPM): {wpm}</p>
         <p className="text-xl text-gray-700 mb-4">総打鍵数: {result.totalKeystrokes} (正解打鍵数: {result.correctKeystrokes})</p>
+
+        {mistypedKeys && (
+          <div className="mt-8">
+            <h3 className="text-2xl font-bold text-gray-800 mb-3">苦手なキー</h3>
+            <OnScreenKeyboard mistypedKeys={mistypedKeys} />
+          </div>
+        )}
 
         {result.mistakes.length > 0 && (
           <div className="mt-6">

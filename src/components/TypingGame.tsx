@@ -16,7 +16,7 @@ const TYPING_TEXTS = [
 interface TypingResult {
   accuracy: number;
   wpm: number;
-  mistakes: { char: string; expected: string; actual: string; }[];
+  mistakes: { char: string; expected: string; actual: string; typedKey: string }[];
   startTime: number;
   endTime: number;
   totalKeystrokes: number; // 総打鍵数
@@ -70,7 +70,7 @@ const TypingGame: React.FC = () => {
   const [totalKeystrokes, setTotalKeystrokes] = useState(0); // 総打鍵数
   const [correctKeystrokes, setCorrectKeystrokes] = useState(0); // 正解打鍵数
   const [correctKanaUnits, setCorrectKanaUnits] = useState(0); // 正解仮名数
-  const [mistakes, setMistakes] = useState<{ char: string; expected: string; actual: string; }[]>([]);
+  const [mistakes, setMistakes] = useState<{ char: string; expected: string; actual: string; typedKey: string }[]>([]);
   const [isGameStarted, setIsGameStarted] = useState(false); // ゲーム開始状態
   const [flashCorrect, setFlashCorrect] = useState(false); // 正解時のフラッシュ
   const [lastTypedKey, setLastTypedKey] = useState<string | null>(null); // 最後に打たれたキー
@@ -200,7 +200,7 @@ const TypingGame: React.FC = () => {
     } else if (!isPartialMatch) {
       setError(true);
       const expectedRomajiForError = currentKana === 'っ' ? '次の子音' : getRomajiCandidates(currentKana).join('/');
-      setMistakes(prev => [...prev, { char: currentKana, expected: expectedRomajiForError, actual: newBuffer }]);
+      setMistakes(prev => [...prev, { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar }]);
       setInputBuffer(''); // エラー時はバッファをクリア
     }
   }, [calculateResult, checkRomajiMatch, currentKana, currentKanaIndex, currentTextIndex, inputBuffer, isMapLoaded, mistakes, router, isGameStarted, typingUnits]);
