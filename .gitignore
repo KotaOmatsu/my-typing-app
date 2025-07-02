@@ -1,0 +1,62 @@
+node_modules/
+.next/
+.DS_Store
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.bak
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Runtime data
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional husky cache
+.husky
+
+# Optional next.js build output
+.next/
+
+# Optional vercel build output
+.vercel/
+
+# Optional yarn cache
+.yarn/
+
+# Optional pnpm store
+.pnpm-store/
+
+# Optional cnpm cache
+.cnpm/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+node_modules
