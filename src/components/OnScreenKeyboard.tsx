@@ -28,13 +28,6 @@ const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey, misty
     }
   }, [lastTypedKey]);
 
-  const getMistakeColor = (count: number) => {
-    if (count === 0) return 'bg-gray-200';
-    const maxMistakes = Math.max(...Object.values(mistypedKeys), 1);
-    const opacity = Math.min(0.8, (count / maxMistakes) * 0.8);
-    return `bg-red-500 bg-opacity-${Math.floor(opacity * 10) * 10}`;
-  };
-
   const getKeyClass = (key: string) => {
     let baseClass = 'flex items-center justify-center rounded-md shadow-sm text-gray-800 font-semibold';
     const mistakeCount = mistypedKeys[key.toLowerCase()] || 0;
@@ -43,7 +36,6 @@ const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey, misty
       baseClass += ' bg-blue-400 text-white'; // アクティブなキーの色
     } else if (mistakeCount > 0) {
       const maxMistakes = Math.max(...Object.values(mistypedKeys), 1);
-      const opacity = 0.2 + (mistakeCount / maxMistakes) * 0.6; // 0.2から0.8の範囲
       baseClass += ` bg-red-500`
       baseClass = `${baseClass} text-white`
     } else {
