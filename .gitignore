@@ -61,3 +61,6 @@ yarn-error.log*
 Thumbs.db
 node_modules
 .vercel
+
+# Gemini CLI temporary files
+COMMIT_EDITMSG
