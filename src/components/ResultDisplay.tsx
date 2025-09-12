@@ -14,6 +14,7 @@ interface TypingResult {
   correctKeystrokes: number;
   correctKanaUnits: number;
   typedText: string;
+  displayUnits: string[];
 }
 
 interface MistakeDetails {
@@ -116,22 +117,45 @@ const ResultDisplay: React.FC = () => {
           <div className="mt-8">
             <h3 className="text-2xl font-bold text-gray-800 mb-3">文章内のミス</h3>
             <div className="text-2xl leading-relaxed p-4 border rounded-lg bg-gray-50">
-              {result.typedText.split('').map((char, index) => {
-                const mistakesAtThisIndex = mistakeDetails[index];
-                if (mistakesAtThisIndex) {
-                  return (
-                    <span 
-                      key={index} 
-                      className="text-red-500 underline decoration-wavy cursor-pointer"
-                      onMouseMove={e => handleMouseOver(e, mistakesAtThisIndex)}
-                      onMouseLeave={handleMouseLeave}
-                    >
-                      {char}
-                    </span>
-                  );
-                }
-                return <span key={index}>{char}</span>;
-              })}
+              {result.displayUnits
+                ? // New logic for data with displayUnits
+                  result.displayUnits.map((unit, index) => {
+                    if (unit === '\n') {
+                      return <br key={index} />;
+                    }
+                    const mistakesAtThisIndex = mistakeDetails[index];
+                    if (mistakesAtThisIndex) {
+                      return (
+                        <span
+                          key={index}
+                          className="text-red-500 underline decoration-wavy cursor-pointer"
+                          onMouseMove={(e) => handleMouseOver(e, mistakesAtThisIndex)}
+                          onMouseLeave={handleMouseLeave}
+                        >
+                          {unit}
+                        </span>
+                      );
+                    }
+                    return <span key={index}>{unit}</span>;
+                  })
+                : // Fallback for old data without displayUnits
+                  result.typedText &&
+                  result.typedText.split('').map((char, index) => {
+                    const mistakesAtThisIndex = mistakeDetails[index];
+                    if (mistakesAtThisIndex) {
+                      return (
+                        <span
+                          key={index}
+                          className="text-red-500 underline decoration-wavy cursor-pointer"
+                          onMouseMove={(e) => handleMouseOver(e, mistakesAtThisIndex)}
+                          onMouseLeave={handleMouseLeave}
+                        >
+                          {char}
+                        </span>
+                      );
+                    }
+                    return <span key={index}>{char}</span>;
+                  })}
             </div>
           </div>
         )}
