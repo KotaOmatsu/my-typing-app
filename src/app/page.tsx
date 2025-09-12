@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import LoginStatus from "../components/LoginStatus";
 
 export default function Home() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 py-2">
+    <div className="flex flex-col items-center justify-start min-h-screen bg-gray-100 py-2">
+      <header className="w-full p-4 flex justify-end absolute top-0 right-0">
+        <LoginStatus />
+      </header>
+
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
         <h1 className="text-6xl font-bold text-gray-800 mb-6">
           タイピング練習サイト
