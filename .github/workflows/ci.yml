@@ -24,3 +24,10 @@ jobs:
       run: npm run lint
     - name: Run build
       run: npm run build
+      env:
+        GITHUB_ID: ${{ secrets.GITHUB_ID }}
+        GITHUB_SECRET: ${{ secrets.GITHUB_SECRET }}
+        GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+        GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
