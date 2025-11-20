@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react"; // Import useSession
 import {
   getRomajiCandidates,
   useKanaRomajiMap,
@@ -8,7 +9,8 @@ import { getTypingUnits } from "../utils/typingUtils";
 
 const TYPING_TEXTS = ["わがはいはねこである。", "て。すと。", "あいうえお"];
 
-interface TypingResult {
+// This interface is for the data passed to the result page via localStorage
+interface LocalStorageResult {
   accuracy: number;
   wpm: number;
   mistakes: {
@@ -20,15 +22,16 @@ interface TypingResult {
   }[];
   startTime: number;
   endTime: number;
-  totalKeystrokes: number; // 総打鍵数
-  correctKeystrokes: number; // 正解打鍵数
-  correctKanaUnits: number; // 正解仮名数
-  typedText: string; // タイプした全文
-  displayUnits: string[]; // 表示用のタイピングユニット配列
+  totalKeystrokes: number;
+  correctKeystrokes: number;
+  correctKanaUnits: number;
+  typedText: string;
+  displayUnits: string[];
 }
 
 export const useTypingGame = () => {
   const router = useRouter();
+  const { data: session } = useSession(); // Get session data
   const isMapLoaded = useKanaRomajiMap();
 
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -37,51 +40,32 @@ export const useTypingGame = () => {
   const [inputBuffer, setInputBuffer] = useState("");
   const [error, setError] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const [totalKeystrokes, setTotalKeystrokes] = useState(0); // 総打鍵数
-  const [correctKeystrokes, setCorrectKeystrokes] = useState(0); // 正解打鍵数
-  const [correctKanaUnits, setCorrectKanaUnits] = useState(0); // 正解仮名数
-  const [mistakes, setMistakes] = useState<
-    {
-      char: string;
-      expected: string;
-      actual: string;
-      typedKey: string;
-      kanaIndex: number;
-    }[]
-  >([]);
-  const [isGameStarted, setIsGameStarted] = useState(false); // ゲーム開始状態
-  const [flashCorrect, setFlashCorrect] = useState(false); // 正解時のフラッシュ
-  const [lastTypedKey, setLastTypedKey] = useState<string | null>(null); // 最後に打たれたキー
+  const [totalKeystrokes, setTotalKeystrokes] = useState(0);
+  const [correctKeystrokes, setCorrectKeystrokes] = useState(0);
+  const [correctKanaUnits, setCorrectKanaUnits] = useState(0);
+  const [mistakes, setMistakes] = useState<LocalStorageResult['mistakes']>([]);
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [flashCorrect, setFlashCorrect] = useState(false);
+  const [lastTypedKey, setLastTypedKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (isMapLoaded) {
       setTypingUnits(getTypingUnits(TYPING_TEXTS[currentTextIndex]));
       if (startTime === null) {
-        setStartTime(Date.now());
-        setIsGameStarted(true); // マップロード後、すぐにゲームを開始状態にする
+        // setStartTime(Date.now()); // Start time is set on first keypress
       }
     }
   }, [isMapLoaded, currentTextIndex, startTime]);
 
   const currentKana = typingUnits[currentKanaIndex];
 
-  const calculateResult = useCallback(() => {
+  const calculateResult = useCallback(async () => {
     const endTime = Date.now();
     const durationSeconds = (endTime - (startTime || endTime)) / 1000;
-    const accuracy = (correctKeystrokes / totalKeystrokes) * 100; // 正解打鍵数 / 総打鍵数
-    const wpm = correctKanaUnits / 5 / (durationSeconds / 60); // 正解仮名数 / 5文字/ワード
+    const accuracy = totalKeystrokes > 0 ? (correctKeystrokes / totalKeystrokes) * 100 : 0;
+    const wpm = durationSeconds > 0 ? (correctKanaUnits / (durationSeconds / 60)) : 0;
 
-    const displayUnits = TYPING_TEXTS.map((text) =>
-      getTypingUnits(text)
-    ).reduce((acc, units, index) => {
-      if (index > 0) {
-        acc.push("\n"); // Add newline marker between texts
-      }
-      acc.push(...units);
-      return acc;
-    }, [] as string[]);
-
-    const result: TypingResult = {
+    const resultDataForLocalStorage: LocalStorageResult = {
       accuracy: isNaN(accuracy) ? 0 : accuracy,
       wpm: isNaN(wpm) ? 0 : wpm,
       mistakes,
@@ -90,19 +74,52 @@ export const useTypingGame = () => {
       totalKeystrokes,
       correctKeystrokes,
       correctKanaUnits,
-      typedText: TYPING_TEXTS.join("\n"), // Keep for compatibility or other uses
-      displayUnits,
+      typedText: TYPING_TEXTS.join("\n"),
+      displayUnits: getTypingUnits(TYPING_TEXTS.join('\n')),
     };
-    localStorage.setItem("typingResult", JSON.stringify(result));
+
+    // Save to localStorage for result page (for all users)
+    localStorage.setItem("typingResult", JSON.stringify(resultDataForLocalStorage));
+
+    // If logged in, save result to database via API (Temporarily Disabled)
+    /*
+    if (session) {
+      const resultForApi = {
+        wpm: resultDataForLocalStorage.wpm,
+        accuracy: resultDataForLocalStorage.accuracy,
+        mistakes: mistakes.length,
+      };
+
+      try {
+        const response = await fetch('/api/results', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(resultForApi),
+        });
+
+        if (response.ok) {
+          console.log('Typing result saved successfully!');
+        } else {
+          console.error('Failed to save typing result:', await response.json());
+        }
+      } catch (error) {
+        console.error('Error while saving typing result:', error);
+      }
+    }
+    */
+
     router.push("/result");
   }, [
     correctKeystrokes,
     correctKanaUnits,
     mistakes,
     router,
+    session, // Add session to dependency array
     startTime,
     totalKeystrokes,
-  ]); // eslint-disable-next-line react-hooks/exhaustive-deps
+  ]);
 
   const checkRomajiMatch = useCallback(
     (
@@ -173,11 +190,16 @@ export const useTypingGame = () => {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!isMapLoaded || !isGameStarted) return; // マップがロードされていない、またはゲームが開始されていない場合は処理しない
+      if (!isMapLoaded) return; // マップがロードされていない場合は処理しない
 
       if (e.key === "Escape") {
         router.push("/"); // Escキーでスタート画面に戻る
         return;
+      }
+
+      if (!isGameStarted) {
+        setIsGameStarted(true);
+        setStartTime(Date.now());
       }
 
       const typedChar = e.key;
