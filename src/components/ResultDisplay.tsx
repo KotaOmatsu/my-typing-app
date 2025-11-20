@@ -3,58 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import OnScreenKeyboard from './OnScreenKeyboard';
-
-interface TypingResult {
-  accuracy: number;
-  wpm: number;
-  mistakes: { char: string; expected: string; actual: string; typedKey: string; kanaIndex: number }[];
-  startTime: number;
-  endTime: number;
-  totalKeystrokes: number;
-  correctKeystrokes: number;
-  correctKanaUnits: number;
-  typedText: string;
-  displayUnits: string[];
-}
-
-interface MistakeDetails {
-  [index: number]: { 
-    char: string;
-    expected: string;
-    actual: string; 
-  }[];
-}
-
-interface MistypedKeys {
-  [key: string]: number;
-}
-
-const createMistakeDetails = (mistakes: TypingResult['mistakes']): MistakeDetails => {
-  const details: MistakeDetails = {};
-  mistakes.forEach(mistake => {
-    if (!details[mistake.kanaIndex]) {
-      details[mistake.kanaIndex] = [];
-    }
-    details[mistake.kanaIndex].push({
-      char: mistake.char,
-      expected: mistake.expected,
-      actual: mistake.actual 
-    });
-  });
-  return details;
-};
-
-const analyzeMistypedKeys = (mistakes: TypingResult['mistakes']): MistypedKeys => {
-  const analysis: MistypedKeys = {};
-  mistakes.forEach(mistake => {
-    const key = mistake.typedKey.toLowerCase();
-    if (!analysis[key]) {
-      analysis[key] = 0;
-    }
-    analysis[key]++;
-  });
-  return analysis;
-};
+import { TypingResult } from '@/types/typing';
+import { LOCAL_STORAGE_RESULT_KEY } from '@/constants/typing';
+import { 
+  MistakeDetails, 
+  MistypedKeys, 
+  createMistakeDetails, 
+  analyzeMistypedKeys 
+} from '@/utils/resultUtils';
 
 const ResultDisplay: React.FC = () => {
   const [result, setResult] = useState<TypingResult | null>(null);
@@ -63,7 +19,7 @@ const ResultDisplay: React.FC = () => {
   const [tooltip, setTooltip] = useState<{ content: string; x: number; y: number } | null>(null);
 
   useEffect(() => {
-    const storedResult = localStorage.getItem('typingResult');
+    const storedResult = localStorage.getItem(LOCAL_STORAGE_RESULT_KEY);
     if (storedResult) {
       const parsedResult: TypingResult = JSON.parse(storedResult);
       setResult(parsedResult);
