@@ -1,63 +1,151 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback, useReducer } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react"; // Import useSession
-import {
-  getRomajiCandidates,
-  useKanaRomajiMap,
-} from "../components/KanaRomajiMap";
+import { useSession } from "next-auth/react";
+import { getRomajiCandidates, useKanaRomajiMap } from "../components/KanaRomajiMap";
 import { getTypingUnits } from "../utils/typingUtils";
+import { TypingResult, Mistake } from "@/types/typing";
+import { TYPING_TEXTS, LOCAL_STORAGE_RESULT_KEY } from "@/constants/typing";
 
-const TYPING_TEXTS = ["わがはいはねこである。", "て。すと。", "あいうえお"];
+// --- State, Action, Reducer ---
 
-// This interface is for the data passed to the result page via localStorage
-interface LocalStorageResult {
-  accuracy: number;
-  wpm: number;
-  mistakes: {
-    char: string;
-    expected: string;
-    actual: string;
-    typedKey: string;
-    kanaIndex: number;
-  }[];
-  startTime: number;
-  endTime: number;
+interface GameState {
+  status: 'loading' | 'idle' | 'running' | 'finished';
+  currentTextIndex: number;
+  typingUnits: string[];
+  currentKanaIndex: number;
+  inputBuffer: string;
+  error: boolean;
+  startTime: number | null;
   totalKeystrokes: number;
   correctKeystrokes: number;
   correctKanaUnits: number;
-  typedText: string;
-  displayUnits: string[];
+  mistakes: Mistake[];
+  flashCorrect: boolean;
+  lastTypedKey: string | null;
 }
+
+type GameAction =
+  | { type: 'MAP_LOADED'; payload: { typingUnits: string[] } }
+  | { type: 'START_GAME'; payload: { startTime: number; typedKey: string } }
+  | { type: 'TYPE_KEY'; payload: { typedKey: string; isCorrect: boolean; isPartial: boolean; buffer: string } }
+  | { type: 'CORRECT_KEY'; payload: { bufferLength: number } }
+  | { type: 'INCORRECT_KEY'; payload: { char: string; expected: string; actual: string; typedKey: string; kanaIndex: number } }
+  | { type: 'NEXT_KANA' }
+  | { type: 'NEXT_TEXT' }
+  | { type: 'FINISH_GAME' }
+  | { type: 'RESET_FLASH' };
+
+const initialState: GameState = {
+  status: 'loading',
+  currentTextIndex: 0,
+  typingUnits: [],
+  currentKanaIndex: 0,
+  inputBuffer: "",
+  error: false,
+  startTime: null,
+  totalKeystrokes: 0,
+  correctKeystrokes: 0,
+  correctKanaUnits: 0,
+  mistakes: [],
+  flashCorrect: false,
+  lastTypedKey: null,
+};
+
+const reducer = (state: GameState, action: GameAction): GameState => {
+  switch (action.type) {
+    case 'MAP_LOADED':
+      return {
+        ...state,
+        status: 'idle',
+        typingUnits: action.payload.typingUnits,
+      };
+    case 'START_GAME':
+      return {
+        ...state,
+        status: 'running',
+        startTime: action.payload.startTime,
+        lastTypedKey: action.payload.typedKey,
+        totalKeystrokes: 1,
+      };
+    case 'TYPE_KEY':
+      return {
+        ...state,
+        inputBuffer: action.payload.buffer,
+        lastTypedKey: action.payload.typedKey,
+        totalKeystrokes: state.totalKeystrokes + 1,
+        error: false,
+      };
+    case 'CORRECT_KEY':
+      return {
+        ...state,
+        correctKeystrokes: state.correctKeystrokes + action.payload.bufferLength,
+        correctKanaUnits: state.correctKanaUnits + 1,
+        inputBuffer: "",
+        flashCorrect: true,
+      };
+    case 'INCORRECT_KEY':
+      return {
+        ...state,
+        error: true,
+        inputBuffer: "",
+        mistakes: [...state.mistakes, action.payload],
+      };
+    case 'NEXT_KANA':
+      return {
+        ...state,
+        currentKanaIndex: state.currentKanaIndex + 1,
+      };
+    case 'NEXT_TEXT':
+      return {
+        ...state,
+        currentTextIndex: state.currentTextIndex + 1,
+        currentKanaIndex: 0,
+        typingUnits: getTypingUnits(TYPING_TEXTS[state.currentTextIndex + 1]),
+      };
+    case 'FINISH_GAME':
+      return {
+        ...state,
+        status: 'finished',
+      };
+    case 'RESET_FLASH':
+      return {
+        ...state,
+        flashCorrect: false,
+      };
+    default:
+      return state;
+  }
+};
+
+// --- Custom Hook ---
 
 export const useTypingGame = () => {
   const router = useRouter();
-  const { data: session } = useSession(); // Get session data
+  const { data: session } = useSession();
   const isMapLoaded = useKanaRomajiMap();
 
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
-  const [typingUnits, setTypingUnits] = useState<string[]>([]);
-  const [currentKanaIndex, setCurrentKanaIndex] = useState(0);
-  const [inputBuffer, setInputBuffer] = useState("");
-  const [error, setError] = useState(false);
-  const [startTime, setStartTime] = useState<number | null>(null);
-  const [totalKeystrokes, setTotalKeystrokes] = useState(0);
-  const [correctKeystrokes, setCorrectKeystrokes] = useState(0);
-  const [correctKanaUnits, setCorrectKanaUnits] = useState(0);
-  const [mistakes, setMistakes] = useState<LocalStorageResult['mistakes']>([]);
-  const [isGameStarted, setIsGameStarted] = useState(false);
-  const [flashCorrect, setFlashCorrect] = useState(false);
-  const [lastTypedKey, setLastTypedKey] = useState<string | null>(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const {
+    status,
+    typingUnits,
+    currentKanaIndex,
+    inputBuffer,
+    error,
+    flashCorrect,
+    lastTypedKey,
+    mistakes,
+    startTime,
+    totalKeystrokes,
+    correctKeystrokes,
+    correctKanaUnits,
+    currentTextIndex
+  } = state;
 
   useEffect(() => {
     if (isMapLoaded) {
-      setTypingUnits(getTypingUnits(TYPING_TEXTS[currentTextIndex]));
-      if (startTime === null) {
-        // setStartTime(Date.now()); // Start time is set on first keypress
-      }
+      dispatch({ type: 'MAP_LOADED', payload: { typingUnits: getTypingUnits(TYPING_TEXTS[0]) } });
     }
-  }, [isMapLoaded, currentTextIndex, startTime]);
-
-  const currentKana = typingUnits[currentKanaIndex];
+  }, [isMapLoaded]);
 
   const calculateResult = useCallback(async () => {
     const endTime = Date.now();
@@ -65,7 +153,7 @@ export const useTypingGame = () => {
     const accuracy = totalKeystrokes > 0 ? (correctKeystrokes / totalKeystrokes) * 100 : 0;
     const wpm = durationSeconds > 0 ? (correctKanaUnits / (durationSeconds / 60)) : 0;
 
-    const resultDataForLocalStorage: LocalStorageResult = {
+    const resultData: TypingResult = {
       accuracy: isNaN(accuracy) ? 0 : accuracy,
       wpm: isNaN(wpm) ? 0 : wpm,
       mistakes,
@@ -78,215 +166,96 @@ export const useTypingGame = () => {
       displayUnits: getTypingUnits(TYPING_TEXTS.join('\n')),
     };
 
-    // Save to localStorage for result page (for all users)
-    localStorage.setItem("typingResult", JSON.stringify(resultDataForLocalStorage));
+    localStorage.setItem(LOCAL_STORAGE_RESULT_KEY, JSON.stringify(resultData));
 
-    // If logged in, save result to database via API (Temporarily Disabled)
-    /*
+    // Future database saving logic will go here
     if (session) {
-      const resultForApi = {
-        wpm: resultDataForLocalStorage.wpm,
-        accuracy: resultDataForLocalStorage.accuracy,
-        mistakes: mistakes.length,
-      };
-
-      try {
-        const response = await fetch('/api/results', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(resultForApi),
-        });
-
-        if (response.ok) {
-          console.log('Typing result saved successfully!');
-        } else {
-          console.error('Failed to save typing result:', await response.json());
-        }
-      } catch (error) {
-        console.error('Error while saving typing result:', error);
-      }
+      // const response = await fetch('/api/results', { ... });
     }
-    */
 
     router.push("/result");
-  }, [
-    correctKeystrokes,
-    correctKanaUnits,
-    mistakes,
-    router,
-    session, // Add session to dependency array
-    startTime,
-    totalKeystrokes,
-  ]);
+  }, [correctKeystrokes, correctKanaUnits, mistakes, router, session, startTime, totalKeystrokes]);
 
-  const checkRomajiMatch = useCallback(
-    (
-      kana: string,
-      buffer: string,
-      nextTypingUnit?: string
-    ): { exact: boolean; partial: boolean } => {
-      const symbolMap: { [key: string]: string } = {
-        "。": ".",
-        "、": ",",
-        "「": "[",
-        "」": "]",
-      };
-      if (symbolMap[kana]) {
-        const expectedKey = symbolMap[kana];
-        return {
-          exact: buffer === expectedKey,
-          partial: expectedKey.startsWith(buffer),
-        };
+  const checkRomajiMatch = useCallback((kana: string, buffer: string, nextTypingUnit?: string): { exact: boolean; partial: boolean } => {
+    const symbolMap: { [key: string]: string } = { "。": ".", "、": ",", "「": "[", "」": "]" };
+    if (symbolMap[kana]) {
+      const expectedKey = symbolMap[kana];
+      return { exact: buffer === expectedKey, partial: expectedKey.startsWith(buffer) };
+    }
+
+    let possibleRomajiCandidates: string[] = getRomajiCandidates(kana);
+    if (kana === "っ" && nextTypingUnit) {
+      const nextKanaRomaji = getRomajiCandidates(nextTypingUnit);
+      if (nextKanaRomaji.length > 0 && nextKanaRomaji[0][0]) {
+        possibleRomajiCandidates = [...possibleRomajiCandidates, nextKanaRomaji[0][0].repeat(2)];
       }
+    } else if (kana === "ん") {
+      possibleRomajiCandidates = (nextTypingUnit && "あいうえおやゆよ".includes(nextTypingUnit))
+        ? ["nn", "n'"]
+        : ["n", "nn", "n'"];
+    }
 
-      let possibleRomajiCandidates: string[] = [];
+    const exact = possibleRomajiCandidates.some(c => c === buffer);
+    const partial = !exact && possibleRomajiCandidates.some(c => c.startsWith(buffer));
+    return { exact, partial };
+  }, []);
 
-      if (kana === "っ") {
-        possibleRomajiCandidates = [...getRomajiCandidates(kana)];
-        if (nextTypingUnit) {
-          const nextKanaRomajiCandidates = getRomajiCandidates(nextTypingUnit);
-          if (nextKanaRomajiCandidates.length > 0) {
-            const firstCharOfNextRomaji = nextKanaRomajiCandidates[0]?.[0];
-            if (firstCharOfNextRomaji) {
-              possibleRomajiCandidates.push(
-                firstCharOfNextRomaji + firstCharOfNextRomaji
-              );
-            }
-          }
-        }
-      } else if (kana === "ん") {
-        if (nextTypingUnit && "あいうえおやゆよ".includes(nextTypingUnit)) {
-          possibleRomajiCandidates = ["nn", "n'"];
-        } else {
-          possibleRomajiCandidates = ["n", "nn", "n'"];
-        }
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (status === 'loading' || status === 'finished') return;
+
+    if (e.key === "Escape") {
+      router.push("/");
+      return;
+    }
+
+    const typedChar = e.key;
+    const isTypingKey = /^[a-zA-Z]$/.test(typedChar) || ["-", ",", ".", "[", "]"].includes(typedChar);
+    if (!isTypingKey) return;
+
+    e.preventDefault();
+
+    if (status === 'idle') {
+      dispatch({ type: 'START_GAME', payload: { startTime: Date.now(), typedKey: typedChar } });
+    }
+
+    const newBuffer = inputBuffer + typedChar;
+    const currentKana = typingUnits[currentKanaIndex];
+    const nextTypingUnit = typingUnits[currentKanaIndex + 1];
+
+    dispatch({ type: 'TYPE_KEY', payload: { typedKey: typedChar, buffer: newBuffer, isCorrect: false, isPartial: false } });
+
+    const { exact: isExactMatch, partial: isPartialMatch } = checkRomajiMatch(currentKana, newBuffer, nextTypingUnit);
+
+    if (isExactMatch) {
+      dispatch({ type: 'CORRECT_KEY', payload: { bufferLength: newBuffer.length } });
+      setTimeout(() => dispatch({ type: 'RESET_FLASH' }), 200);
+
+      if (currentKanaIndex < typingUnits.length - 1) {
+        dispatch({ type: 'NEXT_KANA' });
       } else {
-        possibleRomajiCandidates = getRomajiCandidates(kana);
-      }
-
-      let exact = false;
-      let partial = false;
-
-      for (const candidate of possibleRomajiCandidates) {
-        if (candidate === buffer) {
-          exact = true;
-          break; // Found an exact match
-        }
-        if (candidate.startsWith(buffer)) {
-          partial = true; // Found a partial match
-        }
-      }
-
-      if (exact) {
-        partial = false;
-      }
-
-      return { exact, partial };
-    },
-    []
-  );
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (!isMapLoaded) return; // マップがロードされていない場合は処理しない
-
-      if (e.key === "Escape") {
-        router.push("/"); // Escキーでスタート画面に戻る
-        return;
-      }
-
-      if (!isGameStarted) {
-        setIsGameStarted(true);
-        setStartTime(Date.now());
-      }
-
-      const typedChar = e.key;
-      setLastTypedKey(typedChar); // 最後に打たれたキーを更新
-
-      // タイピングに必要なキーのみを処理
-      const isTypingKey =
-        /^[a-zA-Z]$/.test(typedChar) ||
-        ["-", ",", ".", "/", "?", "!", "(", ")", "[", "]", ":", ";"].includes(
-          typedChar
-        );
-
-      if (!isTypingKey) {
-        return; // タイピングに関係ないキーは無視
-      }
-
-      e.preventDefault(); // ブラウザのデフォルト動作（スペースキーでのスクロールなど）を防止
-
-      const newBuffer = inputBuffer + typedChar;
-      setInputBuffer(newBuffer);
-      setTotalKeystrokes((prev) => prev + 1); // 総打鍵数をインクリメント
-
-      const { exact: isExactMatch, partial: isPartialMatch } = checkRomajiMatch(
-        currentKana,
-        newBuffer,
-        typingUnits[currentKanaIndex + 1]
-      );
-
-      if (isExactMatch) {
-        setCorrectKeystrokes((prev) => prev + newBuffer.length); // 正解打鍵数をインクリメント
-        setCorrectKanaUnits((prev) => prev + 1); // 正解仮名数をインクリメント
-        setError(false);
-        setInputBuffer(""); // 即座にクリア
-        setFlashCorrect(true); // フラッシュ開始
-        setTimeout(() => setFlashCorrect(false), 200); // 200ms後にフラッシュ終了
-
-        if (currentKanaIndex < typingUnits.length - 1) {
-          // Use typingUnits.length
-          setCurrentKanaIndex((prev) => prev + 1);
+        if (currentTextIndex < TYPING_TEXTS.length - 1) {
+          dispatch({ type: 'NEXT_TEXT' });
         } else {
-          if (currentTextIndex < TYPING_TEXTS.length - 1) {
-            setCurrentTextIndex((prev) => prev + 1);
-            setCurrentKanaIndex(0);
-          } else {
-            calculateResult();
-          }
+          dispatch({ type: 'FINISH_GAME' });
         }
-      } else if (!isPartialMatch) {
-        setError(true);
-        const expectedRomajiForError =
-          currentKana === "っ"
-            ? "次の子音"
-            : getRomajiCandidates(currentKana).join("/");
-        const precedingCharCount = TYPING_TEXTS.slice(0, currentTextIndex)
-          .map((text) => getTypingUnits(text).length)
-          .reduce((a, b) => a + b, 0);
-
-        // Add the number of newline characters from previous texts
-        const absoluteKanaIndex =
-          precedingCharCount + currentTextIndex + currentKanaIndex;
-
-        setMistakes((prev) => [
-          ...prev,
-          {
-            char: currentKana,
-            expected: expectedRomajiForError,
-            actual: newBuffer,
-            typedKey: typedChar,
-            kanaIndex: absoluteKanaIndex,
-          },
-        ]);
-        setInputBuffer(""); // エラー時はバッファをクリア
       }
-    },
-    [
-      calculateResult,
-      checkRomajiMatch,
-      currentKana,
-      currentKanaIndex,
-      currentTextIndex,
-      inputBuffer,
-      isMapLoaded,
-      router,
-      isGameStarted,
-      typingUnits,
-    ]
-  );
+    } else if (!isPartialMatch) {
+      const expectedRomajiForError = getRomajiCandidates(currentKana).join("/");
+      const precedingCharCount = TYPING_TEXTS.slice(0, currentTextIndex).map(text => getTypingUnits(text).length).reduce((a, b) => a + b, 0);
+      const absoluteKanaIndex = precedingCharCount + currentTextIndex + currentKanaIndex;
+
+      dispatch({
+        type: 'INCORRECT_KEY',
+        payload: { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar, kanaIndex: absoluteKanaIndex },
+      });
+    }
+  }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, checkRomajiMatch, router]);
+
+  useEffect(() => {
+    if (status === 'finished') {
+      calculateResult();
+    }
+  }, [status, calculateResult]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -296,15 +265,15 @@ export const useTypingGame = () => {
   }, [handleKeyDown]);
 
   return {
-    isMapLoaded,
+    isMapLoaded: status !== 'loading',
     typingUnits,
     currentKanaIndex,
     inputBuffer,
     error,
     flashCorrect,
-    isGameStarted,
+    isGameStarted: status === 'running' || status === 'finished',
     lastTypedKey,
     mistakes,
-    handleKeyDown,
+    handleKeyDown, // handleKeyDown is still returned for potential future use, though not directly used by TypingGame component anymore
   };
 };
