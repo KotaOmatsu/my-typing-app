@@ -1,8 +1,11 @@
 import { NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     GithubProvider({
       clientId: process.env.GITHUB_ID ?? "",
@@ -14,21 +17,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: {
-    strategy: "jwt", // Use JWT sessions instead of database sessions
+    strategy: "database", // Use database sessions
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    // Add user ID to the JWT token
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
     // Add user ID to the session object
-    async session({ session, token }) {
+    async session({ session, user }) {
       if (session.user) {
-        session.user.id = token.id as string;
+        session.user.id = user.id;
       }
       return session;
     },

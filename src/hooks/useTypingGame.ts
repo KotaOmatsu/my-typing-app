@@ -251,11 +251,67 @@ export const useTypingGame = () => {
     }
   }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, checkRomajiMatch, router]);
 
-  useEffect(() => {
-    if (status === 'finished') {
-      calculateResult();
-    }
-  }, [status, calculateResult]);
+    // ゲーム終了時の処理
+    useEffect(() => {
+        if (status === 'finished' && startTime) {
+            const endTime = Date.now();
+            const elapsedTime = endTime - startTime;
+
+            const wpm = totalKeystrokes > 0 ? (correctKanaUnits / (elapsedTime / 1000)) * 60 : 0;
+            const accuracy = totalKeystrokes > 0 ? (correctKeystrokes / totalKeystrokes) * 100 : 0;
+            const currentText = TYPING_TEXTS[currentTextIndex];
+
+            const result = {
+                wpm: wpm,
+                accuracy: accuracy,
+                totalKeystrokes: totalKeystrokes,
+                correctKeystrokes: correctKeystrokes,
+                mistakes: mistakes,
+                text: currentText,
+            };
+
+            // 既存のlocalStorageへの保存
+            localStorage.setItem('typingResult', JSON.stringify(result));
+
+            // API経由で結果をDBに保存
+            const saveResult = async () => {
+                try {
+                    const response = await fetch('/api/typing-results', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            wpm: result.wpm,
+                            accuracy: result.accuracy,
+                            mistakeCount: result.mistakes.length,
+                            totalKeystrokes: result.totalKeystrokes,
+                            correctKeystrokes: result.correctKeystrokes,
+                            text: result.text,
+                            mistakeDetails: result.mistakes,
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Error: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('Typing result saved successfully:', data);
+
+                } catch (error) {
+                    console.error('Failed to save typing result:', error);
+                }
+            };
+
+            if (session) {
+                saveResult();
+            }
+
+            // 結果ページへのリダイレクト
+            router.push('/result');
+        }
+    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
