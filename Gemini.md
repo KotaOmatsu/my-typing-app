@@ -44,7 +44,7 @@
 
 ### 2.4. ログイン機能
 
-今後のパーソナライズ機能（成績保存、苦手分析など）の基盤として、ユーザー認証機能が実装されています。
+今後のパーソナライズ機能（成績保存、苦手分析など）の基盤として、ユーザー認証機能が実装されています。ログインしているユーザーのタイピング結果は、自動的にデータベースに保存されます。
 
 -   **認証プロバイダー**:
     -   GitHub
@@ -66,6 +66,7 @@
 -   **言語**: TypeScript
 -   **スタイリング**: Tailwind CSS
 -   **認証**: NextAuth.js
+-   **ORM**: Prisma
 
 ## 4. 主要ファイルと役割
 
@@ -73,15 +74,22 @@
 -   `src/components/KanaRomajiMap.ts`: `kana_romaji_map.json` をロードし、仮名に対応するローマ字候補を提供するユーティリティ関数群。
 -   `src/components/OnScreenKeyboard.tsx`: 画面上に仮想キーボードを表示し、ユーザーのキー入力を視覚的にフィードバックするコンポーネント。
 -   `src/components/TypingGame.tsx`: タイピング練習画面のメインコンポーネント。コアロジックはカスタムフックに抽出されており、主にレンダリングを担当します。
--   `src/hooks/useTypingGame.ts`: タイピングゲームのコアロジック（ステート管理、イベントハンドリング、結果計算など）をカプセル化したカスタムフック。
+-   `src/hooks/useTypingGame.ts`: タイピングゲームのコアロジックをカプセル化したカスタムフック。UIイベントと状態をつなぐ役割に集中しており、具体的な状態管理やAPI通信は別ファイルに移管されています。
 -   `src/utils/typingUtils.ts`: 日本語の文章をタイピング単位（拗音、促音など）に分解するためのヘルパー関数。
 
 **認証関連**
 -   `src/app/api/auth/[...nextauth]/route.ts`: NextAuth.jsのバックエンド設定ファイル。認証プロバイダー（GitHub, Google）やデバッグモードなどの設定を定義します。
--   `.env.local`: `GITHUB_ID`, `GOOGLE_CLIENT_ID` などの認証情報や、`NEXTAUTH_SECRET` などの秘匿情報を格納します。（このファイルはリポジトリに含まれません）
+-   `.env.local`: `GITHUB_ID`, `GOOGLE_CLIENT_ID`, `DATABASE_URL` などの認証・接続情報や、`NEXTAUTH_SECRET` などの秘匿情報を格納します。（このファイルはリポジトリに含まれません）
 -   `src/components/AuthProvider.tsx`: NextAuth.jsの `SessionProvider` をラップするクライアントコンポーネント。アプリケーション全体でセッション情報を共有可能にします。
 -   `src/components/LoginStatus.tsx`: ヘッダーに表示されるUIコンポーネント。ログイン状態を監視し、「ログイン」ボタンやユーザー情報・「ログアウト」ボタンを動的に表示します。
 -   `next.config.js`: 外部ドメイン（GitHub, Google）のアバター画像を `next/image` で表示するためのホスト名を設定します。
+
+**データベース・状態管理関連**
+-   `prisma/schema.prisma`: Prismaで使用するデータベースのスキーマ（テーブル構造、リレーション）を定義します。
+-   `src/lib/prisma.ts`: Prisma Clientのインスタンスをシングルトンパターンで生成・管理します。
+-   `src/app/api/typing-results/route.ts`: タイピング結果をデータベースに保存するためのAPIエンドポイントです。
+-   `src/services/typingResultService.ts`: 結果保存APIの通信ロジックをカプセル化したサービス関数です。
+-   `src/state/typingGameState.ts`: `useTypingGame`フックで利用する`useReducer`の状態、アクション、reducer関数を定義します。
 
 ## 5. 拡張予定・将来的な機能
 
@@ -91,7 +99,7 @@
     -   ~~GoogleやGitHubなどのOAuthプロバイダーを利用したユーザー認証機能。~~ (実装済み)
     -   他の認証プロバイダー（Twitterなど）の追加。
 -   **苦手分析と練習文の最適化**:
-    -   **（次のステップ候補）** ログインユーザーごとにタイピング結果をデータベースに保存する。
+    -   ~~ログインユーザーごとにタイピング結果をデータベースに保存する。~~ (実装済み)
     -   オンラインDBを利用し、ユーザーの苦手な指や単語を分析し、それを改善できる練習文章を誘導する機能(PythonとSQLを使う予定)。
     -   過去の成績をグラフや図で可視化する機能。
 -   **スコアランキング**: データベースを利用し、ユーザーのタイピングスコアをオンラインでランキング表示する機能。
