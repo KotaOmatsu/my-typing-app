@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import HistoryTable from '@/components/HistoryTable';
+import HistoryChart from '@/components/HistoryChart';
 
 export default async function HistoryPage() {
   const session = await getServerSession(authOptions);
@@ -37,9 +38,12 @@ export default async function HistoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">成績履歴</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1>
       {serializableResults.length > 0 ? (
-        <HistoryTable results={serializableResults} />
+        <>
+          <HistoryChart results={serializableResults} />
+          <HistoryTable results={serializableResults} />
+        </>
       ) : (
         <div className="text-center text-gray-500">
           <p>まだタイピング履歴がありません。</p>
