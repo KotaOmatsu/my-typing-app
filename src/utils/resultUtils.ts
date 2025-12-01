@@ -1,6 +1,6 @@
 // src/utils/resultUtils.ts
 
-import { TypingResult, Mistake } from "@/types/typing";
+import { Mistake } from "@/types/typing";
 
 /**
  * ミスの詳細情報を格納するオブジェクトの型
