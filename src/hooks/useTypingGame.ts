@@ -6,6 +6,7 @@ import { getTypingUnits } from "../utils/typingUtils";
 import { TYPING_TEXTS } from "@/constants/typing";
 import { initialState, reducer } from "@/state/typingGameState";
 import { saveTypingResult } from "@/services/typingResultService";
+import { checkRomajiMatch } from "@/utils/romajiUtils";
 
 // --- Custom Hook ---
 
@@ -36,30 +37,6 @@ export const useTypingGame = () => {
       dispatch({ type: 'MAP_LOADED', payload: { typingUnits: getTypingUnits(TYPING_TEXTS[0]) } });
     }
   }, [isMapLoaded]);
-
-  const checkRomajiMatch = useCallback((kana: string, buffer: string, nextTypingUnit?: string): { exact: boolean; partial: boolean } => {
-    const symbolMap: { [key: string]: string } = { "。": ".", "、": ",", "「": "[", "」": "]" };
-    if (symbolMap[kana]) {
-      const expectedKey = symbolMap[kana];
-      return { exact: buffer === expectedKey, partial: expectedKey.startsWith(buffer) };
-    }
-
-    let possibleRomajiCandidates: string[] = getRomajiCandidates(kana);
-    if (kana === "っ" && nextTypingUnit) {
-      const nextKanaRomaji = getRomajiCandidates(nextTypingUnit);
-      if (nextKanaRomaji.length > 0 && nextKanaRomaji[0][0]) {
-        possibleRomajiCandidates = [...possibleRomajiCandidates, nextKanaRomaji[0][0].repeat(2)];
-      }
-    } else if (kana === "ん") {
-      possibleRomajiCandidates = (nextTypingUnit && "あいうえおやゆよ".includes(nextTypingUnit))
-        ? ["nn", "n'"]
-        : ["n", "nn", "n'"];
-    }
-
-    const exact = possibleRomajiCandidates.some(c => c === buffer);
-    const partial = !exact && possibleRomajiCandidates.some(c => c.startsWith(buffer));
-    return { exact, partial };
-  }, []);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (status === 'loading' || status === 'finished') return;
@@ -110,7 +87,7 @@ export const useTypingGame = () => {
         payload: { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar, kanaIndex: absoluteKanaIndex },
       });
     }
-  }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, checkRomajiMatch, router]);
+  }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, router]);
 
     // ゲーム終了時の処理
     useEffect(() => {

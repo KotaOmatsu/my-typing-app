@@ -26,6 +26,9 @@ export default function LoginStatus() {
         <p className="hidden sm:block">
           {session.user?.name}
         </p>
+        <Link href="/history" className="px-4 py-2 font-semibold text-white bg-gray-600 rounded-lg hover:bg-gray-700">
+          成績履歴
+        </Link>
         <button
           onClick={() => signOut()}
           className="px-4 py-2 font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600"
