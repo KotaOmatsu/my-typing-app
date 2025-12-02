@@ -42,3 +42,28 @@ export const checkRomajiMatch = (
   
   return { exact, partial };
 };
+
+/**
+ * 表示用の推奨ローマ字を取得する
+ * 将来的にはユーザー設定や入力履歴に基づいて動的に変更する余地を残す
+ */
+export const getRecommendedRomaji = (kana: string, nextTypingUnit?: string): string => {
+  const symbolMap: { [key: string]: string } = { "。": ".", "、": ",", "「": "[", "」": "]" };
+  if (symbolMap[kana]) {
+    return symbolMap[kana];
+  }
+
+  const candidates = getRomajiCandidates(kana);
+  if (candidates.length === 0) return "";
+
+  // 促音「っ」の特殊処理
+  if (kana === "っ" && nextTypingUnit) {
+    const nextCandidates = getRomajiCandidates(nextTypingUnit);
+    if (nextCandidates.length > 0 && nextCandidates[0][0]) {
+      return nextCandidates[0][0]; // 次の文字の最初の子音を返す (例: "ka" -> "k")
+    }
+  }
+  
+  // デフォルトは最初の候補（ヘボン式など）を返す
+  return candidates[0];
+};
