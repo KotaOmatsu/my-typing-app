@@ -44,6 +44,23 @@ export default function Home() {
     router.push(`/typing/${courseId}`);
   };
 
+  const handleDeleteCourse = async (courseId: string) => {
+    try {
+      const res = await fetch(`/api/courses/${courseId}`, { method: 'DELETE' });
+      if (res.ok) {
+        // 一覧から削除
+        setCourses(courses.filter(c => c.id !== courseId));
+        setSelectedCourse(null);
+        alert('コースを削除しました');
+      } else {
+        alert('削除に失敗しました');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('エラーが発生しました');
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-gray-50 py-2 relative">
       {/* ヘッダー（ログイン状態など） */}
@@ -101,6 +118,7 @@ export default function Home() {
           settings={settings}
           onUpdateSettings={updateSettings}
           onStart={handleStart}
+          onDelete={handleDeleteCourse}
         />
       )}
     </div>

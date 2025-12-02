@@ -20,6 +20,7 @@ export async function GET() {
         difficulty: true,
         thumbnail: true,
         createdAt: true,
+        authorId: true, // 一覧で権限チェックに使用するため取得
         // 一覧表示（モーダル）でのプレビュー用に最初の3件だけ取得
         texts: {
           take: 3,
