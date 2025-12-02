@@ -4,6 +4,9 @@ import { useSession } from "next-auth/react";
 import { getRomajiCandidates, useKanaRomajiMap } from "../components/KanaRomajiMap";
 import { getTypingUnits } from "../utils/typingUtils";
 import { TypingText } from "@/types/typing";
+import { initialState, reducer } from "@/state/typingGameState";
+import { saveTypingResult } from "@/services/typingResultService";
+import { checkRomajiMatch } from "@/utils/romajiUtils";
 
 // --- Custom Hook ---
 
