@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { Course } from '@/types/typing';
 import { GameSettings } from '../hooks/useGameSettings';
 
@@ -9,6 +10,8 @@ interface CourseDetailModalProps {
   settings: GameSettings;
   onUpdateSettings: (newSettings: Partial<GameSettings>) => void;
   onStart: (courseId: string) => void;
+  onDelete?: (courseId: string) => void; // 削除時のコールバック
+  onEdit?: (courseId: string) => void; // 編集時のコールバック
 }
 
 const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
@@ -18,8 +21,33 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
   settings,
   onUpdateSettings,
   onStart,
+  onDelete,
+  onEdit,
 }) => {
+  const { data: session } = useSession();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   if (!isOpen) return null;
+
+  // 削除ハンドラ
+  const handleDelete = async () => {
+    if (!confirm('本当にこのコースを削除しますか？この操作は取り消せません。')) return;
+    
+    setIsDeleting(true);
+    try {
+      if (onDelete) {
+        await onDelete(course.id);
+      }
+    } catch (_error) { // error を _error にリネーム
+      alert(`削除に失敗しました: ${(_error as Error).message}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // ユーザーIDのチェック（sessionにidが含まれている前提、なければemail等で代用検討だが今回はid）
+  // next-authの型拡張が必要な場合がある
+  const isAuthor = session?.user?.id === course.authorId;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
@@ -85,6 +113,25 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
 
         {/* フッターアクション */}
         <div className="bg-gray-50 p-4 flex justify-end gap-3 border-t">
+          {isAuthor && (
+            <div className="mr-auto flex gap-2">
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition text-sm font-bold"
+              >
+                {isDeleting ? '削除中...' : '削除'}
+              </button>
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(course.id)}
+                  className="px-4 py-2 text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-lg transition text-sm font-bold"
+                >
+                  編集
+                </button>
+              )}
+            </div>
+          )}
           <button
             onClick={onClose}
             className="px-6 py-3 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition"
