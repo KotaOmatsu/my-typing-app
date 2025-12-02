@@ -38,8 +38,8 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
       if (onDelete) {
         await onDelete(course.id);
       }
-    } catch (error) {
-      alert('削除に失敗しました');
+    } catch (_error) { // error を _error にリネーム
+      alert(`削除に失敗しました: ${(_error as Error).message}`);
     } finally {
       setIsDeleting(false);
     }
