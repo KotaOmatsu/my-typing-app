@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react"; // Import useSession
+import Link from "next/link"; // Import Link
 import LoginStatus from "../components/LoginStatus";
 import { useGameSettings } from "../hooks/useGameSettings";
 import { Course } from "../types/typing"; // Import from types
@@ -10,6 +12,7 @@ import CourseDetailModal from "../components/CourseDetailModal";
 
 export default function Home() {
   const router = useRouter();
+  const { data: session } = useSession(); // Get session
   const { settings, updateSettings } = useGameSettings();
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -34,15 +37,6 @@ export default function Home() {
   }, []);
 
   const handleCourseSelect = (course: Course) => {
-    // 詳細モーダル表示のために詳細データが必要な場合、ここで再度fetchするか、
-    // 一覧APIで必要なデータ（description等）は取得済みとする。
-    // 現在のAPI実装では description も取得しているのでそのまま使える。
-    // ただし、texts は一覧には含まれないため、Start時にfetchするか、モーダルでfetchする必要がある。
-    // モーダルで「収録テキスト例」を表示しているため、ここで詳細APIを叩くのがベスト。
-    
-    // 今回は簡易的に、一覧のデータをそのままセットし、モーダル内でテキスト例が表示されなくてもエラーにならないようにする（Optional chainなどで対応済）
-    // または、CourseDetailModal内でfetchロジックを追加する。
-    // ここでは一旦そのままセットする。テキスト例が表示されない場合は後でモーダルを改修する。
     setSelectedCourse(course);
   };
 
@@ -63,9 +57,24 @@ export default function Home() {
           練習コースを選択
         </h1>
 
-        <p className="text-xl text-gray-600 mb-12">
+        <p className="text-xl text-gray-600 mb-8">
           自分のレベルや目的に合ったコースを選んで練習を始めましょう。
         </p>
+
+        {/* コース作成ボタン (ログイン時のみ表示) */}
+        {session && (
+          <div className="mb-12">
+            <Link
+              href="/courses/create"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150"
+            >
+              <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              オリジナルコースを作成
+            </Link>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center items-center h-64">
