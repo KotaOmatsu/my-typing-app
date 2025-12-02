@@ -20,7 +20,10 @@ export const useGameSettings = () => {
     const storedSettings = localStorage.getItem(SETTINGS_KEY);
     if (storedSettings) {
       try {
-        setSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) });
+        const parsed = JSON.parse(storedSettings);
+        if (parsed && typeof parsed === 'object') {
+          setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+        }
       } catch (error) {
         console.error("Failed to parse settings from local storage:", error);
       }
