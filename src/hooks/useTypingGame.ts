@@ -3,10 +3,6 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { getRomajiCandidates, useKanaRomajiMap } from "../components/KanaRomajiMap";
 import { getTypingUnits } from "../utils/typingUtils";
-import { TYPING_TEXTS } from "@/constants/typing";
-import { initialState, reducer } from "@/state/typingGameState";
-import { saveTypingResult } from "@/services/typingResultService";
-import { checkRomajiMatch } from "@/utils/romajiUtils";
 import { TypingText } from "@/types/typing";
 
 // --- Custom Hook ---
@@ -58,7 +54,8 @@ export const useTypingGame = (courseId?: string) => {
 
       // Fallback if API failed or no courseId
       if (texts.length === 0) {
-        texts = TYPING_TEXTS;
+        // Minimal fallback to prevent crash
+        texts = [{ id: "fallback", display: "読み込みエラー", reading: "よみこみえらー" }];
       }
 
       dispatch({ 
