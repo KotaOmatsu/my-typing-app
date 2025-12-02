@@ -50,8 +50,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
 
   const handleTextChange = (index: number, field: keyof TextItem, value: string) => {
     const newTexts = [...texts];
-    // @ts-ignore: dynamic key access
-    newTexts[index][field] = value;
+    newTexts[index] = { ...newTexts[index], [field]: value };
     setTexts(newTexts);
   };
 

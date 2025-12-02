@@ -51,7 +51,7 @@ export default function EditCoursePage({ params }: { params: { courseId: string 
     } else if (status === 'unauthenticated') {
       router.push('/login');
     }
-  }, [params.courseId, status, session, router]);
+  }, [params.courseId, status, session?.user?.id, router]);
 
   const handleUpdate = async (data: CourseFormData) => {
     setSubmitting(true);
