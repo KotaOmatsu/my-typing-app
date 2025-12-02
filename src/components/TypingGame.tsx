@@ -42,29 +42,33 @@ const TypingGame: React.FC = () => {
       return (
         <div key={index} className="flex flex-col items-center mx-1">
           {/* ひらがな表示 */}
-          <span className={`text-3xl font-bold ${color} ${bgColor} ${settings.showKana ? '' : 'invisible'}`}>
-            {unit}
-          </span>
+          {settings.showKana && (
+            <span className={`text-3xl font-bold ${color} ${bgColor}`}>
+              {unit}
+            </span>
+          )}
           
           {/* ローマ字ガイド表示 */}
-          <span className={`text-2xl font-mono mt-1 h-8 ${settings.showRomaji ? '' : 'invisible'}`}>
-             {index === currentKanaIndex ? (
-               <span>
-                 <span className="text-blue-600">{inputBuffer}</span>
-                 <span className="text-gray-300">
-                    {recommendedRomaji.startsWith(inputBuffer) 
-                      ? recommendedRomaji.slice(inputBuffer.length) 
-                      : "" /* 入力が合わない場合はガイドを非表示にする */}
-                 </span>
-               </span>
-             ) : index < currentKanaIndex ? (
-               // 入力済みの文字は薄く表示するか、非表示にする
-               <span className="text-green-500 opacity-50">{recommendedRomaji}</span>
-             ) : (
-               // 未入力の文字
-               <span className="text-gray-300">{recommendedRomaji}</span>
-             )}
-          </span>
+          {settings.showRomaji && (
+            <span className="text-2xl font-mono mt-1 h-8">
+              {index === currentKanaIndex ? (
+                <span>
+                  <span className="text-blue-600">{inputBuffer}</span>
+                  <span className="text-gray-300">
+                      {recommendedRomaji.startsWith(inputBuffer) 
+                        ? recommendedRomaji.slice(inputBuffer.length) 
+                        : "" /* 入力が合わない場合はガイドを非表示にする */}
+                  </span>
+                </span>
+              ) : index < currentKanaIndex ? (
+                // 入力済みの文字は薄く表示するか、非表示にする
+                <span className="text-green-500 opacity-50">{recommendedRomaji}</span>
+              ) : (
+                // 未入力の文字
+                <span className="text-gray-300">{recommendedRomaji}</span>
+              )}
+            </span>
+          )}
         </div>
       );
     });
