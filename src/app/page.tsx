@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-gray-50 py-2 relative">
       {/* ヘッダー（ログイン状態など） */}
-      <header className="w-full p-4 flex justify-between items-center shadow-sm bg-white z-10 mb-8">
+      <header className="w-full p-4 flex justify-between items-center shadow-sm bg-white z-50 mb-8">
          <div className="text-xl font-bold text-gray-800 ml-4">Typing App</div>
          <LoginStatus />
       </header>
