@@ -96,7 +96,7 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         currentTextIndex: state.currentTextIndex + 1,
         currentKanaIndex: 0,
-        typingUnits: getTypingUnits(TYPING_TEXTS[state.currentTextIndex + 1]),
+        typingUnits: getTypingUnits(TYPING_TEXTS[state.currentTextIndex + 1].reading),
       };
     case 'FINISH_GAME':
       return {

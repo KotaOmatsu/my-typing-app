@@ -34,7 +34,7 @@ export const useTypingGame = () => {
 
   useEffect(() => {
     if (isMapLoaded) {
-      dispatch({ type: 'MAP_LOADED', payload: { typingUnits: getTypingUnits(TYPING_TEXTS[0]) } });
+      dispatch({ type: 'MAP_LOADED', payload: { typingUnits: getTypingUnits(TYPING_TEXTS[0].reading) } });
     }
   }, [isMapLoaded]);
 
@@ -79,7 +79,7 @@ export const useTypingGame = () => {
       }
     } else if (!isPartialMatch) {
       const expectedRomajiForError = getRomajiCandidates(currentKana).join("/");
-      const precedingCharCount = TYPING_TEXTS.slice(0, currentTextIndex).map(text => getTypingUnits(text).length).reduce((a, b) => a + b, 0);
+      const precedingCharCount = TYPING_TEXTS.slice(0, currentTextIndex).map(text => getTypingUnits(text.reading).length).reduce((a, b) => a + b, 0);
       const absoluteKanaIndex = precedingCharCount + currentTextIndex + currentKanaIndex;
 
       dispatch({
@@ -97,7 +97,7 @@ export const useTypingGame = () => {
 
             const wpm = totalKeystrokes > 0 ? (correctKanaUnits / (elapsedTime / 1000)) * 60 : 0;
             const accuracy = totalKeystrokes > 0 ? (correctKeystrokes / totalKeystrokes) * 100 : 0;
-            const currentText = TYPING_TEXTS[currentTextIndex];
+            const currentTextObj = TYPING_TEXTS[currentTextIndex];
 
             const result = {
                 wpm: wpm,
@@ -105,7 +105,9 @@ export const useTypingGame = () => {
                 totalKeystrokes: totalKeystrokes,
                 correctKeystrokes: correctKeystrokes,
                 mistakes: mistakes,
-                text: currentText,
+                typedText: currentTextObj.reading,
+                displayText: currentTextObj.display,
+                displayUnits: typingUnits, // Add displayUnits if needed, or leave it
             };
 
             // 既存のlocalStorageへの保存
@@ -119,7 +121,7 @@ export const useTypingGame = () => {
                     mistakeCount: result.mistakes.length,
                     totalKeystrokes: result.totalKeystrokes,
                     correctKeystrokes: result.correctKeystrokes,
-                    text: result.text,
+                    text: result.displayText, // DBには表示用テキストを保存
                     mistakeDetails: result.mistakes,
                 });
             }
@@ -127,7 +129,7 @@ export const useTypingGame = () => {
             // 結果ページへのリダイレクト
             router.push('/result');
         }
-    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session]);
+    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -146,6 +148,7 @@ export const useTypingGame = () => {
     isGameStarted: status === 'running' || status === 'finished',
     lastTypedKey,
     mistakes,
+    currentDisplayText: TYPING_TEXTS[currentTextIndex]?.display || "",
     handleKeyDown, // handleKeyDown is still returned for potential future use, though not directly used by TypingGame component anymore
   };
 };

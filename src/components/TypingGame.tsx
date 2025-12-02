@@ -14,6 +14,7 @@ const TypingGame: React.FC = () => {
     flashCorrect,
     isGameStarted,
     lastTypedKey,
+    currentDisplayText,
   } = useTypingGame();
 
   const renderText = () => {
@@ -30,7 +31,7 @@ const TypingGame: React.FC = () => {
         }
       }
       return (
-        <span key={index} className={`text-5xl font-bold ${color} ${bgColor}`}>
+        <span key={index} className={`text-3xl font-bold ${color} ${bgColor}`}>
           {unit}
         </span>
       );
@@ -43,8 +44,15 @@ const TypingGame: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center w-full">
-      <div className="mb-8 p-8 bg-white rounded-lg shadow-lg min-w-[800px] min-h-[150px] flex items-center justify-center">
-        {renderText()}
+      <div className="mb-8 p-8 bg-white rounded-lg shadow-lg min-w-[800px] min-h-[200px] flex flex-col items-center justify-center gap-6">
+        {/* 漢字（表示用テキスト） */}
+        <div className="text-6xl font-bold text-gray-800 tracking-wider">
+          {currentDisplayText}
+        </div>
+        {/* ひらがな（入力ガイド） */}
+        <div className="flex flex-wrap justify-center">
+          {renderText()}
+        </div>
       </div>
       <div className="text-4xl font-bold text-gray-700 mt-4 h-12">
         {inputBuffer} {/* 入力バッファを表示 */}

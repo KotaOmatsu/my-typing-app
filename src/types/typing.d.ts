@@ -12,6 +12,15 @@ export interface Mistake {
 }
 
 /**
+ * 練習用の文章データ構造
+ */
+export interface TypingText {
+  id: string;
+  display: string; // 表示用（漢字・カタカナ含む）
+  reading: string; // 判定用（ひらがな）
+}
+
+/**
  * 1回のタイピングゲーム全体の結果
  * localStorageやデータベースに保存される際の型
  */
@@ -24,6 +33,7 @@ export interface TypingResult {
   totalKeystrokes: number; // 総打鍵数
   correctKeystrokes: number; // 正解打鍵数
   correctKanaUnits: number; // 正解仮名数
-  typedText: string; // 対象となった文章全体
+  typedText: string; // 対象となった文章全体（判定用：ひらがな）
+  displayText: string; // 対象となった文章全体（表示用：漢字・カタカナ）
   displayUnits: string[]; // 表示用に分割された仮名の配列
 }
