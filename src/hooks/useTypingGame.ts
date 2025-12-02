@@ -97,7 +97,11 @@ export const useTypingGame = () => {
 
             const wpm = totalKeystrokes > 0 ? (correctKanaUnits / (elapsedTime / 1000)) * 60 : 0;
             const accuracy = totalKeystrokes > 0 ? (correctKeystrokes / totalKeystrokes) * 100 : 0;
-            const currentTextObj = TYPING_TEXTS[currentTextIndex];
+
+            // 全テキストのデータを結合する
+            const allTypedText = TYPING_TEXTS.map(t => t.reading).join("");
+            const allDisplayText = TYPING_TEXTS.map(t => t.display).join(" "); // 表示用なのでスペースで区切る
+            const allDisplayUnits = TYPING_TEXTS.flatMap(t => getTypingUnits(t.reading));
 
             const result = {
                 wpm: wpm,
@@ -105,9 +109,9 @@ export const useTypingGame = () => {
                 totalKeystrokes: totalKeystrokes,
                 correctKeystrokes: correctKeystrokes,
                 mistakes: mistakes,
-                typedText: currentTextObj.reading,
-                displayText: currentTextObj.display,
-                displayUnits: typingUnits, // Add displayUnits if needed, or leave it
+                typedText: allTypedText,
+                displayText: allDisplayText,
+                displayUnits: allDisplayUnits,
             };
 
             // 既存のlocalStorageへの保存
