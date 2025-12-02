@@ -6,7 +6,11 @@ import { useTypingGame } from '../hooks/useTypingGame';
 import { getRecommendedRomaji } from '../utils/romajiUtils';
 import { useGameSettings } from '../hooks/useGameSettings';
 
-const TypingGame: React.FC = () => {
+interface TypingGameProps {
+  courseId: string;
+}
+
+const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   const {
     isMapLoaded,
     typingUnits,
@@ -17,7 +21,7 @@ const TypingGame: React.FC = () => {
     isGameStarted,
     lastTypedKey,
     currentDisplayText,
-  } = useTypingGame();
+  } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
 

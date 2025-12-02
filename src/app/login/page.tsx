@@ -27,7 +27,7 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-8">ログイン</h1>
         <div className="space-y-4">
           <button
-            onClick={() => signIn('github', { callbackUrl: '/' }, { prompt: "select_account" })}
+            onClick={() => signIn('github', { callbackUrl: '/' })}
             className="w-full px-4 py-3 font-semibold text-white bg-gray-700 rounded-lg hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center gap-3"
           >
             <GithubIcon />

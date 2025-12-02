@@ -4,13 +4,14 @@ import { useSession } from "next-auth/react";
 import { getRomajiCandidates, useKanaRomajiMap } from "../components/KanaRomajiMap";
 import { getTypingUnits } from "../utils/typingUtils";
 import { TYPING_TEXTS } from "@/constants/typing";
+import { COURSES } from "@/data/courses"; // Import COURSES
 import { initialState, reducer } from "@/state/typingGameState";
 import { saveTypingResult } from "@/services/typingResultService";
 import { checkRomajiMatch } from "@/utils/romajiUtils";
 
 // --- Custom Hook ---
 
-export const useTypingGame = () => {
+export const useTypingGame = (courseId?: string) => {
   const router = useRouter();
   const { data: session } = useSession();
   const isMapLoaded = useKanaRomajiMap();
@@ -29,14 +30,31 @@ export const useTypingGame = () => {
     totalKeystrokes,
     correctKeystrokes,
     correctKanaUnits,
-    currentTextIndex
+    currentTextIndex,
+    courseTexts // Added to state
   } = state;
+
+  // Determine texts to use based on courseId
+  const getCourseTexts = useCallback(() => {
+    if (courseId) {
+      const course = COURSES.find(c => c.id === courseId);
+      if (course) return course.texts;
+    }
+    return TYPING_TEXTS; // Fallback
+  }, [courseId]);
 
   useEffect(() => {
     if (isMapLoaded) {
-      dispatch({ type: 'MAP_LOADED', payload: { typingUnits: getTypingUnits(TYPING_TEXTS[0].reading) } });
+      const texts = getCourseTexts();
+      dispatch({ 
+        type: 'MAP_LOADED', 
+        payload: { 
+          typingUnits: getTypingUnits(texts[0].reading),
+          courseTexts: texts // Pass texts to state
+        } 
+      });
     }
-  }, [isMapLoaded]);
+  }, [isMapLoaded, getCourseTexts]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (status === 'loading' || status === 'finished') return;
@@ -71,7 +89,7 @@ export const useTypingGame = () => {
       if (currentKanaIndex < typingUnits.length - 1) {
         dispatch({ type: 'NEXT_KANA' });
       } else {
-        if (currentTextIndex < TYPING_TEXTS.length - 1) {
+        if (currentTextIndex < courseTexts.length - 1) {
           dispatch({ type: 'NEXT_TEXT' });
         } else {
           dispatch({ type: 'FINISH_GAME' });
@@ -79,7 +97,7 @@ export const useTypingGame = () => {
       }
     } else if (!isPartialMatch) {
       const expectedRomajiForError = getRomajiCandidates(currentKana).join("/");
-      const precedingCharCount = TYPING_TEXTS.slice(0, currentTextIndex).map(text => getTypingUnits(text.reading).length).reduce((a, b) => a + b, 0);
+      const precedingCharCount = courseTexts.slice(0, currentTextIndex).map(text => getTypingUnits(text.reading).length).reduce((a, b) => a + b, 0);
       const absoluteKanaIndex = precedingCharCount + currentKanaIndex;
 
       dispatch({
@@ -87,7 +105,7 @@ export const useTypingGame = () => {
         payload: { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar, kanaIndex: absoluteKanaIndex },
       });
     }
-  }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, router]);
+  }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, router, courseTexts]);
 
     // ゲーム終了時の処理
     useEffect(() => {
@@ -98,10 +116,10 @@ export const useTypingGame = () => {
             const wpm = totalKeystrokes > 0 ? (correctKanaUnits / (elapsedTime / 1000)) * 60 : 0;
             const accuracy = totalKeystrokes > 0 ? (correctKeystrokes / totalKeystrokes) * 100 : 0;
 
-            // 全テキストのデータを結合する
-            const allTypedText = TYPING_TEXTS.map(t => t.reading).join("");
-            const allDisplayText = TYPING_TEXTS.map(t => t.display).join(" "); // 表示用なのでスペースで区切る
-            const allDisplayUnits = TYPING_TEXTS.flatMap(t => getTypingUnits(t.reading));
+            // 全テキストのデータを結合する (courseTextsを使用)
+            const allTypedText = courseTexts.map(t => t.reading).join("");
+            const allDisplayText = courseTexts.map(t => t.display).join(" ");
+            const allDisplayUnits = courseTexts.flatMap(t => getTypingUnits(t.reading));
 
             const result = {
                 wpm: wpm,
@@ -133,7 +151,7 @@ export const useTypingGame = () => {
             // 結果ページへのリダイレクト
             router.push('/result');
         }
-    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits]);
+    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits, courseTexts]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -152,7 +170,7 @@ export const useTypingGame = () => {
     isGameStarted: status === 'running' || status === 'finished',
     lastTypedKey,
     mistakes,
-    currentDisplayText: TYPING_TEXTS[currentTextIndex]?.display || "",
+    currentDisplayText: courseTexts[currentTextIndex]?.display || "",
     handleKeyDown, // handleKeyDown is still returned for potential future use, though not directly used by TypingGame component anymore
   };
 };
