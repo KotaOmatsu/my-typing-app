@@ -80,7 +80,7 @@ export const useTypingGame = () => {
     } else if (!isPartialMatch) {
       const expectedRomajiForError = getRomajiCandidates(currentKana).join("/");
       const precedingCharCount = TYPING_TEXTS.slice(0, currentTextIndex).map(text => getTypingUnits(text.reading).length).reduce((a, b) => a + b, 0);
-      const absoluteKanaIndex = precedingCharCount + currentTextIndex + currentKanaIndex;
+      const absoluteKanaIndex = precedingCharCount + currentKanaIndex;
 
       dispatch({
         type: 'INCORRECT_KEY',
