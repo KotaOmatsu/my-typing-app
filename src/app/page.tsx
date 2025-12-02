@@ -61,6 +61,10 @@ export default function Home() {
     }
   };
 
+  const handleEditCourse = (courseId: string) => {
+    router.push(`/courses/${courseId}/edit`);
+  };
+
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-gray-50 py-2 relative">
       {/* ヘッダー（ログイン状態など） */}
@@ -119,6 +123,7 @@ export default function Home() {
           onUpdateSettings={updateSettings}
           onStart={handleStart}
           onDelete={handleDeleteCourse}
+          onEdit={handleEditCourse}
         />
       )}
     </div>
