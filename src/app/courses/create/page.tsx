@@ -61,6 +61,15 @@ export default function CreateCoursePage() {
       return;
     }
 
+    // 読みのバリデーション（ひらがなと記号のみ）
+    const hiraganaRegex = /^[ぁ-んー。、！？（）「」・：；\s]+$/;
+    const invalidReading = texts.find(t => !hiraganaRegex.test(t.reading));
+    if (invalidReading) {
+      setError(`「${invalidReading.reading}」にひらがな以外の文字が含まれています。読みはひらがなで入力してください。`);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/courses', {
         method: 'POST',
