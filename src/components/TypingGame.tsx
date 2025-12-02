@@ -80,15 +80,17 @@ const TypingGame: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center w-full relative">
-      <div className="mb-8 p-8 bg-white rounded-lg shadow-lg min-w-[800px] min-h-[250px] flex flex-col items-center justify-center gap-6">
+      <div className="mb-8 p-8 bg-white rounded-lg shadow-lg min-w-[800px] flex flex-col items-center justify-center gap-6">
         {/* 漢字（表示用テキスト） */}
         <div className="text-6xl font-bold text-gray-800 tracking-wider mb-4">
           {currentDisplayText}
         </div>
         {/* ひらがな & ローマ字（入力ガイド） */}
-        <div className="flex flex-wrap justify-center">
-          {renderText()}
-        </div>
+        {(settings.showKana || settings.showRomaji) && (
+          <div className="flex flex-wrap justify-center">
+            {renderText()}
+          </div>
+        )}
       </div>
       
       {error && <p className="text-red-500 text-xl mt-4">入力が間違っています。正しいローマ字を入力してください。</p>}
