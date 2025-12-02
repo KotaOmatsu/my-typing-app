@@ -1,5 +1,5 @@
 import React from 'react';
-import { Course } from '@/data/courses';
+import { Course } from '@/types/typing';
 import { GameSettings } from '../hooks/useGameSettings';
 
 interface CourseDetailModalProps {

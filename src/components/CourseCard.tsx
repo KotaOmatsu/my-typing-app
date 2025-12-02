@@ -1,5 +1,5 @@
 import React from 'react';
-import { Course } from '@/data/courses';
+import { Course } from '@/types/typing';
 
 interface CourseCardProps {
   course: Course;
@@ -11,7 +11,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onSelect }) => {
     Easy: 'bg-green-100 text-green-800',
     Normal: 'bg-blue-100 text-blue-800',
     Hard: 'bg-red-100 text-red-800',
-  }[course.difficulty];
+  }[course.difficulty] || 'bg-gray-100 text-gray-800'; // Default fallback
 
   return (
     <div 

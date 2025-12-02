@@ -37,3 +37,15 @@ export interface TypingResult {
   displayText: string; // 対象となった文章全体（表示用：漢字・カタカナ）
   displayUnits: string[]; // 表示用に分割された仮名の配列
 }
+
+/**
+ * コース情報の型定義
+ */
+export interface Course {
+  id: string;
+  title: string;
+  description: string | null;
+  difficulty: string;
+  thumbnail: string | null;
+  texts?: TypingText[];
+}
