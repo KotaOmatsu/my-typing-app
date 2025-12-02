@@ -44,14 +44,14 @@ const TypingGame: React.FC = () => {
           </span>
           
           {/* ローマ字ガイド表示 */}
-          <span className="text-xl font-mono mt-1 h-6">
+          <span className="text-2xl font-mono mt-1 h-8">
              {index === currentKanaIndex ? (
                <span>
                  <span className="text-blue-600">{inputBuffer}</span>
                  <span className="text-gray-300">
                     {recommendedRomaji.startsWith(inputBuffer) 
                       ? recommendedRomaji.slice(inputBuffer.length) 
-                      : recommendedRomaji /* 入力が合わない場合は推奨を表示（または非表示でも可） */}
+                      : "" /* 入力が合わない場合はガイドを非表示にする */}
                  </span>
                </span>
              ) : index < currentKanaIndex ? (
