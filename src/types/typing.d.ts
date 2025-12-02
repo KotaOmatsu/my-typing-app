@@ -39,6 +39,26 @@ export interface TypingResult {
 }
 
 /**
+ * フォームで扱う問題文の型
+ */
+export interface TextItem {
+  id?: string; // 編集時のためにIDを持てるようにする
+  display: string;
+  reading: string;
+}
+
+/**
+ * コース作成/編集フォームのデータ型
+ */
+export interface CourseFormData {
+  title: string;
+  description: string;
+  difficulty: string;
+  isPublic: boolean;
+  texts: TextItem[];
+}
+
+/**
  * コース情報の型定義
  */
 export interface Course {
@@ -49,5 +69,5 @@ export interface Course {
   thumbnail: string | null;
   authorId: string; // 削除・編集権限チェック用
   isPublic?: boolean; // マイページでの表示用
-  texts?: TypingText[];
+  texts?: TypingText[]; // 詳細取得時のみ含まれる (APIからのレスポンス用)
 }

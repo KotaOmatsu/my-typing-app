@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { TextItem } from '@/types/typing'; // TextItem をインポート
 
 // GET /api/courses/[id]
 // 特定のコースの詳細情報を取得するAPI
@@ -90,7 +91,13 @@ export async function PUT(
 
     // 4. リクエストボディの取得
     const body = await request.json();
-    const { title, description, difficulty, isPublic, texts } = body;
+    const { title, description, difficulty, isPublic, texts }: {
+      title: string;
+      description?: string;
+      difficulty?: string;
+      isPublic?: boolean;
+      texts: TextItem[];
+    } = body;
 
     if (!title || !texts || !Array.isArray(texts) || texts.length === 0) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
@@ -106,7 +113,7 @@ export async function PUT(
         isPublic,
         texts: {
           deleteMany: {}, // 既存のテキストを全て削除
-          create: texts.map((text: any, index: number) => ({
+          create: texts.map((text: TextItem, index: number) => ({
             display: text.display,
             reading: text.reading,
             order: index + 1,

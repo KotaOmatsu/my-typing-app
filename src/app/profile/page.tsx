@@ -10,6 +10,8 @@ import CourseDetailModal from '@/components/CourseDetailModal';
 import { Course } from '@/types/typing';
 import { useGameSettings } from '@/hooks/useGameSettings';
 
+import Image from 'next/image'; // Import Image
+
 export default function ProfilePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -91,7 +93,7 @@ export default function ProfilePage() {
         {/* プロフィールヘッダー */}
         <div className="bg-white rounded-xl shadow-sm p-8 mb-8 flex flex-col md:flex-row items-center md:items-start gap-6">
           {session?.user?.image ? (
-            <img src={session.user.image} alt={session.user.name || ''} className="w-24 h-24 rounded-full border-4 border-blue-50" />
+            <Image src={session.user.image} alt={session.user.name || 'User avatar'} width={96} height={96} className="w-24 h-24 rounded-full border-4 border-blue-50" />
           ) : (
             <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-4xl">
               👤

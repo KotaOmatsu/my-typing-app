@@ -2,6 +2,8 @@ import { NextResponse, NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { Prisma } from '@prisma/client'; // Prisma namespaceをインポート
+import { TextItem } from '@/types/typing'; // TextItem をインポート
 
 // GET /api/courses
 // コース一覧を取得するAPI
@@ -10,7 +12,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const authorId = searchParams.get('authorId');
 
-    let where: any = { isPublic: true };
+    let where: Prisma.CourseWhereInput = { isPublic: true }; // 型を明示
 
     if (authorId) {
       const session = await getServerSession(authOptions);
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
         isPublic: isPublic !== undefined ? isPublic : true,
         authorId: user.id,
         texts: {
-          create: texts.map((text: any, index: number) => ({
+          create: texts.map((text: TextItem, index: number) => ({ // TextItem 型を明示
             display: text.display,
             reading: text.reading,
             order: index + 1, // 順番を保存

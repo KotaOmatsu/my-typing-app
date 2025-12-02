@@ -7,7 +7,7 @@ import CourseForm, { CourseFormData } from '@/components/CourseForm';
 
 export default function CreateCoursePage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession(); // _session を削除し status のみ使用
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

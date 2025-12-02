@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 export interface TextItem {
   id?: string; // 編集時のためにIDを持てるようにする

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import CourseForm, { CourseFormData } from '@/components/CourseForm';
+import CourseForm, { CourseFormData, TextItem } from '@/components/CourseForm'; // TextItem をインポート
 
 export default function EditCoursePage({ params }: { params: { courseId: string } }) {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function EditCoursePage({ params }: { params: { courseId: string 
           description: data.description || '',
           difficulty: data.difficulty,
           isPublic: data.isPublic,
-          texts: data.texts.map((t: any) => ({
+          texts: data.texts.map((t: TextItem) => ({ // TextItem 型を明示
             id: t.id,
             display: t.display,
             reading: t.reading,
