@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import OnScreenKeyboard from '../components/OnScreenKeyboard';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { getRecommendedRomaji } from '../utils/romajiUtils';
+import { useGameSettings } from '../hooks/useGameSettings';
+import GameSettingsModal from './GameSettingsModal';
 
 const TypingGame: React.FC = () => {
   const {
@@ -17,6 +19,9 @@ const TypingGame: React.FC = () => {
     lastTypedKey,
     currentDisplayText,
   } = useTypingGame();
+
+  const { settings, updateSettings, isSettingsLoaded } = useGameSettings();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const renderText = () => {
     return typingUnits.map((unit, index) => {
@@ -39,12 +44,12 @@ const TypingGame: React.FC = () => {
       return (
         <div key={index} className="flex flex-col items-center mx-1">
           {/* ひらがな表示 */}
-          <span className={`text-3xl font-bold ${color} ${bgColor}`}>
+          <span className={`text-3xl font-bold ${color} ${bgColor} ${settings.showKana ? '' : 'invisible'}`}>
             {unit}
           </span>
           
           {/* ローマ字ガイド表示 */}
-          <span className="text-2xl font-mono mt-1 h-8">
+          <span className={`text-2xl font-mono mt-1 h-8 ${settings.showRomaji ? '' : 'invisible'}`}>
              {index === currentKanaIndex ? (
                <span>
                  <span className="text-blue-600">{inputBuffer}</span>
@@ -67,12 +72,26 @@ const TypingGame: React.FC = () => {
     });
   };
 
-  if (!isMapLoaded) {
+  if (!isMapLoaded || !isSettingsLoaded) {
     return <div className="text-xl">Loading typing data...</div>;
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="flex flex-col items-center justify-center w-full relative">
+      {/* 設定ボタン */}
+      <div className="absolute top-0 right-0 mt-4 mr-4">
+        <button
+          onClick={() => setIsSettingsOpen(true)}
+          className="p-2 text-gray-500 hover:text-gray-700 bg-white rounded-full shadow hover:shadow-md transition duration-200"
+          title="設定"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      </div>
+
       <div className="mb-8 p-8 bg-white rounded-lg shadow-lg min-w-[800px] min-h-[250px] flex flex-col items-center justify-center gap-6">
         {/* 漢字（表示用テキスト） */}
         <div className="text-6xl font-bold text-gray-800 tracking-wider mb-4">
@@ -87,6 +106,13 @@ const TypingGame: React.FC = () => {
       {error && <p className="text-red-500 text-xl mt-4">入力が間違っています。正しいローマ字を入力してください。</p>}
       {!isGameStarted && <p className="text-gray-600 text-xl mt-4">キーを押してタイピングを開始してください。</p>} {/* ゲーム開始前のメッセージ（オプション） */}
       <OnScreenKeyboard lastTypedKey={lastTypedKey} /> {/* オン・スクリーン・キーボードを追加 */}
+
+      <GameSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={settings}
+        onUpdateSettings={updateSettings}
+      />
     </div>
   );
 };
