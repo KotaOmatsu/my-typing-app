@@ -18,7 +18,18 @@ export async function GET() {
         difficulty: true,
         thumbnail: true,
         createdAt: true,
-        // texts (問題文) はデータ量が多いため一覧では取得しません
+        // 一覧表示（モーダル）でのプレビュー用に最初の3件だけ取得
+        texts: {
+          take: 3,
+          select: {
+            id: true,
+            display: true,
+            reading: true,
+          },
+          orderBy: {
+            order: 'asc',
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc', // 新しい順に並べる
