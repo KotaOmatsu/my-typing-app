@@ -1,5 +1,8 @@
 import { getRomajiCandidates } from "@/components/KanaRomajiMap";
 
+// 記号の直接マッピング
+const SYMBOL_MAP: { [key: string]: string } = { "。": ".", "、": ",", "「": "[", "」": "]" };
+
 /**
  * 入力されたローマ字バッファが、現在の仮名に対して一致するかどうかを判定する
  * @param kana - 現在の仮名 (e.g., "か")
@@ -12,10 +15,8 @@ export const checkRomajiMatch = (
   buffer: string,
   nextTypingUnit?: string
 ): { exact: boolean; partial: boolean } => {
-  // 記号の直接マッピング
-  const symbolMap: { [key: string]: string } = { "。": ".", "、": ",", "「": "[", "」": "]" };
-  if (symbolMap[kana]) {
-    const expectedKey = symbolMap[kana];
+  if (SYMBOL_MAP[kana]) {
+    const expectedKey = SYMBOL_MAP[kana];
     return { exact: buffer === expectedKey, partial: expectedKey.startsWith(buffer) };
   }
 
@@ -41,4 +42,28 @@ export const checkRomajiMatch = (
   const partial = !exact && possibleRomajiCandidates.some(c => c.startsWith(buffer));
   
   return { exact, partial };
+};
+
+/**
+ * 表示用の推奨ローマ字を取得する
+ * 将来的にはユーザー設定や入力履歴に基づいて動的に変更する余地を残す
+ */
+export const getRecommendedRomaji = (kana: string, nextTypingUnit?: string): string => {
+  if (SYMBOL_MAP[kana]) {
+    return SYMBOL_MAP[kana];
+  }
+
+  const candidates = getRomajiCandidates(kana);
+  if (candidates.length === 0) return "";
+
+  // 促音「っ」の特殊処理
+  if (kana === "っ" && nextTypingUnit) {
+    const nextCandidates = getRomajiCandidates(nextTypingUnit);
+    if (nextCandidates.length > 0 && nextCandidates[0]?.[0]) {
+      return nextCandidates[0][0]; // 次の文字の最初の子音を返す (例: "ka" -> "k")
+    }
+  }
+  
+  // デフォルトは最初の候補（ヘボン式など）を返す
+  return candidates[0];
 };
