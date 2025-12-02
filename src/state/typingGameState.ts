@@ -1,6 +1,5 @@
-import { Mistake } from "@/types/typing";
+import { Mistake, TypingText } from "@/types/typing";
 import { getTypingUnits } from "@/utils/typingUtils";
-import { TYPING_TEXTS } from "@/constants/typing";
 
 // --- State, Action, Reducer ---
 
@@ -18,10 +17,11 @@ export interface GameState {
   mistakes: Mistake[];
   flashCorrect: boolean;
   lastTypedKey: string | null;
+  courseTexts: TypingText[];
 }
 
 export type GameAction =
-  | { type: 'MAP_LOADED'; payload: { typingUnits: string[] } }
+  | { type: 'MAP_LOADED'; payload: { typingUnits: string[]; courseTexts: TypingText[] } }
   | { type: 'START_GAME'; payload: { startTime: number; typedKey: string } }
   | { type: 'TYPE_KEY'; payload: { typedKey: string; isCorrect: boolean; isPartial: boolean; buffer: string } }
   | { type: 'CORRECT_KEY'; payload: { bufferLength: number } }
@@ -45,6 +45,7 @@ export const initialState: GameState = {
   mistakes: [],
   flashCorrect: false,
   lastTypedKey: null,
+  courseTexts: [],
 };
 
 export const reducer = (state: GameState, action: GameAction): GameState => {
@@ -54,6 +55,7 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         status: 'idle',
         typingUnits: action.payload.typingUnits,
+        courseTexts: action.payload.courseTexts,
       };
     case 'START_GAME':
       return {
@@ -96,7 +98,7 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         currentTextIndex: state.currentTextIndex + 1,
         currentKanaIndex: 0,
-        typingUnits: getTypingUnits(TYPING_TEXTS[state.currentTextIndex + 1].reading),
+        typingUnits: getTypingUnits(state.courseTexts[state.currentTextIndex + 1].reading),
       };
     case 'FINISH_GAME':
       return {
