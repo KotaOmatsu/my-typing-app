@@ -1,5 +1,5 @@
 import React from 'react';
-import { Course } from '@/data/courses';
+import { Course } from '@/types/typing';
 import { GameSettings } from '../hooks/useGameSettings';
 
 interface CourseDetailModalProps {
@@ -48,12 +48,12 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
           <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
             <h3 className="font-bold text-gray-800 mb-2">収録テキスト例:</h3>
             <ul className="list-disc list-inside text-gray-600 space-y-1">
-              {course.texts.slice(0, 3).map((text) => (
+              {course.texts?.slice(0, 3).map((text) => (
                 <li key={text.id} className="truncate">
                   {text.display}
                 </li>
               ))}
-              {course.texts.length > 3 && <li className="list-none text-gray-400 ml-5">...他 {course.texts.length} 件</li>}
+              {(course.texts?.length || 0) > 3 && <li className="list-none text-gray-400 ml-5">...他 {(course.texts?.length || 0)} 件</li>}
             </ul>
           </div>
 

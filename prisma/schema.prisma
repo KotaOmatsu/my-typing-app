@@ -47,6 +47,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   typingResults TypingResult[]
+  createdCourses Course[] @relation("CreatedCourses")
 }
 
 model VerificationToken {
@@ -55,6 +56,34 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  thumbnail   String?
+  difficulty  String   @default("Normal")
+  isPublic    Boolean  @default(true)
+  tags        String   @default("") // SQLite doesn't support scalar lists, so storing as comma-separated string or similar logic handled by app
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  authorId    String
+  author      User     @relation("CreatedCourses", fields: [authorId], references: [id], onDelete: Cascade)
+
+  texts       TypingText[]
+  results     TypingResult[]
+}
+
+model TypingText {
+  id        String @id @default(cuid())
+  display   String
+  reading   String
+  order     Int
+
+  courseId  String
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }
 
 model TypingResult {
@@ -69,7 +98,11 @@ model TypingResult {
   mistakeDetails     String
   createdAt          DateTime @default(now())
 
+  courseId           String?
+  course             Course?  @relation(fields: [courseId], references: [id])
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([courseId])
 }

@@ -3,8 +3,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { getRomajiCandidates, useKanaRomajiMap } from "../components/KanaRomajiMap";
 import { getTypingUnits } from "../utils/typingUtils";
-import { TYPING_TEXTS } from "@/constants/typing";
-import { COURSES } from "@/data/courses"; // Import COURSES
+import { TypingText } from "@/types/typing";
 import { initialState, reducer } from "@/state/typingGameState";
 import { saveTypingResult } from "@/services/typingResultService";
 import { checkRomajiMatch } from "@/utils/romajiUtils";
@@ -34,27 +33,45 @@ export const useTypingGame = (courseId?: string) => {
     courseTexts // Added to state
   } = state;
 
-  // Determine texts to use based on courseId
-  const getCourseTexts = useCallback(() => {
-    if (courseId) {
-      const course = COURSES.find(c => c.id === courseId);
-      if (course) return course.texts;
-    }
-    return TYPING_TEXTS; // Fallback
-  }, [courseId]);
-
   useEffect(() => {
-    if (isMapLoaded) {
-      const texts = getCourseTexts();
+    const loadCourse = async () => {
+      if (!isMapLoaded) return;
+
+      let texts: TypingText[] = [];
+      
+      if (courseId) {
+        try {
+          const res = await fetch(`/api/courses/${courseId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.texts && Array.isArray(data.texts) && data.texts.length > 0) {
+              texts = data.texts;
+            }
+          } else {
+            console.error("Failed to fetch course:", res.statusText);
+          }
+        } catch (error) {
+          console.error("Error fetching course:", error);
+        }
+      }
+
+      // Fallback if API failed or no courseId
+      if (texts.length === 0) {
+        // Minimal fallback to prevent crash
+        texts = [{ id: "fallback", display: "読み込みエラー", reading: "よみこみえらー" }];
+      }
+
       dispatch({ 
         type: 'MAP_LOADED', 
         payload: { 
           typingUnits: getTypingUnits(texts[0].reading),
-          courseTexts: texts // Pass texts to state
+          courseTexts: texts 
         } 
       });
-    }
-  }, [isMapLoaded, getCourseTexts]);
+    };
+
+    loadCourse();
+  }, [isMapLoaded, courseId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (status === 'loading' || status === 'finished') return;
