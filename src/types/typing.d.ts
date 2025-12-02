@@ -48,5 +48,6 @@ export interface Course {
   difficulty: string;
   thumbnail: string | null;
   authorId?: string; // 削除・編集権限チェック用
+  isPublic?: boolean; // マイページでの表示用
   texts?: TypingText[];
 }

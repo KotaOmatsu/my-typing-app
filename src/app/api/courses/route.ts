@@ -1,17 +1,41 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 
 // GET /api/courses
 // コース一覧を取得するAPI
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const authorId = searchParams.get('authorId');
+
+    let where: any = { isPublic: true };
+
+    if (authorId) {
+      const session = await getServerSession(authOptions);
+      // セッションがあり、かつメールアドレスからユーザーを特定し、IDが一致すれば全コース（非公開含む）を取得
+      if (session?.user?.email) {
+        const user = await prisma.user.findUnique({
+          where: { email: session.user.email },
+        });
+        
+        if (user && user.id === authorId) {
+          // 本人の場合、公開・非公開問わず自分のコースを全て取得
+          where = { authorId };
+        } else {
+          // 他人の場合、その人の公開コースのみ
+          where = { authorId, isPublic: true };
+        }
+      } else {
+        // 未ログインの場合、公開コースのみ
+        where = { authorId, isPublic: true };
+      }
+    }
+
     // prisma.course.findMany() で条件に合うデータを複数取得します
     const courses = await prisma.course.findMany({
-      where: {
-        isPublic: true, // 公開設定のコースのみ
-      },
+      where,
       select: {
         // 必要なフィールドだけを指定して取得（パフォーマンス向上）
         id: true,
@@ -20,7 +44,8 @@ export async function GET() {
         difficulty: true,
         thumbnail: true,
         createdAt: true,
-        authorId: true, // 一覧で権限チェックに使用するため取得
+        isPublic: true, // マイページで公開状態を確認するために追加
+        authorId: true,
         // 一覧表示（モーダル）でのプレビュー用に最初の3件だけ取得
         texts: {
           take: 3,
