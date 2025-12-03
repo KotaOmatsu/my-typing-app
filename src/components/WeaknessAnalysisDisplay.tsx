@@ -85,7 +85,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
             </div>
             
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">キーボードヒートマップ</h3>
-            <div className="grid grid-cols-10 gap-1 text-xs">
+            <div className="grid grid-cols-10 gap-1 text-xs mb-2">
                 {/* Simplified Keyboard Grid for visualization */}
                 {/* Row 1 */}
                 {['1','2','3','4','5','6','7','8','9','0'].map(k => <Key key={k} char={k} score={getKeyScore(k, analysis.keyScores)} />)}
@@ -96,6 +96,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                 {/* Row 4 */}
                 {['z','x','c','v','b','n','m',',','.','/'].map(k => <Key key={k} char={k} score={getKeyScore(k, analysis.keyScores)} />)}
             </div>
+            <p className="text-xs text-gray-400 text-center">打つべきだったのにミスしたキーの頻度</p>
         </div>
 
         {/* Right: Detailed Data with Tabs */}
