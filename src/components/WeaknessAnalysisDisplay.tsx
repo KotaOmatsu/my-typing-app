@@ -33,7 +33,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
       <div className="p-6 border-b border-gray-200 bg-gray-50">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">タイピング診断</h2>
         <p className="text-lg text-gray-600">
-          あなたの弱点は <span className="font-bold text-red-600">{analysis.worstFinger}</span> と <span className="font-bold text-red-600">{topCategory?.label || '不明'}</span> です。
+          あなたの弱点は <span className="font-bold text-red-600">{analysis.worstFinger}指</span> と <span className="font-bold text-red-600">{topCategory?.label || 'その他'}</span> です。
         </p>
         {topCategory && (
             <div className="mt-2 p-3 bg-white border border-l-4 border-l-blue-500 rounded text-blue-800 text-sm">
@@ -46,55 +46,45 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
         
         {/* Left: Visual Heatmap (Finger & Keyboard) */}
         <div className="col-span-1 lg:col-span-1 p-6 border-r border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Finger Heatmap</h3>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">指のヒートマップ</h3>
             <div className="flex justify-center items-end space-x-8 mb-8"> {/* Increased gap between hands */}
                 
-                {/* Left Hand (0-4) */}
+                {/* Left Hand: Pinky(0), Ring(1), Middle(2), Index(3), Thumb(4) */}
                 <div className="flex space-x-1 items-end">
-                    {[0, 1, 2, 3, 4].map(idx => {
-                        const fs = analysis.fingerScores[idx];
-                        const height = [12, 16, 20, 16, 10][idx]; // Relative heights
+                    {analysis.fingerScores.slice(0, 5).map((fs) => { // slice(0,5) for left hand
+                        const heights = { '左小': 12, '左薬': 16, '左中': 20, '左人': 18, '左親': 10 }; // Specific heights for each finger
                         return (
-                            <div key={idx} className="flex flex-col items-center group relative">
+                            <div key={fs.finger} className="flex flex-col items-center group relative">
                                 <div 
-                                    className={`w-4 rounded-t-full border border-gray-300 ${getHeatColor(fs?.score || 0)} transition-colors`}
-                                    style={{ height: `${height * 4}px` }}
-                                    title={`${fs?.finger}: ${fs?.missCount} miss`}
+                                    className={`w-4 rounded-t-full border border-gray-300 ${getHeatColor(fs.score)} transition-colors`}
+                                    style={{ height: `${(heights[fs.finger as keyof typeof heights] || 10) * 4}px` }} // Use specific height
+                                    title={`${fs.finger}: ${fs.missCount} miss`}
                                 ></div>
-                                <span className="text-xs mt-1 text-gray-500">{fs?.finger[1]}</span>
+                                <span className="text-xs mt-1 text-gray-500">{fs.finger.slice(-1)}</span> {/* 例: 左小 -> 小 */}
                             </div>
                         );
                     })}
                 </div>
 
-                {/* Right Hand (5-9) */}
+                {/* Right Hand: Thumb(5), Index(6), Middle(7), Ring(8), Pinky(9) */}
                 <div className="flex space-x-1 items-end">
-                    {[5, 6, 7, 8, 9].map(idx => { // Note: FINGER_NAMES order is L-Pinky...L-Thumb, R-Thumb...R-Pinky.
-                        // Wait, FINGER_NAMES in analysisUtils:
-                        // '左小', '左薬', '左中', '左人', '左親', '右親', '右人', '右中', '右薬', '右小'
-                        // So indices 5-9 are R-Thumb to R-Pinky.
-                        // This matches the natural visual order if displayed L->R.
-                        // Left hand: Pinky(0) -> Thumb(4).
-                        // Right hand: Thumb(5) -> Pinky(9).
-                        // Heights should mirror: Thumb(short) -> Middle(tall) -> Pinky(short).
-                        // Index 5 (Thumb) -> 10, Index 6 (Index) -> 16, 7 (Middle) -> 20, 8 (Ring) -> 16, 9 (Pinky) -> 12.
-                        const fs = analysis.fingerScores[idx];
-                        const height = [10, 16, 20, 16, 12][idx - 5];
+                    {analysis.fingerScores.slice(5, 10).map((fs) => { // slice(5,10) for right hand
+                        const heights = { '右親': 10, '右人': 18, '右中': 20, '右薬': 16, '右小': 12 }; // Specific heights for each finger
                         return (
-                            <div key={idx} className="flex flex-col items-center group relative">
+                            <div key={fs.finger} className="flex flex-col items-center group relative">
                                 <div 
-                                    className={`w-4 rounded-t-full border border-gray-300 ${getHeatColor(fs?.score || 0)} transition-colors`}
-                                    style={{ height: `${height * 4}px` }}
-                                    title={`${fs?.finger}: ${fs?.missCount} miss`}
+                                    className={`w-4 rounded-t-full border border-gray-300 ${getHeatColor(fs.score)} transition-colors`}
+                                    style={{ height: `${(heights[fs.finger as keyof typeof heights] || 10) * 4}px` }} // Use specific height
+                                    title={`${fs.finger}: ${fs.missCount} miss`}
                                 ></div>
-                                <span className="text-xs mt-1 text-gray-500">{fs?.finger[1]}</span>
+                                <span className="text-xs mt-1 text-gray-500">{fs.finger.slice(-1)}</span> {/* 例: 右小 -> 小 */}
                             </div>
                         );
                     })}
                 </div>
             </div>
             
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Keyboard Heatmap</h3>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">キーボードヒートマップ</h3>
             <div className="grid grid-cols-10 gap-1 text-xs">
                 {/* Simplified Keyboard Grid for visualization */}
                 {/* Row 1 */}
@@ -115,19 +105,19 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                     className={`flex-1 py-3 text-sm font-medium ${activeTab === 'keys' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                     onClick={() => setActiveTab('keys')}
                 >
-                    苦手キー
+                    キーのミス詳細
                 </button>
                 <button 
                     className={`flex-1 py-3 text-sm font-medium ${activeTab === 'patterns' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                     onClick={() => setActiveTab('patterns')}
                 >
-                    ミスパターン
+                    ミスパターン分析
                 </button>
                 <button 
                     className={`flex-1 py-3 text-sm font-medium ${activeTab === 'trends' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                     onClick={() => setActiveTab('trends')}
                 >
-                    傾向診断
+                    傾向と対策
                 </button>
             </div>
 
@@ -135,7 +125,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                 {activeTab === 'keys' && (
                     <div className="space-y-6">
                         <div>
-                            <h4 className="text-sm font-bold text-red-600 mb-2">打てなかったキー (Missed)</h4>
+                            <h4 className="text-sm font-bold text-red-600 mb-2">打つべきキー (Missed Keys)</h4>
                             <ul className="grid grid-cols-2 gap-2">
                                 {analysis.missedKeys.slice(0, 6).map((item, i) => (
                                     <li key={i} className="flex justify-between p-2 bg-red-50 rounded">
@@ -146,7 +136,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                             </ul>
                         </div>
                         <div>
-                            <h4 className="text-sm font-bold text-orange-600 mb-2">誤って押したキー (Accidental)</h4>
+                            <h4 className="text-sm font-bold text-orange-600 mb-2">実際に入力したキー (Accidental Keys)</h4>
                             <ul className="grid grid-cols-2 gap-2">
                                 {analysis.accidentalKeys.slice(0, 6).map((item, i) => (
                                     <li key={i} className="flex justify-between p-2 bg-orange-50 rounded">
@@ -162,7 +152,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                 {activeTab === 'patterns' && (
                     <div className="space-y-6">
                         <div>
-                            <h4 className="text-sm font-bold text-yellow-600 mb-2">よくある間違い (正解 -> 誤打)</h4>
+                            <h4 className="text-sm font-bold text-yellow-600 mb-2">よくある間違い (打つべきキー → 誤って入力したキー)</h4>
                             <ul>
                                 {(analysis.missPatterns || []).slice(0, 8).map((item, i) => (
                                     <li key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
@@ -173,7 +163,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                             </ul>
                         </div>
                         <div>
-                            <h4 className="text-sm font-bold text-blue-600 mb-2">苦手な流れ (前のキー -> 次のキー)</h4>
+                            <h4 className="text-sm font-bold text-blue-600 mb-2">苦手なキーの連続 (前のキー → 次に打つべきキー)</h4>
                             <ul>
                                 {(analysis.sequenceWeaknesses || []).slice(0, 8).map((item, i) => (
                                     <li key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
