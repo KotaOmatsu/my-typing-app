@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react"; // Import useSession
 import Link from "next/link"; // Import Link
-import LoginStatus from "../components/LoginStatus";
 import { useGameSettings } from "../hooks/useGameSettings";
 import { Course } from "../types/typing"; // Import from types
 import CourseCard from "../components/CourseCard";
@@ -67,12 +66,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-gray-50 py-2 relative">
-      {/* ヘッダー（ログイン状態など） */}
-      <header className="w-full p-4 flex justify-between items-center shadow-sm bg-white z-50 mb-8">
-         <div className="text-xl font-bold text-gray-800 ml-4">Typing App</div>
-         <LoginStatus />
-      </header>
-
       <main className="flex flex-col items-center w-full flex-1 px-4 md:px-20 text-center max-w-7xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
           練習コースを選択
