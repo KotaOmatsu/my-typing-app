@@ -2,6 +2,7 @@
 
 import React from 'react';
 import OnScreenKeyboard from '../components/OnScreenKeyboard';
+import FingerGuide from '../components/FingerGuide';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { getRecommendedRomaji } from '../utils/romajiUtils';
 import { useGameSettings } from '../hooks/useGameSettings';
@@ -24,6 +25,18 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
+
+  // Calculate next key for guides
+  let nextKey: string | null = null;
+  if (typingUnits.length > 0 && currentKanaIndex < typingUnits.length) {
+      const currentUnit = typingUnits[currentKanaIndex];
+      const nextUnit = typingUnits[currentKanaIndex + 1];
+      const recommendedRomaji = getRecommendedRomaji(currentUnit, nextUnit);
+      const remainingRomaji = recommendedRomaji.slice(inputBuffer.length);
+      if (remainingRomaji.length > 0) {
+          nextKey = remainingRomaji[0];
+      }
+  }
 
   const renderText = () => {
     return typingUnits.map((unit, index) => {
@@ -99,7 +112,12 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
       
       {error && <p className="text-red-500 text-xl mt-4">入力が間違っています。正しいローマ字を入力してください。</p>}
       {!isGameStarted && <p className="text-gray-600 text-xl mt-4">キーを押してタイピングを開始してください。</p>} {/* ゲーム開始前のメッセージ（オプション） */}
-      <OnScreenKeyboard lastTypedKey={lastTypedKey} /> {/* オン・スクリーン・キーボードを追加 */}
+      
+      {/* キーボードと運指ガイド */}
+      <div className="flex flex-col items-center gap-4">
+        <OnScreenKeyboard lastTypedKey={lastTypedKey} nextKey={nextKey} />
+        <FingerGuide nextKey={nextKey} />
+      </div>
     </div>
   );
 };
