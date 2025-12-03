@@ -82,11 +82,11 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
                   return (
                     <span>
                       <span className="text-blue-600">{inputBuffer}</span>
-                      {nextChar && (
+                      {nextChar ? (
                         <span className="text-blue-600 font-bold border-b-2 border-blue-600">
                           {nextChar}
                         </span>
-                      )}
+                      ) : null}
                       <span className="text-gray-300">{rest}</span>
                     </span>
                   );
