@@ -35,6 +35,8 @@ export const useTypingGame = (courseId?: string) => {
   } = state;
 
   useEffect(() => {
+    let isCancelled = false;
+
     const loadCourse = async () => {
       if (!isMapLoaded) return;
 
@@ -43,8 +45,12 @@ export const useTypingGame = (courseId?: string) => {
       if (courseId) {
         try {
           const res = await fetch(`/api/courses/${courseId}`);
+          if (isCancelled) return; // Check cancellation after await
+
           if (res.ok) {
             const data = await res.json();
+            if (isCancelled) return; // Check cancellation after await
+
             if (data.texts && Array.isArray(data.texts) && data.texts.length > 0) {
               texts = data.texts;
             }
@@ -53,6 +59,7 @@ export const useTypingGame = (courseId?: string) => {
             console.error("Failed to fetch course:", res.statusText);
           }
         } catch (error) {
+          if (isCancelled) return;
           console.error("Error fetching course:", error);
         }
       }
@@ -64,16 +71,22 @@ export const useTypingGame = (courseId?: string) => {
         dispatch({ type: 'SET_COURSE_TITLE', payload: { title: "デフォルトコース" } });
       }
 
-      dispatch({ 
-        type: 'MAP_LOADED', 
-        payload: { 
-          typingUnits: getTypingUnits(texts[0].reading),
-          courseTexts: texts 
-        } 
-      });
+      if (!isCancelled) {
+        dispatch({ 
+            type: 'MAP_LOADED', 
+            payload: { 
+            typingUnits: getTypingUnits(texts[0].reading),
+            courseTexts: texts 
+            } 
+        });
+      }
     };
 
     loadCourse();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [isMapLoaded, courseId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {

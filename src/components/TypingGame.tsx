@@ -28,16 +28,18 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   const { settings, isSettingsLoaded } = useGameSettings();
 
   // Calculate next key for guides
-  let nextKey: string | null = null;
-  if (typingUnits.length > 0 && currentKanaIndex < typingUnits.length) {
-      const currentUnit = typingUnits[currentKanaIndex];
-      const nextUnit = typingUnits[currentKanaIndex + 1];
-      const recommendedRomaji = getRecommendedRomaji(currentUnit, nextUnit);
-      const remainingRomaji = recommendedRomaji.slice(inputBuffer.length);
-      if (remainingRomaji.length > 0) {
-          nextKey = remainingRomaji[0];
-      }
-  }
+  const nextKey = React.useMemo(() => {
+    if (typingUnits.length > 0 && currentKanaIndex < typingUnits.length) {
+        const currentUnit = typingUnits[currentKanaIndex];
+        const nextUnit = typingUnits[currentKanaIndex + 1];
+        const recommendedRomaji = getRecommendedRomaji(currentUnit, nextUnit);
+        const remainingRomaji = recommendedRomaji.slice(inputBuffer.length);
+        if (remainingRomaji.length > 0) {
+            return remainingRomaji[0];
+        }
+    }
+    return null;
+  }, [typingUnits, currentKanaIndex, inputBuffer]);
 
   const renderText = () => {
     return typingUnits.map((unit, index) => {
