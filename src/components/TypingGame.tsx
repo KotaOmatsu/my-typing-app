@@ -19,7 +19,6 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     inputBuffer,
     error,
     flashCorrect,
-    isGameStarted,
     lastTypedKey,
     currentDisplayText,
     courseTitle, // Add courseTitle to destructuring

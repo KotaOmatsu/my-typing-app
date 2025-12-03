@@ -76,7 +76,7 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
       };
     case 'PROCESS_KEY_INPUT':
       const { typedKey, isCorrect, isExactMatch, buffer, mistake } = action.payload;
-      let newState = {
+      const newState = {
         ...state,
         lastTypedKey: typedKey,
         totalKeystrokes: state.totalKeystrokes + 1,
