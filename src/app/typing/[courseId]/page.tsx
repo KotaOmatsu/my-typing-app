@@ -9,9 +9,6 @@ const TypingPage = ({ params }: { params: { courseId: string } }) => {
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-gray-100 py-2">
       <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">
-          タイピング練習 (コースID: {params.courseId})
-        </h1>
         <TypingGame courseId={params.courseId} />
       </main>
     </div>
