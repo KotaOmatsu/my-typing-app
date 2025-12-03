@@ -129,7 +129,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                         <div>
                             <h4 className="text-sm font-bold text-yellow-600 mb-2">よくある間違い (正解 -> 誤打)</h4>
                             <ul>
-                                {analysis.missPatterns.slice(0, 8).map((item, i) => (
+                                {(analysis.missPatterns || []).slice(0, 8).map((item, i) => (
                                     <li key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
                                         <span className="font-mono text-sm text-gray-700">{item.pattern}</span>
                                         <span className="text-sm text-gray-500">{item.count}回</span>
@@ -140,7 +140,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                         <div>
                             <h4 className="text-sm font-bold text-blue-600 mb-2">苦手な流れ (前のキー -> 次のキー)</h4>
                             <ul>
-                                {analysis.sequenceWeaknesses.slice(0, 8).map((item, i) => (
+                                {(analysis.sequenceWeaknesses || []).slice(0, 8).map((item, i) => (
                                     <li key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
                                         <span className="font-mono text-sm text-gray-700">{item.pattern}</span>
                                         <span className="text-sm text-gray-500">{item.count}回</span>
