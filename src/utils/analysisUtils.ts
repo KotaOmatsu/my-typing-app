@@ -2,9 +2,11 @@ import { Mistake } from "@/types/typing";
 
 export interface WeaknessAnalysis {
   totalMistakes: number;
-  worstKeys: { key: string; count: number }[];
+  missedKeys: { key: string; count: number }[]; // 正解だったはずのキー（打てなかったキー）
+  accidentalKeys: { key: string; count: number }[]; // 間違って押してしまったキー
   worstFinger: string;
-  missPatterns: { pattern: string; count: number }[]; // e.g., "r -> e" (intended 'r', typed 'e')
+  sequenceWeaknesses: { pattern: string; count: number }[]; // 例: "K" のあとの "U"
+  missPatterns: { pattern: string; count: number }[]; // 例: "r -> e" (rを打つべきところでeを打った)
 }
 
 const FINGER_MAP: { [key: string]: string } = {
@@ -22,72 +24,74 @@ const FINGER_MAP: { [key: string]: string } = {
 };
 
 export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
-  const keyCounts: { [key: string]: number } = {};
+  const missedKeyCounts: { [key: string]: number } = {};
+  const accidentalKeyCounts: { [key: string]: number } = {};
   const fingerCounts: { [key: string]: number } = {};
+  const sequenceCounts: { [key: string]: number } = {};
   const patternCounts: { [key: string]: number } = {};
 
   mistakes.forEach(mistake => {
-    // Count mistyped expected keys (what they SHOULD have typed)
-    // Or count the key they actually typed?
-    // Usually weakness is "I can't hit 'P'", so we count the expected key.
-    // BUT, the `mistake` object has `typedKey` (what they pressed) and `expected` (romaji string).
-    // `expected` might be "shi" but they typed "si" (valid) or "ci" (valid).
-    // Wait, `INCORRECT_KEY` is fired when they type a key that is NOT valid.
-    // So we should analyze:
-    // 1. Which key did they TRY to type? (This is hard to know exactly if they typed a wrong key)
-    //    Actually, we know the `currentKana` and `expected` romaji.
-    //    However, in the `INCORRECT_KEY` payload, we have `typedKey`.
-    //    We also have `expected` string (e.g., "ka/ca").
-    //    If they typed 'r', and expected was 'k', then they missed 'k'.
-    //    But if they typed 't' for 'chi', maybe they were going for 'ti'.
+    // 1. Extract Expected Key
+    // mistake.expected may contain multiple patterns e.g., "ka/ca"
+    // We need to find the next char based on previousInputBuffer
+    // Since inputBuffer is valid prefix, we look at index = previousInputBuffer.length
+    // If multiple patterns, we might have multiple valid next chars.
+    // However, usually we just want the primary one or we collect all possible valid next chars.
+    // For simplicity, let's take the first pattern's next char, or assume the user was aiming for the most standard one.
+    // Better: The game usually prioritizes one, but allows others.
+    // If previousInputBuffer is "k", and expected is "ka/ca", the next char could be "a".
+    // If previousInputBuffer is "", next could be "k" or "c".
+    // Let's assume the first candidate in `expected` is the standard one the user likely aimed for.
     
-    // Let's focus on the KEY they PRESSED incorrectly first (finger error).
-    // No, that shows "I accidentally press X a lot".
-    // We want "I fail to press Y a lot".
-    
-    // The `mistake` object has: `char` (kana), `expected` (full romaji string), `actual` (buffer), `typedKey`.
-    // It's hard to map exactly "which key they missed" without complex logic.
-    // Simple approach: Analyze the `typedKey` (the wrong input) to see "which finger is misfiring".
-    // AND analyze the `expected` char (kana) to see "which kana is hard".
-    
-    // For this initial version, let's count the `typedKey` as "Keys I accidentally press"
-    // And we can try to infer the target key if `inputBuffer` was empty?
-    
-    // Let's stick to a simpler metric for now:
-    // "Worst Keys": Keys that were pressed incorrectly. (Finger coordination issue)
-    const badKey = mistake.typedKey.toLowerCase();
-    keyCounts[badKey] = (keyCounts[badKey] || 0) + 1;
+    const bufferLen = mistake.previousInputBuffer?.length || 0;
+    const primaryExpectedPattern = mistake.expected.split('/')[0];
+    const expectedKey = primaryExpectedPattern.charAt(bufferLen); // This is the key they SHOULD have typed
 
-    const finger = FINGER_MAP[badKey];
-    if (finger) {
-      fingerCounts[finger] = (fingerCounts[finger] || 0) + 1;
+    // 2. Extract Preceding Key
+    const precedingKey = bufferLen > 0 ? mistake.previousInputBuffer!.slice(-1) : "Start";
+
+    // 3. Extract Actual Key
+    const actualKey = mistake.typedKey;
+
+    if (expectedKey) {
+        missedKeyCounts[expectedKey] = (missedKeyCounts[expectedKey] || 0) + 1;
+        
+        // Finger analysis based on what they SHOULD have typed (Missed Key)
+        // Or finger analysis based on what they DID type (Accidental Key)?
+        // Usually "weak finger" means "I can't control this finger well" (Accidental)
+        // OR "I can't move this finger to the right place" (Missed).
+        // Let's count Missed Keys for "Worst Finger" as "Hard to press".
+        const finger = FINGER_MAP[expectedKey.toLowerCase()];
+        if (finger) {
+            fingerCounts[finger] = (fingerCounts[finger] || 0) + 1;
+        }
+
+        // Sequence Weakness: "After [Preceding], I missed [Expected]"
+        const sequencePattern = `${precedingKey} -> ${expectedKey}`;
+        sequenceCounts[sequencePattern] = (sequenceCounts[sequencePattern] || 0) + 1;
+
+        // Miss Pattern: "Expected [Expected] but typed [Actual]"
+        const missPattern = `${expectedKey} -> ${actualKey}`;
+        patternCounts[missPattern] = (patternCounts[missPattern] || 0) + 1;
     }
 
-    // Miss pattern: Expected vs Typed
-    // We don't have the exact "target key" in the mistake object easily, 
-    // but we have the kana.
-    const pattern = `${mistake.char} で ${badKey}`; // e.g. "あ で r"
-    patternCounts[pattern] = (patternCounts[pattern] || 0) + 1;
+    // Accidental Key (What they typed)
+    accidentalKeyCounts[actualKey] = (accidentalKeyCounts[actualKey] || 0) + 1;
   });
 
-  // Sort and extract top items
-  const sortedKeys = Object.entries(keyCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
-    .map(([key, count]) => ({ key, count }));
-
-  const worstFinger = Object.entries(fingerCounts)
-    .sort(([, a], [, b]) => b - a)[0]?.[0] || "なし";
-
-  const sortedPatterns = Object.entries(patternCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
-    .map(([pattern, count]) => ({ pattern, count }));
+  // Helper to sort and slice
+  const getTop = (counts: { [key: string]: number }, limit: number = 5) => 
+    Object.entries(counts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, limit)
+        .map(([key, count]) => ({ key, count, pattern: key })); // mapping key/pattern interchangeably
 
   return {
     totalMistakes: mistakes.length,
-    worstKeys: sortedKeys,
-    worstFinger,
-    missPatterns: sortedPatterns
+    missedKeys: getTop(missedKeyCounts),
+    accidentalKeys: getTop(accidentalKeyCounts),
+    worstFinger: Object.entries(fingerCounts).sort(([, a], [, b]) => b - a)[0]?.[0] || "なし",
+    sequenceWeaknesses: getTop(sequenceCounts),
+    missPatterns: getTop(patternCounts),
   };
 }
