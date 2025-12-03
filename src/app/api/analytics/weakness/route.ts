@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { analyzeWeaknesses } from '@/utils/analysisUtils';
 import { Mistake } from '@/types/typing';
 
-export async function GET(req: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {

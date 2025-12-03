@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { WeaknessAnalysis, FingerScore, KeyScore, MissCategory } from '@/utils/analysisUtils';
+import { WeaknessAnalysis, KeyScore } from '@/utils/analysisUtils';
 
 interface WeaknessAnalysisDisplayProps {
   analysis: WeaknessAnalysis | null;
