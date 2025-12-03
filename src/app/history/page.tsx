@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import HistoryTable from '@/components/HistoryTable';
 import HistoryChart from '@/components/HistoryChart';
+import WeaknessAnalysisDisplay from '@/components/WeaknessAnalysisDisplay';
+import { analyzeWeaknesses } from '@/utils/analysisUtils';
+import { Mistake } from '@/types/typing';
 
 export default async function HistoryPage() {
   const session = await getServerSession(authOptions);
@@ -29,6 +32,20 @@ export default async function HistoryPage() {
     },
   });
 
+  // Analyze weaknesses from all results
+  let allMistakes: Mistake[] = [];
+  results.forEach(result => {
+    try {
+      const parsed: Mistake[] = JSON.parse(result.mistakeDetails);
+      if (Array.isArray(parsed)) {
+        allMistakes = [...allMistakes, ...parsed];
+      }
+    } catch (e) {
+      console.error("Failed to parse mistake details", e);
+    }
+  });
+  const weaknessAnalysis = analyzeWeaknesses(allMistakes);
+
   // `mistakeDetails`はJSON文字列なので、クライアントコンポーネントに渡す前にパースする必要はない。
   // しかし、Dateオブジェクトはシリアライズできないため、文字列に変換する必要がある。
   const serializableResults = results.map(result => ({
@@ -38,9 +55,11 @@ export default async function HistoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1>
+      {/* <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1> */}
       {serializableResults.length > 0 ? (
         <>
+          <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1>
+          <WeaknessAnalysisDisplay analysis={weaknessAnalysis} />
           <HistoryChart results={serializableResults} />
           <HistoryTable results={serializableResults} />
         </>

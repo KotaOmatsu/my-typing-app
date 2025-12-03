@@ -1,7 +1,7 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 
 const GithubIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -19,7 +19,7 @@ const GoogleIcon = () => (
 );
 
 export default function LoginPage() {
-  const router = useRouter();
+  // const router = useRouter();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
@@ -41,11 +41,11 @@ export default function LoginPage() {
             Googleでログイン
           </button>
         </div>
-        <div className="mt-8 text-center">
+        {/* <div className="mt-8 text-center">
           <button onClick={() => router.push('/')} className="text-sm text-gray-600 hover:underline">
             トップページに戻る
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

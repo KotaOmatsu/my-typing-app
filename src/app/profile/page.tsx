@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import LoginStatus from '@/components/LoginStatus';
 import CourseCard from '@/components/CourseCard';
 import CourseDetailModal from '@/components/CourseDetailModal';
 import { Course } from '@/types/typing';
@@ -82,13 +81,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-2 relative">
-      <header className="w-full p-4 flex justify-between items-center shadow-sm bg-white z-50 mb-8">
-         <Link href="/" className="text-xl font-bold text-gray-800 ml-4 hover:text-blue-600 transition">
-           Typing App
-         </Link>
-         <LoginStatus />
-      </header>
-
       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-12">
         {/* プロフィールヘッダー */}
         <div className="bg-white rounded-xl shadow-sm p-8 mb-8 flex flex-col md:flex-row items-center md:items-start gap-6">

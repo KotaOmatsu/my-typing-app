@@ -1,4 +1,5 @@
 import AuthProvider from '../components/AuthProvider';
+import Header from '../components/Header';
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
@@ -22,7 +23,10 @@ export default async function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <body className={inter.className}>
-        <AuthProvider session={session}>{children}</AuthProvider>
+        <AuthProvider session={session}>
+          <Header />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

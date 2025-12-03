@@ -1,0 +1,155 @@
+import { Mistake } from "@/types/typing";
+
+// --- Interfaces ---
+
+export interface FingerScore {
+  finger: string;
+  score: number; // 0 (perfect) to 100 (bad) based on miss rate relative to total strokes (approx)
+  missCount: number;
+}
+
+export interface KeyScore {
+  key: string;
+  score: number; // 0 to 100 heatmap intensity
+  missCount: number;
+}
+
+export interface MissCategory {
+  type: 'FatFinger' | 'Mirror' | 'Basic';
+  count: number;
+  label: string;
+  description: string;
+}
+
+export interface WeaknessAnalysis {
+  totalMistakes: number;
+  fingerScores: FingerScore[];
+  keyScores: KeyScore[];
+  missCategories: MissCategory[];
+  sequenceWeaknesses: { pattern: string; count: number }[];
+  missPatterns: { pattern: string; count: number }[]; // "打つべきキー -> 実際に入力したキー"
+  worstFinger: string; // For summary
+}
+
+// --- Constants & Data ---
+
+// Simple layout map for distance/finger calc. 
+// Format: [row, col, finger_index (0=L-Pinky, 9=R-Pinky)]
+// Row 0=Number, 1=Top(Q), 2=Home(A), 3=Bottom(Z)
+const KEY_LAYOUT: { [key: string]: [number, number, number] } = {
+  '1': [0, 0, 0], '2': [0, 1, 1], '3': [0, 2, 2], '4': [0, 3, 3], '5': [0, 4, 3],
+  '6': [0, 5, 6], '7': [0, 6, 6], '8': [0, 7, 7], '9': [0, 8, 8], '0': [0, 9, 9],
+  'q': [1, 0, 0], 'w': [1, 1, 1], 'e': [1, 2, 2], 'r': [1, 3, 3], 't': [1, 4, 3],
+  'y': [1, 5, 6], 'u': [1, 6, 6], 'i': [1, 7, 7], 'o': [1, 8, 8], 'p': [1, 9, 9],
+  'a': [2, 0, 0], 's': [2, 1, 1], 'd': [2, 2, 2], 'f': [2, 3, 3], 'g': [2, 4, 3],
+  'h': [2, 5, 6], 'j': [2, 6, 6], 'k': [2, 7, 7], 'l': [2, 8, 8], ';': [2, 9, 9],
+  'z': [3, 0, 0], 'x': [3, 1, 1], 'c': [3, 2, 2], 'v': [3, 3, 3], 'b': [3, 4, 3],
+  'n': [3, 5, 6], 'm': [3, 6, 6], ',': [3, 7, 7], '.': [3, 8, 8], '/': [3, 9, 9],
+};
+
+const FINGER_NAMES = [
+  '左小', '左薬', '左中', '左人', '左親', '右親', '右人', '右中', '右薬', '右小'
+];
+
+// --- Helper Functions ---
+
+// Manhattan distance on keyboard grid
+function getDistance(key1: string, key2: string): number {
+  const p1 = KEY_LAYOUT[key1];
+  const p2 = KEY_LAYOUT[key2];
+  if (!p1 || !p2) return 999;
+  return Math.abs(p1[0] - p2[0]) + Math.abs(p1[1] - p2[1]);
+}
+
+function isMirrorKey(key1: string, key2: string): boolean {
+  const p1 = KEY_LAYOUT[key1];
+  const p2 = KEY_LAYOUT[key2];
+  if (!p1 || !p2) return false;
+  return (p1[2] + p2[2] === 9) && (p1[0] === p2[0]);
+}
+
+export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
+  const sequenceCounts: { [key: string]: number } = {};
+  const missPatternCounts: { [key: string]: number } = {}; // "Expected -> Actual"
+  
+  const fingerMissCounts: { [index: number]: number } = {};
+  const keyMissCounts: { [key: string]: number } = {}; // For heatmap (based on expected key)
+
+  let fatFingerCount = 0;
+  let mirrorCount = 0;
+  let basicCount = 0;
+
+  mistakes.forEach(mistake => {
+    const bufferLen = mistake.previousInputBuffer?.length || 0;
+    const primaryExpectedPattern = mistake.expected.split('/')[0];
+    const expectedKey = primaryExpectedPattern.charAt(bufferLen).toLowerCase(); 
+    const precedingKey = bufferLen > 0 ? mistake.previousInputBuffer!.slice(-1) : "Start";
+    const actualKey = mistake.typedKey.toLowerCase();
+
+    if (expectedKey && KEY_LAYOUT[expectedKey]) {
+        // Counts
+        const sequencePattern = `${precedingKey} -> ${expectedKey}`;
+        sequenceCounts[sequencePattern] = (sequenceCounts[sequencePattern] || 0) + 1;
+
+        const missPattern = `${expectedKey} -> ${actualKey}`;
+        missPatternCounts[missPattern] = (missPatternCounts[missPattern] || 0) + 1;
+
+        // Finger & Key Scores (Based on Missed Key - "Hard to hit")
+        const fingerIdx = KEY_LAYOUT[expectedKey][2];
+        fingerMissCounts[fingerIdx] = (fingerMissCounts[fingerIdx] || 0) + 1;
+        keyMissCounts[expectedKey] = (keyMissCounts[expectedKey] || 0) + 1;
+
+        // Classification
+        if (getDistance(expectedKey, actualKey) === 1) {
+            fatFingerCount++;
+        } else if (isMirrorKey(expectedKey, actualKey)) {
+            mirrorCount++;
+        } else {
+            basicCount++;
+        }
+    }
+  });
+
+  // --- Aggregation ---
+
+  // Helper to sort and slice
+  const getTop = (counts: { [key: string]: number }, limit: number = 5) => 
+    Object.entries(counts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, limit)
+        .map(([key, count]) => ({ pattern: key, count })); // Changed to pattern: key
+
+  // Normalize Scores
+  const maxFingerMiss = Math.max(...Object.values(fingerMissCounts), 1);
+  const fingerScores: FingerScore[] = FINGER_NAMES.map((name, idx) => ({
+      finger: name,
+      missCount: fingerMissCounts[idx] || 0,
+      score: Math.round(((fingerMissCounts[idx] || 0) / maxFingerMiss) * 100)
+  }));
+
+  const maxKeyMiss = Math.max(...Object.values(keyMissCounts), 1);
+  const keyScores: KeyScore[] = Object.entries(keyMissCounts).map(([key, count]) => ({
+      key,
+      missCount: count,
+      score: Math.round((count / maxKeyMiss) * 100)
+  }));
+
+  const missCategories: MissCategory[] = [
+      { type: 'FatFinger' as const, count: fatFingerCount, label: '隣接キー誤打', description: '打つべきキーの隣を誤って打鍵しています。指の横移動がスムーズでないか、ホームポジションの意識が低い可能性があります。キーボードのキー間隔を体で覚え、正確な指の動きを心がけましょう。' },
+      { type: 'Mirror' as const, count: mirrorCount, label: '逆手誤打', description: '左右で同じような位置にあるキーを誤って打鍵しています。脳内でキーの配置が混乱している可能性があります。運指表を確認し、目でキーボードを見ながらゆっくりと打つ練習を繰り返しましょう。' },
+      { type: 'Basic' as const, count: basicCount, label: 'その他', description: '特定の傾向がないミスです。まずはホームポジションを確実にし、指を動かす距離が短いキーから練習して基礎的な打鍵精度を高めましょう。' },
+  ].sort((a, b) => b.count - a.count);
+
+  // Fix: Sort a copy to avoid mutating the original array which is needed for ordered heatmap
+  const worstFinger = [...fingerScores].sort((a, b) => b.missCount - a.missCount)[0].finger;
+
+  return {
+    totalMistakes: mistakes.length,
+    sequenceWeaknesses: getTop(sequenceCounts),
+    missPatterns: getTop(missPatternCounts),
+    fingerScores,
+    keyScores,
+    missCategories,
+    worstFinger
+  };
+}
