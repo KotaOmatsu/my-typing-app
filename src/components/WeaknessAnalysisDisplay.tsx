@@ -154,7 +154,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                                         <span className="font-bold text-gray-800">{cat.label}</span>
                                         <span className="text-sm font-mono bg-gray-200 px-2 rounded-full">{cat.count}回</span>
                                     </div>
-                                    <p className="text-xs text-gray-500">{cat.description}</p>
+                                    <p className="text-xs text-gray-500">{cat.type === 'FatFinger' ? '打つべきキーの隣を誤って打鍵しています。指の横移動がスムーズでないか、ホームポジションの意識が低い可能性があります。キーボードのキー間隔を体で覚え、正確な指の動きを心がけましょう。' : cat.type === 'Mirror' ? '左右で同じような位置にあるキーを誤って打鍵しています。脳内でキーの配置が混乱している可能性があります。運指表を確認し、目でキーボードを見ながらゆっくりと打つ練習を繰り返しましょう。' : '特定の傾向がないミスです。まずはホームポジションを確実にし、指を動かす距離が短いキーから練習して基礎的な打鍵精度を高めましょう。'}</p>
                                 </div>
                             ))}
                         </div>

@@ -41,11 +41,11 @@ export default function LoginPage() {
             Googleでログイン
           </button>
         </div>
-        <div className="mt-8 text-center">
+        {/* <div className="mt-8 text-center">
           <button onClick={() => router.push('/')} className="text-sm text-gray-600 hover:underline">
             トップページに戻る
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -55,9 +55,10 @@ export default async function HistoryPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1>
+      {/* <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1> */}
       {serializableResults.length > 0 ? (
         <>
+          <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1>
           <WeaknessAnalysisDisplay analysis={weaknessAnalysis} />
           <HistoryChart results={serializableResults} />
           <HistoryTable results={serializableResults} />
