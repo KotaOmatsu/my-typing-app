@@ -111,31 +111,50 @@ export const useTypingGame = (courseId?: string) => {
     const currentKana = typingUnits[currentKanaIndex];
     const nextTypingUnit = typingUnits[currentKanaIndex + 1];
 
-    dispatch({ type: 'TYPE_KEY', payload: { typedKey: typedChar, buffer: newBuffer, isCorrect: false, isPartial: false } });
-
     const { exact: isExactMatch, partial: isPartialMatch } = checkRomajiMatch(currentKana, newBuffer, nextTypingUnit);
 
     if (isExactMatch) {
-      dispatch({ type: 'CORRECT_KEY', payload: { bufferLength: newBuffer.length } });
+      dispatch({ 
+        type: 'PROCESS_KEY_INPUT', 
+        payload: { 
+          typedKey: typedChar, 
+          isCorrect: true, 
+          isExactMatch: true, 
+          buffer: newBuffer 
+        } 
+      });
       setTimeout(() => dispatch({ type: 'RESET_FLASH' }), 200);
-
-      if (currentKanaIndex < typingUnits.length - 1) {
-        dispatch({ type: 'NEXT_KANA' });
-      } else {
-        if (currentTextIndex < courseTexts.length - 1) {
-          dispatch({ type: 'NEXT_TEXT' });
-        } else {
-          dispatch({ type: 'FINISH_GAME' });
-        }
-      }
-    } else if (!isPartialMatch) {
+    } else if (isPartialMatch) {
+      dispatch({ 
+        type: 'PROCESS_KEY_INPUT', 
+        payload: { 
+          typedKey: typedChar, 
+          isCorrect: true, 
+          isExactMatch: false, 
+          buffer: newBuffer 
+        } 
+      });
+    } else {
       const expectedRomajiForError = getRomajiCandidates(currentKana).join("/");
       const precedingCharCount = courseTexts.slice(0, currentTextIndex).map(text => getTypingUnits(text.reading).length).reduce((a, b) => a + b, 0);
       const absoluteKanaIndex = precedingCharCount + currentKanaIndex;
 
       dispatch({
-        type: 'INCORRECT_KEY',
-        payload: { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar, kanaIndex: absoluteKanaIndex },
+        type: 'PROCESS_KEY_INPUT',
+        payload: { 
+          typedKey: typedChar, 
+          isCorrect: false, 
+          isExactMatch: false, 
+          buffer: newBuffer,
+          mistake: { 
+            char: currentKana, 
+            expected: expectedRomajiForError, 
+            actual: newBuffer, 
+            typedKey: typedChar, 
+            kanaIndex: absoluteKanaIndex,
+            previousInputBuffer: inputBuffer, 
+          }
+        },
       });
     }
   }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, router, courseTexts]);

@@ -25,12 +25,13 @@ export type GameAction =
   | { type: 'MAP_LOADED'; payload: { typingUnits: string[]; courseTexts: TypingText[] } }
   | { type: 'SET_COURSE_TITLE'; payload: { title: string | null } } // コースタイトル設定アクションを追加
   | { type: 'START_GAME'; payload: { startTime: number; typedKey: string } }
-  | { type: 'TYPE_KEY'; payload: { typedKey: string; isCorrect: boolean; isPartial: boolean; buffer: string } }
-  | { type: 'CORRECT_KEY'; payload: { bufferLength: number } }
-  | { type: 'INCORRECT_KEY'; payload: { char: string; expected: string; actual: string; typedKey: string; kanaIndex: number } }
-  | { type: 'NEXT_KANA' }
-  | { type: 'NEXT_TEXT' }
-  | { type: 'FINISH_GAME' }
+  | { type: 'PROCESS_KEY_INPUT'; payload: { 
+      typedKey: string; 
+      isCorrect: boolean; 
+      isExactMatch: boolean; 
+      buffer: string; 
+      mistake?: { char: string; expected: string; actual: string; typedKey: string; kanaIndex: number; previousInputBuffer: string };
+    } }
   | { type: 'RESET_FLASH' };
 
 export const initialState: GameState = {
@@ -73,46 +74,47 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
         lastTypedKey: action.payload.typedKey,
         totalKeystrokes: 1,
       };
-    case 'TYPE_KEY':
-      return {
+    case 'PROCESS_KEY_INPUT':
+      const { typedKey, isCorrect, isExactMatch, buffer, mistake } = action.payload;
+      let newState = {
         ...state,
-        inputBuffer: action.payload.buffer,
-        lastTypedKey: action.payload.typedKey,
+        lastTypedKey: typedKey,
         totalKeystrokes: state.totalKeystrokes + 1,
-        error: false,
       };
-    case 'CORRECT_KEY':
-      return {
-        ...state,
-        correctKeystrokes: state.correctKeystrokes + action.payload.bufferLength,
-        correctKanaUnits: state.correctKanaUnits + 1,
-        inputBuffer: "",
-        flashCorrect: true,
-      };
-    case 'INCORRECT_KEY':
-      return {
-        ...state,
-        error: true,
-        inputBuffer: "",
-        mistakes: [...state.mistakes, action.payload],
-      };
-    case 'NEXT_KANA':
-      return {
-        ...state,
-        currentKanaIndex: state.currentKanaIndex + 1,
-      };
-    case 'NEXT_TEXT':
-      return {
-        ...state,
-        currentTextIndex: state.currentTextIndex + 1,
-        currentKanaIndex: 0,
-        typingUnits: getTypingUnits(state.courseTexts[state.currentTextIndex + 1]?.reading || ""),
-      };
-    case 'FINISH_GAME':
-      return {
-        ...state,
-        status: 'finished',
-      };
+
+      if (isCorrect) {
+        newState.error = false;
+        newState.inputBuffer = buffer;
+
+        if (isExactMatch) {
+          newState.correctKeystrokes = state.correctKeystrokes + buffer.length; // Use buffer length, as it includes previous chars
+          newState.correctKanaUnits = state.correctKanaUnits + 1;
+          newState.inputBuffer = ""; // Clear buffer on completion
+          newState.flashCorrect = true;
+
+          // Check if kana is finished
+          if (state.currentKanaIndex < state.typingUnits.length - 1) {
+            newState.currentKanaIndex = state.currentKanaIndex + 1;
+          } else {
+            // Check if text is finished
+            if (state.currentTextIndex < state.courseTexts.length - 1) {
+              newState.currentTextIndex = state.currentTextIndex + 1;
+              newState.currentKanaIndex = 0;
+              newState.typingUnits = getTypingUnits(state.courseTexts[state.currentTextIndex + 1]?.reading || "");
+            } else {
+              // Game finished
+              newState.status = 'finished';
+            }
+          }
+        }
+      } else if (mistake) {
+        newState.error = true;
+        newState.inputBuffer = mistake.previousInputBuffer; // Revert buffer
+        newState.mistakes = [...state.mistakes, mistake];
+      }
+
+      return newState;
+
     case 'RESET_FLASH':
       return {
         ...state,
