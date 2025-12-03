@@ -96,10 +96,10 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full relative">
-      <div className="mb-8 p-8 bg-white rounded-lg shadow-lg min-w-[800px] flex flex-col items-center justify-center gap-6">
+    <div className="flex flex-col items-center justify-center w-full relative min-h-[600px]"> {/* Added min-h to ensure space */}
+      <div className="mb-4 p-6 bg-white rounded-lg shadow-lg min-w-[600px] flex flex-col items-center justify-center gap-4 transform scale-90 origin-top"> {/* Reduced padding/gap, added scale */}
         {/* 漢字（表示用テキスト） */}
-        <div className="text-6xl font-bold text-gray-800 tracking-wider mb-4">
+        <div className="text-5xl font-bold text-gray-800 tracking-wider mb-2"> {/* Reduced font size */}
           {currentDisplayText}
         </div>
         {/* ひらがな & ローマ字（入力ガイド） */}
@@ -110,14 +110,16 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
         )}
       </div>
       
-      {error && <p className="text-red-500 text-xl mt-4">入力が間違っています。正しいローマ字を入力してください。</p>}
-      {!isGameStarted && <p className="text-gray-600 text-xl mt-4">キーを押してタイピングを開始してください。</p>} {/* ゲーム開始前のメッセージ（オプション） */}
+      {error && <p className="text-red-500 text-lg mt-2">入力が間違っています。正しいローマ字を入力してください。</p>}
+      {!isGameStarted && <p className="text-gray-600 text-lg mt-2">キーを押してタイピングを開始してください。</p>} 
       
-      {/* キーボードと運指ガイド */}
-      <div className="flex flex-col items-center gap-4">
+      {/* キーボード */}
+      <div className="flex flex-col items-center gap-4 transform scale-90 origin-top">
         <OnScreenKeyboard lastTypedKey={lastTypedKey} nextKey={nextKey} />
-        <FingerGuide nextKey={nextKey} />
       </div>
+
+      {/* 運指ガイド (Fixed position handled in component, just render it here) */}
+      <FingerGuide nextKey={nextKey} />
     </div>
   );
 };

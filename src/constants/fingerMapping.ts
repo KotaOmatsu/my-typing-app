@@ -21,19 +21,6 @@ export const KEY_TO_FINGER: { [key: string]: FingerName } = {
   '8': 'right-middle', 'i': 'right-middle', 'k': 'right-middle', ',': 'right-middle',
   '9': 'right-ring', 'o': 'right-ring', 'l': 'right-ring', '.': 'right-ring',
   '0': 'right-pinky', 'p': 'right-pinky', ';': 'right-pinky', '/': 'right-pinky',
-  '-': 'right-pinky', '[': 'right-pinky', "'": 'right-pinky',
+  '-': 'right-pinky', '[': 'right-pinky', '\'': 'right-pinky',
   ']': 'right-pinky', '\\': 'right-pinky', '=': 'right-pinky'
-};
-
-export const FINGER_LABELS: { [key in FingerName]: string } = {
-  'left-pinky': '左小',
-  'left-ring': '左薬',
-  'left-middle': '左中',
-  'left-index': '左人',
-  'left-thumb': '左親',
-  'right-thumb': '右親',
-  'right-index': '右人',
-  'right-middle': '右中',
-  'right-ring': '右薬',
-  'right-pinky': '右小',
 };
