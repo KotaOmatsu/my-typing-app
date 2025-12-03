@@ -26,9 +26,8 @@ export interface WeaknessAnalysis {
   fingerScores: FingerScore[];
   keyScores: KeyScore[];
   missCategories: MissCategory[];
-  missedKeys: { key: string; count: number }[];
-  accidentalKeys: { key: string; count: number }[];
   sequenceWeaknesses: { pattern: string; count: number }[];
+  missPatterns: { pattern: string; count: number }[]; // "打つべきキー -> 実際に入力したキー"
   worstFinger: string; // For summary
 }
 
@@ -66,18 +65,12 @@ function isMirrorKey(key1: string, key2: string): boolean {
   const p1 = KEY_LAYOUT[key1];
   const p2 = KEY_LAYOUT[key2];
   if (!p1 || !p2) return false;
-  // Check if fingers are symmetric (e.g. 0 and 9, 1 and 8)
-  // Left hand fingers are 0-4, Right are 5-9. (Skipping thumbs 4,5 for simple mapping logic above? No, layout has 0-9 index mapped to fingers)
-  // Let's use the finger index from KEY_LAYOUT.
-  // Standard map: L-Pinky=0, R-Pinky=9. Sum is 9.
-  // L-Ring=1, R-Ring=8. Sum is 9.
-  return (p1[2] + p2[2] === 9) && (p1[0] === p2[0]); // Same row, symmetric finger
+  return (p1[2] + p2[2] === 9) && (p1[0] === p2[0]);
 }
 
 export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
-  const missedKeyCounts: { [key: string]: number } = {};
-  const accidentalKeyCounts: { [key: string]: number } = {};
   const sequenceCounts: { [key: string]: number } = {};
+  const missPatternCounts: { [key: string]: number } = {}; // "Expected -> Actual"
   
   const fingerMissCounts: { [index: number]: number } = {};
   const keyMissCounts: { [key: string]: number } = {}; // For heatmap (based on expected key)
@@ -94,19 +87,19 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
     const actualKey = mistake.typedKey.toLowerCase();
 
     if (expectedKey && KEY_LAYOUT[expectedKey]) {
-        // 1. Counts
-        missedKeyCounts[expectedKey] = (missedKeyCounts[expectedKey] || 0) + 1;
-        accidentalKeyCounts[actualKey] = (accidentalKeyCounts[actualKey] || 0) + 1;
-        
+        // Counts
         const sequencePattern = `${precedingKey} -> ${expectedKey}`;
         sequenceCounts[sequencePattern] = (sequenceCounts[sequencePattern] || 0) + 1;
 
-        // 2. Finger & Key Scores (Based on Missed Key - "Hard to hit")
+        const missPattern = `${expectedKey} -> ${actualKey}`;
+        missPatternCounts[missPattern] = (missPatternCounts[missPattern] || 0) + 1;
+
+        // Finger & Key Scores (Based on Missed Key - "Hard to hit")
         const fingerIdx = KEY_LAYOUT[expectedKey][2];
         fingerMissCounts[fingerIdx] = (fingerMissCounts[fingerIdx] || 0) + 1;
         keyMissCounts[expectedKey] = (keyMissCounts[expectedKey] || 0) + 1;
 
-        // 3. Classification
+        // Classification
         if (getDistance(expectedKey, actualKey) === 1) {
             fatFingerCount++;
         } else if (isMirrorKey(expectedKey, actualKey)) {
@@ -124,7 +117,7 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
     Object.entries(counts)
         .sort(([, a], [, b]) => b - a)
         .slice(0, limit)
-        .map(([key, count]) => ({ key, count, pattern: key })); // Ensure pattern is set for sequenceWeaknesses
+        .map(([key, count]) => ({ pattern: key, count })); // Changed to pattern: key
 
   // Normalize Scores
   const maxFingerMiss = Math.max(...Object.values(fingerMissCounts), 1);
@@ -152,9 +145,8 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
 
   return {
     totalMistakes: mistakes.length,
-    missedKeys: getTop(missedKeyCounts),
-    accidentalKeys: getTop(accidentalKeyCounts),
     sequenceWeaknesses: getTop(sequenceCounts),
+    missPatterns: getTop(missPatternCounts),
     fingerScores,
     keyScores,
     missCategories,

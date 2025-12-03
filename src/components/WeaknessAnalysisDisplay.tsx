@@ -8,7 +8,7 @@ interface WeaknessAnalysisDisplayProps {
 }
 
 const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analysis }) => {
-  const [activeTab, setActiveTab] = useState<'keys' | 'patterns' | 'trends'>('keys');
+  const [activeTab, setActiveTab] = useState<'patterns' | 'trends'>('patterns');
 
   if (!analysis || analysis.totalMistakes === 0) {
     return (
@@ -102,16 +102,10 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
         <div className="col-span-1 lg:col-span-2 flex flex-col">
             <div className="flex border-b border-gray-200">
                 <button 
-                    className={`flex-1 py-3 text-sm font-medium ${activeTab === 'keys' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-                    onClick={() => setActiveTab('keys')}
-                >
-                    キーのミス詳細
-                </button>
-                <button 
                     className={`flex-1 py-3 text-sm font-medium ${activeTab === 'patterns' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                     onClick={() => setActiveTab('patterns')}
                 >
-                    ミスパターン分析
+                    ミスパターン
                 </button>
                 <button 
                     className={`flex-1 py-3 text-sm font-medium ${activeTab === 'trends' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
@@ -122,33 +116,6 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
             </div>
 
             <div className="p-6 flex-1 overflow-y-auto max-h-[400px]">
-                {activeTab === 'keys' && (
-                    <div className="space-y-6">
-                        <div>
-                            <h4 className="text-sm font-bold text-red-600 mb-2">打つべきキー (Missed Keys)</h4>
-                            <ul className="grid grid-cols-2 gap-2">
-                                {analysis.missedKeys.slice(0, 6).map((item, i) => (
-                                    <li key={i} className="flex justify-between p-2 bg-red-50 rounded">
-                                        <span className="font-mono font-bold text-gray-700 uppercase">{item.key}</span>
-                                        <span className="text-sm text-gray-500">{item.count}回</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 className="text-sm font-bold text-orange-600 mb-2">実際に入力したキー (Accidental Keys)</h4>
-                            <ul className="grid grid-cols-2 gap-2">
-                                {analysis.accidentalKeys.slice(0, 6).map((item, i) => (
-                                    <li key={i} className="flex justify-between p-2 bg-orange-50 rounded">
-                                        <span className="font-mono font-bold text-gray-700 uppercase">{item.key}</span>
-                                        <span className="text-sm text-gray-500">{item.count}回</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-                )}
-
                 {activeTab === 'patterns' && (
                     <div className="space-y-6">
                         <div>
