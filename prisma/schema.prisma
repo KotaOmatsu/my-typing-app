@@ -92,6 +92,7 @@ model TypingResult {
   wpm                Float
   accuracy           Float
   mistakeCount       Int
+  score              Int      @default(0)
   totalKeystrokes    Int
   correctKeystrokes  Int
   text               String

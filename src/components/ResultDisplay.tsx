@@ -73,6 +73,9 @@ const ResultDisplay: React.FC = () => {
         )}
         <p className="text-xl text-gray-700 mb-2">正確性: {accuracyPercentage}%</p>
         <p className="text-xl text-gray-700 mb-2">タイピング速度 (WPM): {wpm}</p>
+        {result.score !== undefined && (
+          <p className="text-2xl text-blue-600 font-bold mb-2">スコア: {result.score}</p>
+        )}
         <p className="text-xl text-gray-700 mb-4">総打鍵数: {result.totalKeystrokes} (正解打鍵数: {result.correctKeystrokes})</p>
 
         {result.typedText && mistakeDetails && (

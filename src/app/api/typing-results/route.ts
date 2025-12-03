@@ -16,6 +16,7 @@ export async function POST(req: Request) {
       wpm,
       accuracy,
       mistakeCount,
+      score,
       totalKeystrokes,
       correctKeystrokes,
       text,
@@ -41,6 +42,7 @@ export async function POST(req: Request) {
         wpm,
         accuracy,
         mistakeCount,
+        score: score ?? 0, // Use 0 if score is undefined
         totalKeystrokes,
         correctKeystrokes,
         text,

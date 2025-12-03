@@ -27,6 +27,7 @@ export interface TypingText {
 export interface TypingResult {
   accuracy: number; // 正確性 (%)
   wpm: number; // Words Per Minute
+  score?: number; // 総合スコア
   mistakes: Mistake[]; // ミスの詳細配列
   startTime: number; // 開始時刻 (Unixタイムスタンプ)
   endTime: number; // 終了時刻 (Unixタイムスタンプ)
