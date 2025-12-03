@@ -21,6 +21,9 @@ export default function HistoryTable({ results }: HistoryTableProps) {
               実施日時
             </th>
             <th scope="col" className="py-3 px-6">
+              スコア
+            </th>
+            <th scope="col" className="py-3 px-6">
               WPM
             </th>
             <th scope="col" className="py-3 px-6">
@@ -46,6 +49,9 @@ export default function HistoryTable({ results }: HistoryTableProps) {
                   minute: '2-digit',
                 })}
               </th>
+              <td className="py-4 px-6 font-semibold text-gray-900">
+                {result.score}
+              </td>
               <td className="py-4 px-6">
                 {result.wpm.toFixed(2)}
               </td>

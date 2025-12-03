@@ -7,6 +7,7 @@ export interface TypingResultPayload {
   wpm: number;
   accuracy: number;
   mistakeCount: number;
+  score: number;
   totalKeystrokes: number;
   correctKeystrokes: number;
   text: string;

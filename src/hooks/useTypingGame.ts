@@ -129,9 +129,13 @@ export const useTypingGame = (courseId?: string) => {
         if (status === 'finished' && startTime) {
             const endTime = Date.now();
             const elapsedTime = endTime - startTime;
+            const durationSeconds = elapsedTime / 1000;
 
-            const wpm = totalKeystrokes > 0 ? (correctKanaUnits / (elapsedTime / 1000)) * 60 : 0;
+            const wpm = totalKeystrokes > 0 ? (correctKanaUnits / durationSeconds) * 60 : 0;
             const accuracy = totalKeystrokes > 0 ? (correctKeystrokes / totalKeystrokes) * 100 : 0;
+            const score = durationSeconds > 0 
+                ? Math.max(0, Math.round(((correctKeystrokes - mistakes.length) / durationSeconds) * 1000))
+                : 0;
 
             // 全テキストのデータを結合する (courseTextsを使用)
             const allTypedText = courseTexts.map(t => t.reading).join("");
@@ -141,6 +145,7 @@ export const useTypingGame = (courseId?: string) => {
             const result = {
                 wpm: wpm,
                 accuracy: accuracy,
+                score: score,
                 totalKeystrokes: totalKeystrokes,
                 correctKeystrokes: correctKeystrokes,
                 mistakes: mistakes,
@@ -158,6 +163,7 @@ export const useTypingGame = (courseId?: string) => {
                     wpm: result.wpm,
                     accuracy: result.accuracy,
                     mistakeCount: result.mistakes.length,
+                    score: result.score,
                     totalKeystrokes: result.totalKeystrokes,
                     correctKeystrokes: result.correctKeystrokes,
                     text: result.displayText, // DBには表示用テキストを保存
