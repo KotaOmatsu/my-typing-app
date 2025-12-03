@@ -72,14 +72,25 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
           {settings.showRomaji && (
             <span className="text-2xl font-mono mt-1 h-8">
               {index === currentKanaIndex ? (
-                <span>
-                  <span className="text-blue-600">{inputBuffer}</span>
-                  <span className="text-gray-300">
-                      {recommendedRomaji.startsWith(inputBuffer) 
-                        ? recommendedRomaji.slice(inputBuffer.length) 
-                        : "" /* 入力が合わない場合はガイドを非表示にする */}
-                  </span>
-                </span>
+                (() => {
+                  const remaining = recommendedRomaji.startsWith(inputBuffer)
+                    ? recommendedRomaji.slice(inputBuffer.length)
+                    : "";
+                  const nextChar = remaining.charAt(0);
+                  const rest = remaining.slice(1);
+
+                  return (
+                    <span>
+                      <span className="text-blue-600">{inputBuffer}</span>
+                      {nextChar && (
+                        <span className="text-orange-500 font-bold border-b-2 border-orange-500">
+                          {nextChar}
+                        </span>
+                      )}
+                      <span className="text-gray-300">{rest}</span>
+                    </span>
+                  );
+                })()
               ) : index < currentKanaIndex ? (
                 // 入力済みの文字は薄く表示するか、非表示にする
                 <span className="text-green-500 opacity-50">{recommendedRomaji}</span>
