@@ -30,7 +30,8 @@ export const useTypingGame = (courseId?: string) => {
     correctKeystrokes,
     correctKanaUnits,
     currentTextIndex,
-    courseTexts // Added to state
+    courseTexts, // Added to state
+    courseTitle // Add courseTitle to destructuring
   } = state;
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export const useTypingGame = (courseId?: string) => {
             if (data.texts && Array.isArray(data.texts) && data.texts.length > 0) {
               texts = data.texts;
             }
+            dispatch({ type: 'SET_COURSE_TITLE', payload: { title: data.title || null } });
           } else {
             console.error("Failed to fetch course:", res.statusText);
           }
@@ -59,6 +61,7 @@ export const useTypingGame = (courseId?: string) => {
       if (texts.length === 0) {
         // Minimal fallback to prevent crash
         texts = [{ id: "fallback", display: "読み込みエラー", reading: "よみこみえらー" }];
+        dispatch({ type: 'SET_COURSE_TITLE', payload: { title: "デフォルトコース" } });
       }
 
       dispatch({ 
@@ -194,6 +197,7 @@ export const useTypingGame = (courseId?: string) => {
     lastTypedKey,
     mistakes,
     currentDisplayText: courseTexts[currentTextIndex]?.display || "",
+    courseTitle, // Return courseTitle
     handleKeyDown, // handleKeyDown is still returned for potential future use, though not directly used by TypingGame component anymore
   };
 };

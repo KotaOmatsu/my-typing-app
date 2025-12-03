@@ -22,6 +22,7 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     isGameStarted,
     lastTypedKey,
     currentDisplayText,
+    courseTitle, // Add courseTitle to destructuring
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
@@ -97,6 +98,9 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
 
   return (
     <div className="flex flex-col items-center justify-center w-full relative min-h-[600px]"> {/* Added min-h to ensure space */}
+      {courseTitle && (
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">{courseTitle}</h1>
+      )}
       <div className="mb-4 p-6 bg-white rounded-lg shadow-lg min-w-[600px] flex flex-col items-center justify-center gap-4 transform scale-90 origin-top"> {/* Reduced padding/gap, added scale */}
         {/* 漢字（表示用テキスト） */}
         <div className="text-5xl font-bold text-gray-800 tracking-wider mb-2"> {/* Reduced font size */}

@@ -18,10 +18,12 @@ export interface GameState {
   flashCorrect: boolean;
   lastTypedKey: string | null;
   courseTexts: TypingText[];
+  courseTitle: string | null; // コースタイトルを追加
 }
 
 export type GameAction =
   | { type: 'MAP_LOADED'; payload: { typingUnits: string[]; courseTexts: TypingText[] } }
+  | { type: 'SET_COURSE_TITLE'; payload: { title: string | null } } // コースタイトル設定アクションを追加
   | { type: 'START_GAME'; payload: { startTime: number; typedKey: string } }
   | { type: 'TYPE_KEY'; payload: { typedKey: string; isCorrect: boolean; isPartial: boolean; buffer: string } }
   | { type: 'CORRECT_KEY'; payload: { bufferLength: number } }
@@ -46,6 +48,7 @@ export const initialState: GameState = {
   flashCorrect: false,
   lastTypedKey: null,
   courseTexts: [],
+  courseTitle: null, // 初期値はnull
 };
 
 export const reducer = (state: GameState, action: GameAction): GameState => {
@@ -56,6 +59,11 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
         status: 'idle',
         typingUnits: action.payload.typingUnits,
         courseTexts: action.payload.courseTexts,
+      };
+    case 'SET_COURSE_TITLE':
+      return {
+        ...state,
+        courseTitle: action.payload.title,
       };
     case 'START_GAME':
       return {
