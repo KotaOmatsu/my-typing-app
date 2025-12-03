@@ -111,7 +111,6 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
       </div>
       
       {error && <p className="text-red-500 text-lg mt-2">入力が間違っています。正しいローマ字を入力してください。</p>}
-      {!isGameStarted && <p className="text-gray-600 text-lg mt-2">キーを押してタイピングを開始してください。</p>} 
       
       {/* キーボード */}
       <div className="flex flex-col items-center gap-4 transform scale-90 origin-top">
