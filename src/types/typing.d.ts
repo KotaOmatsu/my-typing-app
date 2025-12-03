@@ -9,6 +9,7 @@ export interface Mistake {
   actual: string; // 実際のローマ字入力
   typedKey: string; // 実際にタイプされたキー
   kanaIndex: number; // 文章全体における仮名のインデックス
+  previousInputBuffer?: string; // 誤入力直前の入力バッファ状態
 }
 
 /**

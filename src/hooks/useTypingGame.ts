@@ -30,10 +30,13 @@ export const useTypingGame = (courseId?: string) => {
     correctKeystrokes,
     correctKanaUnits,
     currentTextIndex,
-    courseTexts // Added to state
+    courseTexts, // Added to state
+    courseTitle // Add courseTitle to destructuring
   } = state;
 
   useEffect(() => {
+    let isCancelled = false;
+
     const loadCourse = async () => {
       if (!isMapLoaded) return;
 
@@ -42,15 +45,21 @@ export const useTypingGame = (courseId?: string) => {
       if (courseId) {
         try {
           const res = await fetch(`/api/courses/${courseId}`);
+          if (isCancelled) return; // Check cancellation after await
+
           if (res.ok) {
             const data = await res.json();
+            if (isCancelled) return; // Check cancellation after await
+
             if (data.texts && Array.isArray(data.texts) && data.texts.length > 0) {
               texts = data.texts;
             }
+            dispatch({ type: 'SET_COURSE_TITLE', payload: { title: data.title || null } });
           } else {
             console.error("Failed to fetch course:", res.statusText);
           }
         } catch (error) {
+          if (isCancelled) return;
           console.error("Error fetching course:", error);
         }
       }
@@ -59,18 +68,25 @@ export const useTypingGame = (courseId?: string) => {
       if (texts.length === 0) {
         // Minimal fallback to prevent crash
         texts = [{ id: "fallback", display: "読み込みエラー", reading: "よみこみえらー" }];
+        dispatch({ type: 'SET_COURSE_TITLE', payload: { title: "デフォルトコース" } });
       }
 
-      dispatch({ 
-        type: 'MAP_LOADED', 
-        payload: { 
-          typingUnits: getTypingUnits(texts[0].reading),
-          courseTexts: texts 
-        } 
-      });
+      if (!isCancelled) {
+        dispatch({ 
+            type: 'MAP_LOADED', 
+            payload: { 
+            typingUnits: getTypingUnits(texts[0].reading),
+            courseTexts: texts 
+            } 
+        });
+      }
     };
 
     loadCourse();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [isMapLoaded, courseId]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -95,31 +111,50 @@ export const useTypingGame = (courseId?: string) => {
     const currentKana = typingUnits[currentKanaIndex];
     const nextTypingUnit = typingUnits[currentKanaIndex + 1];
 
-    dispatch({ type: 'TYPE_KEY', payload: { typedKey: typedChar, buffer: newBuffer, isCorrect: false, isPartial: false } });
-
     const { exact: isExactMatch, partial: isPartialMatch } = checkRomajiMatch(currentKana, newBuffer, nextTypingUnit);
 
     if (isExactMatch) {
-      dispatch({ type: 'CORRECT_KEY', payload: { bufferLength: newBuffer.length } });
+      dispatch({ 
+        type: 'PROCESS_KEY_INPUT', 
+        payload: { 
+          typedKey: typedChar, 
+          isCorrect: true, 
+          isExactMatch: true, 
+          buffer: newBuffer 
+        } 
+      });
       setTimeout(() => dispatch({ type: 'RESET_FLASH' }), 200);
-
-      if (currentKanaIndex < typingUnits.length - 1) {
-        dispatch({ type: 'NEXT_KANA' });
-      } else {
-        if (currentTextIndex < courseTexts.length - 1) {
-          dispatch({ type: 'NEXT_TEXT' });
-        } else {
-          dispatch({ type: 'FINISH_GAME' });
-        }
-      }
-    } else if (!isPartialMatch) {
+    } else if (isPartialMatch) {
+      dispatch({ 
+        type: 'PROCESS_KEY_INPUT', 
+        payload: { 
+          typedKey: typedChar, 
+          isCorrect: true, 
+          isExactMatch: false, 
+          buffer: newBuffer 
+        } 
+      });
+    } else {
       const expectedRomajiForError = getRomajiCandidates(currentKana).join("/");
       const precedingCharCount = courseTexts.slice(0, currentTextIndex).map(text => getTypingUnits(text.reading).length).reduce((a, b) => a + b, 0);
       const absoluteKanaIndex = precedingCharCount + currentKanaIndex;
 
       dispatch({
-        type: 'INCORRECT_KEY',
-        payload: { char: currentKana, expected: expectedRomajiForError, actual: newBuffer, typedKey: typedChar, kanaIndex: absoluteKanaIndex },
+        type: 'PROCESS_KEY_INPUT',
+        payload: { 
+          typedKey: typedChar, 
+          isCorrect: false, 
+          isExactMatch: false, 
+          buffer: newBuffer,
+          mistake: { 
+            char: currentKana, 
+            expected: expectedRomajiForError, 
+            actual: newBuffer, 
+            typedKey: typedChar, 
+            kanaIndex: absoluteKanaIndex,
+            previousInputBuffer: inputBuffer, 
+          }
+        },
       });
     }
   }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, router, courseTexts]);
@@ -194,6 +229,7 @@ export const useTypingGame = (courseId?: string) => {
     lastTypedKey,
     mistakes,
     currentDisplayText: courseTexts[currentTextIndex]?.display || "",
+    courseTitle, // Return courseTitle
     handleKeyDown, // handleKeyDown is still returned for potential future use, though not directly used by TypingGame component anymore
   };
 };

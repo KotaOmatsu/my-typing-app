@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 interface OnScreenKeyboardProps {
   lastTypedKey?: string | null;
   mistypedKeys?: { [key: string]: number };
+  nextKey?: string | null;
 }
 
 const keyboardLayout = [
@@ -15,7 +16,7 @@ const keyboardLayout = [
   ['ctrl', 'alt', 'space', 'alt', 'ctrl'],
 ];
 
-const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey, mistypedKeys = {} }) => {
+const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey, mistypedKeys = {}, nextKey }) => {
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,12 +32,14 @@ const OnScreenKeyboard: React.FC<OnScreenKeyboardProps> = ({ lastTypedKey, misty
   const getKeyClass = (key: string) => {
     let baseClass = 'flex items-center justify-center rounded-md shadow-sm text-gray-800 font-semibold';
     const mistakeCount = mistypedKeys[key.toLowerCase()] || 0;
+    const isNextKey = nextKey && key.toLowerCase() === nextKey.toLowerCase();
 
     if (key === activeKey) {
       baseClass += ' bg-blue-400 text-white'; // アクティブなキーの色
     } else if (mistakeCount > 0) {
-      baseClass += ` bg-red-500`
-      baseClass = `${baseClass} text-white`
+      baseClass += ` bg-red-500 text-white`;
+    } else if (isNextKey) {
+      baseClass += ' bg-yellow-200 ring-2 ring-yellow-400'; // 次に打つべきキーの色
     } else {
       baseClass += ' bg-gray-200 hover:bg-gray-300';
     }

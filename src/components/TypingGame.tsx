@@ -2,6 +2,7 @@
 
 import React from 'react';
 import OnScreenKeyboard from '../components/OnScreenKeyboard';
+import FingerGuide from '../components/FingerGuide';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { getRecommendedRomaji } from '../utils/romajiUtils';
 import { useGameSettings } from '../hooks/useGameSettings';
@@ -18,12 +19,26 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     inputBuffer,
     error,
     flashCorrect,
-    isGameStarted,
     lastTypedKey,
     currentDisplayText,
+    courseTitle, // Add courseTitle to destructuring
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
+
+  // Calculate next key for guides
+  const nextKey = React.useMemo(() => {
+    if (typingUnits.length > 0 && currentKanaIndex < typingUnits.length) {
+        const currentUnit = typingUnits[currentKanaIndex];
+        const nextUnit = typingUnits[currentKanaIndex + 1];
+        const recommendedRomaji = getRecommendedRomaji(currentUnit, nextUnit);
+        const remainingRomaji = recommendedRomaji.slice(inputBuffer.length);
+        if (remainingRomaji.length > 0) {
+            return remainingRomaji[0];
+        }
+    }
+    return null;
+  }, [typingUnits, currentKanaIndex, inputBuffer]);
 
   const renderText = () => {
     return typingUnits.map((unit, index) => {
@@ -56,14 +71,25 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
           {settings.showRomaji && (
             <span className="text-2xl font-mono mt-1 h-8">
               {index === currentKanaIndex ? (
-                <span>
-                  <span className="text-blue-600">{inputBuffer}</span>
-                  <span className="text-gray-300">
-                      {recommendedRomaji.startsWith(inputBuffer) 
-                        ? recommendedRomaji.slice(inputBuffer.length) 
-                        : "" /* 入力が合わない場合はガイドを非表示にする */}
-                  </span>
-                </span>
+                (() => {
+                  const remaining = recommendedRomaji.startsWith(inputBuffer)
+                    ? recommendedRomaji.slice(inputBuffer.length)
+                    : "";
+                  const nextChar = remaining.charAt(0);
+                  const rest = remaining.slice(1);
+
+                  return (
+                    <span>
+                      <span className="text-blue-600">{inputBuffer}</span>
+                      {nextChar ? (
+                        <span className="text-blue-600 font-bold border-b-2 border-blue-600">
+                          {nextChar}
+                        </span>
+                      ) : null}
+                      <span className="text-gray-300">{rest}</span>
+                    </span>
+                  );
+                })()
               ) : index < currentKanaIndex ? (
                 // 入力済みの文字は薄く表示するか、非表示にする
                 <span className="text-green-500 opacity-50">{recommendedRomaji}</span>
@@ -83,10 +109,13 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full relative">
-      <div className="mb-8 p-8 bg-white rounded-lg shadow-lg min-w-[800px] flex flex-col items-center justify-center gap-6">
+    <div className="flex flex-col items-center justify-center w-full relative min-h-[600px]"> {/* Added min-h to ensure space */}
+      {courseTitle && (
+        <h1 className="text-3xl font-bold text-gray-800 mb-4">{courseTitle}</h1>
+      )}
+      <div className="mb-4 p-6 bg-white rounded-lg shadow-lg min-w-[600px] flex flex-col items-center justify-center gap-4 transform scale-90 origin-top"> {/* Reduced padding/gap, added scale */}
         {/* 漢字（表示用テキスト） */}
-        <div className="text-6xl font-bold text-gray-800 tracking-wider mb-4">
+        <div className="text-5xl font-bold text-gray-800 tracking-wider mb-2"> {/* Reduced font size */}
           {currentDisplayText}
         </div>
         {/* ひらがな & ローマ字（入力ガイド） */}
@@ -97,9 +126,15 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
         )}
       </div>
       
-      {error && <p className="text-red-500 text-xl mt-4">入力が間違っています。正しいローマ字を入力してください。</p>}
-      {!isGameStarted && <p className="text-gray-600 text-xl mt-4">キーを押してタイピングを開始してください。</p>} {/* ゲーム開始前のメッセージ（オプション） */}
-      <OnScreenKeyboard lastTypedKey={lastTypedKey} /> {/* オン・スクリーン・キーボードを追加 */}
+      {error && <p className="text-red-500 text-lg mt-2">入力が間違っています。正しいローマ字を入力してください。</p>}
+      
+      {/* キーボード */}
+      <div className="flex flex-col items-center gap-4 transform scale-90 origin-top">
+        <OnScreenKeyboard lastTypedKey={lastTypedKey} nextKey={nextKey} />
+      </div>
+
+      {/* 運指ガイド (Fixed position handled in component, just render it here) */}
+      <FingerGuide nextKey={nextKey} />
     </div>
   );
 };
