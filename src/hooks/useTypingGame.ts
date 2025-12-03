@@ -128,7 +128,7 @@ export const useTypingGame = (courseId?: string) => {
     useEffect(() => {
         if (status === 'finished' && startTime) {
             const endTime = Date.now();
-            const elapsedTime = endTime - startTime;
+            const elapsedTime = Math.max(1, endTime - startTime); // Ensure non-zero duration
             const durationSeconds = elapsedTime / 1000;
 
             const wpm = totalKeystrokes > 0 ? (correctKanaUnits / durationSeconds) * 60 : 0;

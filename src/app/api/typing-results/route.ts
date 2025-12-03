@@ -28,7 +28,6 @@ export async function POST(req: Request) {
       typeof wpm !== 'number' ||
       typeof accuracy !== 'number' ||
       typeof mistakeCount !== 'number' ||
-      typeof score !== 'number' ||
       typeof totalKeystrokes !== 'number' ||
       typeof correctKeystrokes !== 'number' ||
       typeof text !== 'string' ||
@@ -43,7 +42,7 @@ export async function POST(req: Request) {
         wpm,
         accuracy,
         mistakeCount,
-        score,
+        score: score ?? 0, // Use 0 if score is undefined
         totalKeystrokes,
         correctKeystrokes,
         text,
