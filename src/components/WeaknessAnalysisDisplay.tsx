@@ -47,16 +47,51 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
         {/* Left: Visual Heatmap (Finger & Keyboard) */}
         <div className="col-span-1 lg:col-span-1 p-6 border-r border-gray-200">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Finger Heatmap</h3>
-            <div className="flex justify-center space-x-1 mb-8">
-                {analysis.fingerScores.map((fs, idx) => (
-                    <div key={idx} className="flex flex-col items-center group relative">
-                        <div 
-                            className={`w-4 h-12 rounded-t-full border border-gray-300 ${getHeatColor(fs.score)} transition-colors`}
-                            title={`${fs.finger}: ${fs.missCount} miss`}
-                        ></div>
-                        <span className="text-xs mt-1 text-gray-500">{fs.finger[1]}</span>{/* Show abbreviated finger name e.g. 小 */}
-                    </div>
-                ))}
+            <div className="flex justify-center items-end space-x-8 mb-8"> {/* Increased gap between hands */}
+                
+                {/* Left Hand (0-4) */}
+                <div className="flex space-x-1 items-end">
+                    {[0, 1, 2, 3, 4].map(idx => {
+                        const fs = analysis.fingerScores[idx];
+                        const height = [12, 16, 20, 16, 10][idx]; // Relative heights
+                        return (
+                            <div key={idx} className="flex flex-col items-center group relative">
+                                <div 
+                                    className={`w-4 rounded-t-full border border-gray-300 ${getHeatColor(fs?.score || 0)} transition-colors`}
+                                    style={{ height: `${height * 4}px` }}
+                                    title={`${fs?.finger}: ${fs?.missCount} miss`}
+                                ></div>
+                                <span className="text-xs mt-1 text-gray-500">{fs?.finger[1]}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Right Hand (5-9) */}
+                <div className="flex space-x-1 items-end">
+                    {[5, 6, 7, 8, 9].map(idx => { // Note: FINGER_NAMES order is L-Pinky...L-Thumb, R-Thumb...R-Pinky.
+                        // Wait, FINGER_NAMES in analysisUtils:
+                        // '左小', '左薬', '左中', '左人', '左親', '右親', '右人', '右中', '右薬', '右小'
+                        // So indices 5-9 are R-Thumb to R-Pinky.
+                        // This matches the natural visual order if displayed L->R.
+                        // Left hand: Pinky(0) -> Thumb(4).
+                        // Right hand: Thumb(5) -> Pinky(9).
+                        // Heights should mirror: Thumb(short) -> Middle(tall) -> Pinky(short).
+                        // Index 5 (Thumb) -> 10, Index 6 (Index) -> 16, 7 (Middle) -> 20, 8 (Ring) -> 16, 9 (Pinky) -> 12.
+                        const fs = analysis.fingerScores[idx];
+                        const height = [10, 16, 20, 16, 12][idx - 5];
+                        return (
+                            <div key={idx} className="flex flex-col items-center group relative">
+                                <div 
+                                    className={`w-4 rounded-t-full border border-gray-300 ${getHeatColor(fs?.score || 0)} transition-colors`}
+                                    style={{ height: `${height * 4}px` }}
+                                    title={`${fs?.finger}: ${fs?.missCount} miss`}
+                                ></div>
+                                <span className="text-xs mt-1 text-gray-500">{fs?.finger[1]}</span>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
             
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Keyboard Heatmap</h3>
