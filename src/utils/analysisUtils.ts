@@ -1,97 +1,162 @@
 import { Mistake } from "@/types/typing";
 
-export interface WeaknessAnalysis {
-  totalMistakes: number;
-  missedKeys: { key: string; count: number }[]; // 正解だったはずのキー（打てなかったキー）
-  accidentalKeys: { key: string; count: number }[]; // 間違って押してしまったキー
-  worstFinger: string;
-  sequenceWeaknesses: { pattern: string; count: number }[]; // 例: "K" のあとの "U"
-  missPatterns: { pattern: string; count: number }[]; // 例: "r -> e" (rを打つべきところでeを打った)
+// --- Interfaces ---
+
+export interface FingerScore {
+  finger: string;
+  score: number; // 0 (perfect) to 100 (bad) based on miss rate relative to total strokes (approx)
+  missCount: number;
 }
 
-const FINGER_MAP: { [key: string]: string } = {
-  '1': '左小', 'q': '左小', 'a': '左小', 'z': '左小',
-  '2': '左薬', 'w': '左薬', 's': '左薬', 'x': '左薬',
-  '3': '左中', 'e': '左中', 'd': '左中', 'c': '左中',
-  '4': '左人', 'r': '左人', 'f': '左人', 'v': '左人',
-  '5': '左人', 't': '左人', 'g': '左人', 'b': '左人',
-  '6': '右人', 'y': '右人', 'h': '右人', 'n': '右人',
-  '7': '右人', 'u': '右人', 'j': '右人', 'm': '右人',
-  '8': '右中', 'i': '右中', 'k': '右中', ',': '右中',
-  '9': '右薬', 'o': '右薬', 'l': '右薬', '.': '右薬',
-  '0': '右小', 'p': '右小', ';': '右小', '/': '右小',
-  '-': '右小', '[': '右小', "'": '右小', ']': '右小',
+export interface KeyScore {
+  key: string;
+  score: number; // 0 to 100 heatmap intensity
+  missCount: number;
+}
+
+export interface MissCategory {
+  type: 'FatFinger' | 'Mirror' | 'Basic';
+  count: number;
+  label: string;
+  description: string;
+}
+
+export interface WeaknessAnalysis {
+  totalMistakes: number;
+  fingerScores: FingerScore[];
+  keyScores: KeyScore[];
+  missCategories: MissCategory[];
+  missedKeys: { key: string; count: number }[];
+  accidentalKeys: { key: string; count: number }[];
+  sequenceWeaknesses: { pattern: string; count: number }[];
+  worstFinger: string; // For summary
+}
+
+// --- Constants & Data ---
+
+// Simple layout map for distance/finger calc. 
+// Format: [row, col, finger_index (0=L-Pinky, 9=R-Pinky)]
+// Row 0=Number, 1=Top(Q), 2=Home(A), 3=Bottom(Z)
+const KEY_LAYOUT: { [key: string]: [number, number, number] } = {
+  '1': [0, 0, 0], '2': [0, 1, 1], '3': [0, 2, 2], '4': [0, 3, 3], '5': [0, 4, 3],
+  '6': [0, 5, 6], '7': [0, 6, 6], '8': [0, 7, 7], '9': [0, 8, 8], '0': [0, 9, 9],
+  'q': [1, 0, 0], 'w': [1, 1, 1], 'e': [1, 2, 2], 'r': [1, 3, 3], 't': [1, 4, 3],
+  'y': [1, 5, 6], 'u': [1, 6, 6], 'i': [1, 7, 7], 'o': [1, 8, 8], 'p': [1, 9, 9],
+  'a': [2, 0, 0], 's': [2, 1, 1], 'd': [2, 2, 2], 'f': [2, 3, 3], 'g': [2, 4, 3],
+  'h': [2, 5, 6], 'j': [2, 6, 6], 'k': [2, 7, 7], 'l': [2, 8, 8], ';': [2, 9, 9],
+  'z': [3, 0, 0], 'x': [3, 1, 1], 'c': [3, 2, 2], 'v': [3, 3, 3], 'b': [3, 4, 3],
+  'n': [3, 5, 6], 'm': [3, 6, 6], ',': [3, 7, 7], '.': [3, 8, 8], '/': [3, 9, 9],
 };
+
+const FINGER_NAMES = [
+  '左小', '左薬', '左中', '左人', '左親', '右親', '右人', '右中', '右薬', '右小'
+];
+
+// --- Helper Functions ---
+
+// Manhattan distance on keyboard grid
+function getDistance(key1: string, key2: string): number {
+  const p1 = KEY_LAYOUT[key1];
+  const p2 = KEY_LAYOUT[key2];
+  if (!p1 || !p2) return 999;
+  return Math.abs(p1[0] - p2[0]) + Math.abs(p1[1] - p2[1]);
+}
+
+function isMirrorKey(key1: string, key2: string): boolean {
+  const p1 = KEY_LAYOUT[key1];
+  const p2 = KEY_LAYOUT[key2];
+  if (!p1 || !p2) return false;
+  // Check if fingers are symmetric (e.g. 0 and 9, 1 and 8)
+  // Left hand fingers are 0-4, Right are 5-9. (Skipping thumbs 4,5 for simple mapping logic above? No, layout has 0-9 index mapped to fingers)
+  // Let's use the finger index from KEY_LAYOUT.
+  // Standard map: L-Pinky=0, R-Pinky=9. Sum is 9.
+  // L-Ring=1, R-Ring=8. Sum is 9.
+  return (p1[2] + p2[2] === 9) && (p1[0] === p2[0]); // Same row, symmetric finger
+}
 
 export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
   const missedKeyCounts: { [key: string]: number } = {};
   const accidentalKeyCounts: { [key: string]: number } = {};
-  const fingerCounts: { [key: string]: number } = {};
   const sequenceCounts: { [key: string]: number } = {};
-  const patternCounts: { [key: string]: number } = {};
+  
+  const fingerMissCounts: { [index: number]: number } = {};
+  const keyMissCounts: { [key: string]: number } = {}; // For heatmap (based on expected key)
+
+  let fatFingerCount = 0;
+  let mirrorCount = 0;
+  let basicCount = 0;
 
   mistakes.forEach(mistake => {
-    // 1. Extract Expected Key
-    // mistake.expected may contain multiple patterns e.g., "ka/ca"
-    // We need to find the next char based on previousInputBuffer
-    // Since inputBuffer is valid prefix, we look at index = previousInputBuffer.length
-    // If multiple patterns, we might have multiple valid next chars.
-    // However, usually we just want the primary one or we collect all possible valid next chars.
-    // For simplicity, let's take the first pattern's next char, or assume the user was aiming for the most standard one.
-    // Better: The game usually prioritizes one, but allows others.
-    // If previousInputBuffer is "k", and expected is "ka/ca", the next char could be "a".
-    // If previousInputBuffer is "", next could be "k" or "c".
-    // Let's assume the first candidate in `expected` is the standard one the user likely aimed for.
-    
     const bufferLen = mistake.previousInputBuffer?.length || 0;
     const primaryExpectedPattern = mistake.expected.split('/')[0];
-    const expectedKey = primaryExpectedPattern.charAt(bufferLen); // This is the key they SHOULD have typed
-
-    // 2. Extract Preceding Key
+    const expectedKey = primaryExpectedPattern.charAt(bufferLen).toLowerCase(); 
     const precedingKey = bufferLen > 0 ? mistake.previousInputBuffer!.slice(-1) : "Start";
+    const actualKey = mistake.typedKey.toLowerCase();
 
-    // 3. Extract Actual Key
-    const actualKey = mistake.typedKey;
-
-    if (expectedKey) {
+    if (expectedKey && KEY_LAYOUT[expectedKey]) {
+        // 1. Counts
         missedKeyCounts[expectedKey] = (missedKeyCounts[expectedKey] || 0) + 1;
+        accidentalKeyCounts[actualKey] = (accidentalKeyCounts[actualKey] || 0) + 1;
         
-        // Finger analysis based on what they SHOULD have typed (Missed Key)
-        // Or finger analysis based on what they DID type (Accidental Key)?
-        // Usually "weak finger" means "I can't control this finger well" (Accidental)
-        // OR "I can't move this finger to the right place" (Missed).
-        // Let's count Missed Keys for "Worst Finger" as "Hard to press".
-        const finger = FINGER_MAP[expectedKey.toLowerCase()];
-        if (finger) {
-            fingerCounts[finger] = (fingerCounts[finger] || 0) + 1;
-        }
-
-        // Sequence Weakness: "After [Preceding], I missed [Expected]"
         const sequencePattern = `${precedingKey} -> ${expectedKey}`;
         sequenceCounts[sequencePattern] = (sequenceCounts[sequencePattern] || 0) + 1;
 
-        // Miss Pattern: "Expected [Expected] but typed [Actual]"
-        const missPattern = `${expectedKey} -> ${actualKey}`;
-        patternCounts[missPattern] = (patternCounts[missPattern] || 0) + 1;
-    }
+        // 2. Finger & Key Scores (Based on Missed Key - "Hard to hit")
+        const fingerIdx = KEY_LAYOUT[expectedKey][2];
+        fingerMissCounts[fingerIdx] = (fingerMissCounts[fingerIdx] || 0) + 1;
+        keyMissCounts[expectedKey] = (keyMissCounts[expectedKey] || 0) + 1;
 
-    // Accidental Key (What they typed)
-    accidentalKeyCounts[actualKey] = (accidentalKeyCounts[actualKey] || 0) + 1;
+        // 3. Classification
+        if (getDistance(expectedKey, actualKey) === 1) {
+            fatFingerCount++;
+        } else if (isMirrorKey(expectedKey, actualKey)) {
+            mirrorCount++;
+        } else {
+            basicCount++;
+        }
+    }
   });
+
+  // --- Aggregation ---
 
   // Helper to sort and slice
   const getTop = (counts: { [key: string]: number }, limit: number = 5) => 
     Object.entries(counts)
         .sort(([, a], [, b]) => b - a)
         .slice(0, limit)
-        .map(([key, count]) => ({ key, count, pattern: key })); // mapping key/pattern interchangeably
+        .map(([key, count]) => ({ key, count }));
+
+  // Normalize Scores
+  const maxFingerMiss = Math.max(...Object.values(fingerMissCounts), 1);
+  const fingerScores: FingerScore[] = FINGER_NAMES.map((name, idx) => ({
+      finger: name,
+      missCount: fingerMissCounts[idx] || 0,
+      score: Math.round(((fingerMissCounts[idx] || 0) / maxFingerMiss) * 100)
+  }));
+
+  const maxKeyMiss = Math.max(...Object.values(keyMissCounts), 1);
+  const keyScores: KeyScore[] = Object.entries(keyMissCounts).map(([key, count]) => ({
+      key,
+      missCount: count,
+      score: Math.round((count / maxKeyMiss) * 100)
+  }));
+
+  const missCategories: MissCategory[] = [
+      { type: 'FatFinger', count: fatFingerCount, label: '隣接キー誤打', description: '隣のキーを打っています。指の位置を確認しましょう。' },
+      { type: 'Mirror', count: mirrorCount, label: '逆手誤打', description: '左右対称の指で打っています。脳内マップを整理しましょう。' },
+      { type: 'Basic', count: basicCount, label: 'その他', description: '基本的なキー配置の練習が必要です。' },
+  ].sort((a, b) => b.count - a.count);
+
+  const worstFinger = fingerScores.sort((a, b) => b.missCount - a.missCount)[0].finger;
 
   return {
     totalMistakes: mistakes.length,
     missedKeys: getTop(missedKeyCounts),
     accidentalKeys: getTop(accidentalKeyCounts),
-    worstFinger: Object.entries(fingerCounts).sort(([, a], [, b]) => b - a)[0]?.[0] || "なし",
     sequenceWeaknesses: getTop(sequenceCounts),
-    missPatterns: getTop(patternCounts),
+    fingerScores,
+    keyScores,
+    missCategories,
+    worstFinger
   };
 }
