@@ -135,9 +135,9 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
   }));
 
   const missCategories: MissCategory[] = [
-      { type: 'FatFinger', count: fatFingerCount, label: '隣接キー誤打', description: '隣のキーを打っています。指の位置を確認しましょう。' },
-      { type: 'Mirror', count: mirrorCount, label: '逆手誤打', description: '左右対称の指で打っています。脳内マップを整理しましょう。' },
-      { type: 'Basic', count: basicCount, label: 'その他', description: '基本的なキー配置の練習が必要です。' },
+      { type: 'FatFinger' as const, count: fatFingerCount, label: '隣接キー誤打', description: '打つべきキーの隣を誤って打鍵しています。指の横移動がスムーズでないか、ホームポジションの意識が低い可能性があります。キーボードのキー間隔を体で覚え、正確な指の動きを心がけましょう。' },
+      { type: 'Mirror' as const, count: mirrorCount, label: '逆手誤打', description: '左右で同じような位置にあるキーを誤って打鍵しています。脳内でキーの配置が混乱している可能性があります。運指表を確認し、目でキーボードを見ながらゆっくりと打つ練習を繰り返しましょう。' },
+      { type: 'Basic' as const, count: basicCount, label: 'その他', description: '特定の傾向がないミスです。まずはホームポジションを確実にし、指を動かす距離が短いキーから練習して基礎的な打鍵精度を高めましょう。' },
   ].sort((a, b) => b.count - a.count);
 
   // Fix: Sort a copy to avoid mutating the original array which is needed for ordered heatmap
