@@ -83,7 +83,7 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
                     <span>
                       <span className="text-blue-600">{inputBuffer}</span>
                       {nextChar && (
-                        <span className="text-orange-500 font-bold border-b-2 border-orange-500">
+                        <span className="text-blue-600 font-bold border-b-2 border-blue-600">
                           {nextChar}
                         </span>
                       )}
