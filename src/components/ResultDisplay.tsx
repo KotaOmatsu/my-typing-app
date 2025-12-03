@@ -138,8 +138,8 @@ const ResultDisplay: React.FC = () => {
         )}
 
       </div>
-      <Link href="/" className="px-8 py-4 bg-blue-600 text-white text-2xl font-bold rounded-lg shadow-lg hover:bg-blue-700 transition duration-300">
-        スタート画面に戻る
+      <Link href="/" className="mt-8 px-8 py-4 bg-blue-600 text-white text-2xl font-bold rounded-lg shadow-lg hover:bg-blue-700 transition duration-300">
+        ホームに戻る
       </Link>
     </div>
   );
