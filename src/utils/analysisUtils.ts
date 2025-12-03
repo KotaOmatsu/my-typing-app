@@ -124,7 +124,7 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
     Object.entries(counts)
         .sort(([, a], [, b]) => b - a)
         .slice(0, limit)
-        .map(([key, count]) => ({ key, count }));
+        .map(([key, count]) => ({ key, count, pattern: key })); // Ensure pattern is set for sequenceWeaknesses
 
   // Normalize Scores
   const maxFingerMiss = Math.max(...Object.values(fingerMissCounts), 1);
@@ -147,7 +147,8 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
       { type: 'Basic', count: basicCount, label: 'その他', description: '基本的なキー配置の練習が必要です。' },
   ].sort((a, b) => b.count - a.count);
 
-  const worstFinger = fingerScores.sort((a, b) => b.missCount - a.missCount)[0].finger;
+  // Fix: Sort a copy to avoid mutating the original array which is needed for ordered heatmap
+  const worstFinger = [...fingerScores].sort((a, b) => b.missCount - a.missCount)[0].finger;
 
   return {
     totalMistakes: mistakes.length,
