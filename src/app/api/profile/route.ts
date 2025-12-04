@@ -23,8 +23,15 @@ export async function PUT(request: Request) {
     }
     
     // 画像URLの簡単な検証（本来はURL形式チェックなどを行うべき）
-    if (image !== undefined && typeof image !== 'string') {
-         return NextResponse.json({ error: 'Invalid image format' }, { status: 400 });
+    if (image !== undefined) {
+        if (typeof image !== 'string') {
+             return NextResponse.json({ error: 'Invalid image format' }, { status: 400 });
+        }
+        try {
+            new URL(image);
+        } catch {
+             return NextResponse.json({ error: 'Invalid image URL' }, { status: 400 });
+        }
     }
 
     // 3. データベース更新

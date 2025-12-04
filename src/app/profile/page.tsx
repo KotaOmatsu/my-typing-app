@@ -102,14 +102,7 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error('Failed to update');
 
       // Update session on client side to reflect changes immediately
-      await update({ 
-        ...session,
-        user: {
-            ...session?.user,
-            name: editName,
-            image: editImage
-        }
-      }); 
+      await update(); // This will re-fetch the session from the server
       
       setIsEditing(false);
       router.refresh(); // Refresh server components if any
