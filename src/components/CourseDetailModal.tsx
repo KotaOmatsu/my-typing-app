@@ -46,7 +46,12 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
     if (isOpen && course.id) {
       setIsLoadingRanking(true);
       fetch(`/api/courses/${course.id}/ranking`)
-        .then((res) => res.json())
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return res.json();
+        })
         .then((data) => {
           if (Array.isArray(data)) {
             setRankings(data);

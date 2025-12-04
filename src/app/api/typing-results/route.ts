@@ -32,7 +32,8 @@ export async function POST(req: Request) {
       typeof totalKeystrokes !== 'number' ||
       typeof correctKeystrokes !== 'number' ||
       typeof text !== 'string' ||
-      !Array.isArray(mistakeDetails)
+      !Array.isArray(mistakeDetails) ||
+      (courseId !== undefined && typeof courseId !== 'string')
     ) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
     }
