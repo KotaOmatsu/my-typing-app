@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       correctKeystrokes,
       text,
       mistakeDetails,
+      courseId, // Added courseId
     } = body;
 
     // Basic validation
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
         text,
         // Convert mistakeDetails array to a JSON string
         mistakeDetails: JSON.stringify(mistakeDetails),
+        courseId, // Added courseId
       },
     });
 

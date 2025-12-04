@@ -203,6 +203,7 @@ export const useTypingGame = (courseId?: string) => {
                     correctKeystrokes: result.correctKeystrokes,
                     text: result.displayText, // DBには表示用テキストを保存
                     mistakeDetails: result.mistakes,
+                    courseId: courseId, // Added courseId
                 });
             }
 
