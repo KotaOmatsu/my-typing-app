@@ -73,3 +73,21 @@ export interface Course {
   isPublic?: boolean; // マイページでの表示用
   texts?: TypingText[]; // 詳細取得時のみ含まれる (APIからのレスポンス用)
 }
+
+/**
+ * 履歴画面表示用の結果型 (Prismaモデルベース + createdAt文字列化)
+ */
+export interface HistoryResult {
+  id: string;
+  userId: string;
+  wpm: number;
+  accuracy: number;
+  mistakeCount: number;
+  score: number;
+  totalKeystrokes: number;
+  correctKeystrokes: number;
+  text: string;
+  mistakeDetails: string; // JSON string in DB
+  createdAt: string; // Serialized date
+  courseId: string | null;
+}
