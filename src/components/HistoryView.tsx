@@ -58,23 +58,37 @@ const HistoryView: React.FC<HistoryViewProps> = ({ results, weaknessAnalysis }) 
 
       {results.length > 0 ? (
         <>
-            {/* 苦手分析 */}
-            <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div className="mb-4 pb-2 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        🎯 苦手分析 <span className="text-sm font-normal text-gray-500 ml-2">({TIME_RANGES.find(r => r.value === currentRange)?.label})</span>
+            {/* 分析レポート（グラフ＆苦手分析） */}
+            <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        📊 分析レポート
+                        <span className="text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded border">
+                            {TIME_RANGES.find(r => r.value === currentRange)?.label}
+                        </span>
                     </h2>
                 </div>
-                <WeaknessAnalysisDisplay analysis={weaknessAnalysis} />
-            </section>
+                
+                <div className="p-6 space-y-8">
+                    {/* 成績推移チャート */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-l-4 border-blue-500 pl-3">
+                            📈 成績推移 (スコア・WPM・正確性)
+                        </h3>
+                        <div className="h-[400px] w-full">
+                            <HistoryChart results={results} />
+                        </div>
+                    </div>
 
-            {/* グラフ */}
-            <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div className="mb-4 pb-2 border-b border-gray-100">
-                    <h2 className="text-xl font-bold text-gray-800">📈 成績推移</h2>
-                </div>
-                <div className="h-[400px] w-full">
-                    <HistoryChart results={results} />
+                    <div className="border-t border-gray-100 pt-8"></div>
+
+                    {/* 苦手分析 */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-l-4 border-red-500 pl-3">
+                            🎯 苦手傾向分析
+                        </h3>
+                        <WeaknessAnalysisDisplay analysis={weaknessAnalysis} />
+                    </div>
                 </div>
             </section>
 
