@@ -210,7 +210,7 @@ export const useTypingGame = (courseId?: string) => {
             // 結果ページへのリダイレクト
             router.push('/result');
         }
-    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits, courseTexts]);
+    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits, courseTexts, courseId]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
