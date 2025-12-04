@@ -152,6 +152,9 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
             </div>
           </div>
 
+          {/* 区切り線と余白 */}
+          <div className="mt-8 border-t border-gray-200 pt-6"></div>
+
           {/* ランキングエリア */}
           <div className="mb-6">
             <h3 className="font-bold text-gray-800 mb-3 flex items-center">
