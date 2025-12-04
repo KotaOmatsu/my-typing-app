@@ -209,7 +209,7 @@ export default function ProfilePage() {
                                 </svg>
                             </button>
                         </div>
-                        <p className="text-gray-500">{session?.user?.email}</p>
+
                         <div className="mt-6 flex gap-4 justify-center md:justify-start">
                         <Link href="/history" className="px-6 py-2 bg-blue-50 text-blue-700 font-semibold rounded-lg hover:bg-blue-100 transition">
                             📊 成績履歴を見る
