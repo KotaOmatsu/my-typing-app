@@ -36,40 +36,37 @@ const HistoryView: React.FC<HistoryViewProps> = ({ results, weaknessAnalysis }) 
   }, [router, searchParams]);
 
   return (
-    <div className="space-y-8">
-      {/* 期間切り替えタブ */}
-      <div className="flex justify-center">
-        <div className="inline-flex bg-gray-100 p-1 rounded-lg">
-          {TIME_RANGES.map((range) => (
-            <button
-              key={range.value}
-              onClick={() => handleRangeChange(range.value)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                currentRange === range.value
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {range.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <div className="space-y-6"> {/* Reduced space-y here */}
       {results.length > 0 ? (
         <>
             {/* 分析レポート（グラフ＆苦手分析） */}
             <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                         📊 分析レポート
                         <span className="text-sm font-normal text-gray-500 bg-white px-2 py-1 rounded border">
                             {TIME_RANGES.find(r => r.value === currentRange)?.label}
                         </span>
                     </h2>
+                    {/* 期間切り替えタブ */}
+                    <div className="inline-flex bg-gray-100 p-1 rounded-lg">
+                        {TIME_RANGES.map((range) => (
+                            <button
+                            key={range.value}
+                            onClick={() => handleRangeChange(range.value)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                                currentRange === range.value
+                                ? 'bg-white text-blue-600 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+                            }`}
+                            >
+                            {range.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
                 
-                <div className="p-6 space-y-6">
+                <div className="p-4 space-y-4"> {/* Reduced p and space-y here */}
                     {/* 苦手分析 */}
                     <div>
                         <h3 className="text-lg font-semibold text-gray-700 mb-4 border-l-4 border-red-500 pl-3">
@@ -78,7 +75,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ results, weaknessAnalysis }) 
                         <WeaknessAnalysisDisplay analysis={weaknessAnalysis} />
                     </div>
 
-                    <div className="border-t border-gray-100 pt-6"></div>
+                    <div className="border-t border-gray-100 pt-4"></div> {/* Reduced pt here */}
 
                     {/* 成績推移チャート */}
                     <div>
