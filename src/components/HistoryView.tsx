@@ -69,25 +69,25 @@ const HistoryView: React.FC<HistoryViewProps> = ({ results, weaknessAnalysis }) 
                     </h2>
                 </div>
                 
-                <div className="p-6 space-y-8">
-                    {/* 成績推移チャート */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-l-4 border-blue-500 pl-3">
-                            📈 成績推移 (スコア・WPM・正確性)
-                        </h3>
-                        <div className="h-[400px] w-full">
-                            <HistoryChart results={results} />
-                        </div>
-                    </div>
-
-                    <div className="border-t border-gray-100 pt-8"></div>
-
+                <div className="p-6 space-y-6">
                     {/* 苦手分析 */}
                     <div>
                         <h3 className="text-lg font-semibold text-gray-700 mb-4 border-l-4 border-red-500 pl-3">
                             🎯 苦手傾向分析
                         </h3>
                         <WeaknessAnalysisDisplay analysis={weaknessAnalysis} />
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-6"></div>
+
+                    {/* 成績推移チャート */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-l-4 border-blue-500 pl-3">
+                            📈 成績推移 (WPM・正確性)
+                        </h3>
+                        <div className="h-[400px] w-full">
+                            <HistoryChart results={results} />
+                        </div>
                     </div>
                 </div>
             </section>

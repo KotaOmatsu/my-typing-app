@@ -25,7 +25,6 @@ export default function HistoryChart({ results }: HistoryChartProps) {
         month: 'numeric',
         day: 'numeric',
       }),
-      スコア: result.score,
       WPM: parseFloat(result.wpm.toFixed(2)),
       正解率: parseFloat(result.accuracy.toFixed(2)),
     }))
@@ -40,20 +39,18 @@ export default function HistoryChart({ results }: HistoryChartProps) {
             top: 5,
             right: 20,
             left: 10,
-            bottom: 5,
+            bottom: 30,
           }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
-          <YAxis yAxisId="score" label={{ value: 'スコア', angle: -90, position: 'insideLeft' }} stroke="#ffc658" />
-          <YAxis yAxisId="wpm" orientation="right" label={{ value: 'WPM', angle: 90, position: 'insideRight' }} stroke="#8884d8" />
-          <YAxis yAxisId="accuracy" orientation="right" domain={[0, 100]} hide />
+          <YAxis yAxisId="wpm" label={{ value: 'WPM', angle: -90, position: 'insideLeft' }} stroke="#8884d8" />
+          <YAxis yAxisId="accuracy" orientation="right" label={{ value: '正解率 (%)', angle: 90, position: 'insideRight' }} stroke="#82ca9d" domain={[0, 100]} />
           
           <Tooltip />
           <Legend />
           
-          <Line yAxisId="score" type="monotone" dataKey="スコア" stroke="#ffc658" strokeWidth={2} activeDot={{ r: 6 }} />
-          <Line yAxisId="wpm" type="monotone" dataKey="WPM" stroke="#8884d8" />
+          <Line yAxisId="wpm" type="monotone" dataKey="WPM" stroke="#8884d8" activeDot={{ r: 8 }} />
           <Line yAxisId="accuracy" type="monotone" dataKey="正解率" stroke="#82ca9d" />
         </LineChart>
       </ResponsiveContainer>
