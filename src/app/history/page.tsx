@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { TypingResult } from '@/types/typing';
+import { TypingResult, HistoryResult } from '@/types/typing';
 import { analyzeWeaknesses } from '@/utils/analysisUtils';
 import HistoryView from '@/components/HistoryView';
 
@@ -51,25 +51,42 @@ export default async function HistoryPage({
     },
   });
 
-  // 1. 分析用データ (Mistake[]が必要なので、従来のTypingResult型に整形してmistakesをパース)
-  const analysisData: TypingResult[] = rawResults.map((r) => ({
-    ...r,
-    score: r.score,
-    mistakes: JSON.parse(r.mistakeDetails),
-    startTime: 0,
-    endTime: 0,
-    correctKanaUnits: 0,
-    typedText: '',
-    displayText: r.text,
-    displayUnits: [],
-    createdAt: r.createdAt.toISOString(), // 実際には使用されないが型合わせのため
-  }));
+  // データの整形（分析用と表示用を一度に生成してパフォーマンス最適化）
+  const analysisData: TypingResult[] = [];
+  const viewData: HistoryResult[] = [];
 
-  // 2. 表示用データ (HistoryResult型)
-  const viewData = rawResults.map((r) => ({
-    ...r,
-    createdAt: r.createdAt.toISOString(),
-  }));
+  for (const r of rawResults) {
+    const createdAtStr = r.createdAt.toISOString();
+    
+    // 表示用 (HistoryResult)
+    viewData.push({
+      ...r,
+      createdAt: createdAtStr,
+    });
+
+    // 分析用 (TypingResult - mistakesをパース)
+    let parsedMistakes = [];
+    try {
+        parsedMistakes = JSON.parse(r.mistakeDetails);
+    } catch (e) {
+        console.error("Failed to parse mistakes for result " + r.id, e);
+    }
+
+    analysisData.push({
+      wpm: r.wpm,
+      accuracy: r.accuracy,
+      score: r.score,
+      mistakes: parsedMistakes,
+      startTime: 0,
+      endTime: 0,
+      totalKeystrokes: r.totalKeystrokes,
+      correctKeystrokes: r.correctKeystrokes,
+      correctKanaUnits: 0,
+      typedText: '',
+      displayText: r.text,
+      displayUnits: [],
+    });
+  }
 
   // 苦手分析の実行
   const weaknessAnalysis = analyzeWeaknesses(analysisData.flatMap((r) => r.mistakes));
