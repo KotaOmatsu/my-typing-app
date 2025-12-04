@@ -31,7 +31,7 @@ export default function HistoryChart({ results }: HistoryChartProps) {
     .reverse(); // 時系列で表示するために配列を逆順にする
 
   return (
-    <div className="w-full h-80 bg-white p-4 rounded-lg shadow-md mb-8">
+    <div className="w-full h-80 bg-white p-4 rounded-lg shadow-md">
       <ResponsiveContainer>
         <LineChart
           data={chartData}
