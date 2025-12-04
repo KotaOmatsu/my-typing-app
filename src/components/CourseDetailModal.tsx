@@ -127,6 +127,31 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
             </ul>
           </div>
 
+          {/* 設定エリア (簡易版) */}
+          <div className="border-t pt-4">
+            <h3 className="font-bold text-gray-800 mb-3">プレイ設定</h3>
+            <div className="flex gap-6">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  checked={settings.showKana}
+                  onChange={(e) => onUpdateSettings({ showKana: e.target.checked })}
+                />
+                <span className="ml-2 text-gray-700">かなガイドを表示</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
+                  checked={settings.showRomaji}
+                  onChange={(e) => onUpdateSettings({ showRomaji: e.target.checked })}
+                />
+                <span className="ml-2 text-gray-700">ローマ字ガイドを表示</span>
+              </label>
+            </div>
+          </div>
+
           {/* ランキングエリア */}
           <div className="mb-6">
             <h3 className="font-bold text-gray-800 mb-3 flex items-center">
@@ -179,31 +204,6 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   まだランキングデータがありません。挑戦して1位を目指そう！
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* 設定エリア (簡易版) */}
-          <div className="border-t pt-4">
-            <h3 className="font-bold text-gray-800 mb-3">プレイ設定</h3>
-            <div className="flex gap-6">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                  checked={settings.showKana}
-                  onChange={(e) => onUpdateSettings({ showKana: e.target.checked })}
-                />
-                <span className="ml-2 text-gray-700">かなガイドを表示</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                  checked={settings.showRomaji}
-                  onChange={(e) => onUpdateSettings({ showRomaji: e.target.checked })}
-                />
-                <span className="ml-2 text-gray-700">ローマ字ガイドを表示</span>
-              </label>
             </div>
           </div>
         </div>
