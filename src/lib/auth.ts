@@ -21,10 +21,13 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    // Add user ID to the session object
+    // Add user ID and other details to the session object
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
+        session.user.name = user.name;
+        session.user.image = user.image;
+        session.user.email = user.email;
       }
       return session;
     },
