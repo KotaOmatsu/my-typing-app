@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { Course } from '@/types/typing';
 import { GameSettings } from '../hooks/useGameSettings';
 
@@ -14,6 +15,18 @@ interface CourseDetailModalProps {
   onEdit?: (courseId: string) => void; // 編集時のコールバック
 }
 
+type RankingEntry = {
+  id: string;
+  score: number;
+  wpm: number;
+  accuracy: number;
+  createdAt: string;
+  user: {
+    name: string | null;
+    image: string | null;
+  };
+};
+
 const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
   isOpen,
   onClose,
@@ -26,6 +39,30 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
 }) => {
   const { data: session } = useSession();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [rankings, setRankings] = useState<RankingEntry[]>([]);
+  const [isLoadingRanking, setIsLoadingRanking] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && course.id) {
+      setIsLoadingRanking(true);
+      fetch(`/api/courses/${course.id}/ranking`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setRankings(data);
+          } else {
+            setRankings([]);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch rankings:', err);
+          setRankings([]);
+        })
+        .finally(() => {
+          setIsLoadingRanking(false);
+        });
+    }
+  }, [isOpen, course.id]);
 
   if (!isOpen) return null;
 
@@ -83,6 +120,61 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
               ))}
               {(course.texts?.length || 0) > 3 && <li className="list-none text-gray-400 ml-5">...他 {(course.texts?.length || 0)} 件</li>}
             </ul>
+          </div>
+
+          {/* ランキングエリア */}
+          <div className="mb-6">
+            <h3 className="font-bold text-gray-800 mb-3 flex items-center">
+              <span className="mr-2">🏆</span> トップランキング
+            </h3>
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {isLoadingRanking ? (
+                <div className="p-4 text-center text-gray-500">読み込み中...</div>
+              ) : rankings.length > 0 ? (
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-500">
+                    <tr>
+                      <th className="px-4 py-2 text-left w-16">順位</th>
+                      <th className="px-4 py-2 text-left">ユーザー</th>
+                      <th className="px-4 py-2 text-right">スコア</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {rankings.map((rank, index) => (
+                      <tr key={rank.id} className={index < 3 ? 'bg-yellow-50/50' : ''}>
+                        <td className="px-4 py-2 font-bold text-gray-600">
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                        </td>
+                        <td className="px-4 py-2 flex items-center gap-2">
+                          <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                            {rank.user.image ? (
+                              <Image 
+                                src={rank.user.image} 
+                                alt={rank.user.name || 'User'} 
+                                fill
+                                className="object-cover"
+                              />
+                            ) : (
+                              <span className="flex items-center justify-center h-full w-full text-xs text-gray-500">?</span>
+                            )}
+                          </div>
+                          <span className="truncate max-w-[120px] sm:max-w-[200px]">
+                            {rank.user.name || '名無しさん'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-right font-mono font-semibold text-blue-600">
+                          {rank.score.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  まだランキングデータがありません。挑戦して1位を目指そう！
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 設定エリア (簡易版) */}
