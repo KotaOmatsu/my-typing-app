@@ -1,14 +1,9 @@
 'use client';
 
-import { TypingResult } from '@prisma/client';
-
-// page.tsxから渡される結果の型。Dateが文字列にシリアライズされている。
-type SerializableResult = Omit<TypingResult, 'createdAt'> & {
-  createdAt: string;
-};
+import { HistoryResult } from '@/types/typing';
 
 interface HistoryTableProps {
-  results: SerializableResult[];
+  results: HistoryResult[];
 }
 
 export default function HistoryTable({ results }: HistoryTableProps) {

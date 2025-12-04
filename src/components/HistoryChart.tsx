@@ -1,6 +1,6 @@
 'use client';
 
-import { TypingResult } from '@prisma/client';
+import { HistoryResult } from '@/types/typing';
 import {
   LineChart,
   Line,
@@ -12,13 +12,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 
-// page.tsxから渡される結果の型。Dateが文字列にシリアライズされている。
-type SerializableResult = Omit<TypingResult, 'createdAt'> & {
-  createdAt: string;
-};
-
 interface HistoryChartProps {
-  results: SerializableResult[];
+  results: HistoryResult[];
 }
 
 export default function HistoryChart({ results }: HistoryChartProps) {

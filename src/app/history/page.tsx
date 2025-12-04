@@ -1,77 +1,88 @@
+import React from 'react';
+import { redirect } from 'next/navigation';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import Link from 'next/link';
-import HistoryTable from '@/components/HistoryTable';
-import HistoryChart from '@/components/HistoryChart';
-import WeaknessAnalysisDisplay from '@/components/WeaknessAnalysisDisplay';
+import { TypingResult } from '@/types/typing';
 import { analyzeWeaknesses } from '@/utils/analysisUtils';
-import { Mistake } from '@/types/typing';
+import HistoryView from '@/components/HistoryView';
 
-export default async function HistoryPage() {
+export default async function HistoryPage({
+  searchParams,
+}: {
+  searchParams: { range?: string };
+}) {
   const session = await getServerSession(authOptions);
 
-  if (!session || !session.user?.id) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-3xl font-bold mb-4">アクセス権がありません</h1>
-        <p className="mb-6">成績履歴を閲覧するには、ログインが必要です。</p>
-        <Link href="/login" className="px-6 py-3 font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700">
-          ログインページへ
-        </Link>
-      </div>
-    );
+  if (!session || !session.user?.email) {
+    redirect('/login');
   }
 
-  const results = await prisma.typingResult.findMany({
+  // 期間フィルタリングの日付計算
+  let startDate: Date | undefined;
+  const now = new Date();
+  const range = searchParams.range;
+
+  if (range === 'week') {
+    startDate = new Date(now);
+    startDate.setDate(now.getDate() - 7);
+  } else if (range === 'month') {
+    startDate = new Date(now);
+    startDate.setMonth(now.getMonth() - 1);
+  } else if (range === 'year') {
+    startDate = new Date(now);
+    startDate.setFullYear(now.getFullYear() - 1);
+  }
+  // 'all' または未指定の場合は startDate は undefined のまま
+
+  const rawResults = await prisma.typingResult.findMany({
     where: {
-      userId: session.user.id,
+      user: {
+        email: session.user.email,
+      },
+      ...(startDate && {
+        createdAt: {
+          gte: startDate,
+        },
+      }),
     },
     orderBy: {
       createdAt: 'desc',
     },
   });
 
-  // Analyze weaknesses from all results
-  let allMistakes: Mistake[] = [];
-  results.forEach(result => {
-    try {
-      const parsed: Mistake[] = JSON.parse(result.mistakeDetails);
-      if (Array.isArray(parsed)) {
-        allMistakes = [...allMistakes, ...parsed];
-      }
-    } catch (e) {
-      console.error("Failed to parse mistake details", e);
-    }
-  });
-  const weaknessAnalysis = analyzeWeaknesses(allMistakes);
-
-  // `mistakeDetails`はJSON文字列なので、クライアントコンポーネントに渡す前にパースする必要はない。
-  // しかし、Dateオブジェクトはシリアライズできないため、文字列に変換する必要がある。
-  const serializableResults = results.map(result => ({
-    ...result,
-    createdAt: result.createdAt.toISOString(),
+  // 1. 分析用データ (Mistake[]が必要なので、従来のTypingResult型に整形してmistakesをパース)
+  const analysisData: TypingResult[] = rawResults.map((r) => ({
+    ...r,
+    score: r.score,
+    mistakes: JSON.parse(r.mistakeDetails),
+    startTime: 0,
+    endTime: 0,
+    correctKanaUnits: 0,
+    typedText: '',
+    displayText: r.text,
+    displayUnits: [],
+    createdAt: r.createdAt.toISOString(), // 実際には使用されないが型合わせのため
   }));
 
+  // 2. 表示用データ (HistoryResult型)
+  const viewData = rawResults.map((r) => ({
+    ...r,
+    createdAt: r.createdAt.toISOString(),
+  }));
+
+  // 苦手分析の実行
+  const weaknessAnalysis = analyzeWeaknesses(analysisData.flatMap((r) => r.mistakes));
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1> */}
-      {serializableResults.length > 0 ? (
-        <>
-          <h1 className="text-3xl font-bold mb-8 text-center">成績履歴</h1>
-          <WeaknessAnalysisDisplay analysis={weaknessAnalysis} />
-          <HistoryChart results={serializableResults} />
-          <HistoryTable results={serializableResults} />
-        </>
-      ) : (
-        <div className="text-center text-gray-500">
-          <p>まだタイピング履歴がありません。</p>
-          <p>最初のタイピングに挑戦してみましょう！</p>
-          <Link href="/typing" className="mt-4 inline-block px-6 py-3 font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700">
-            タイピングを開始する
-          </Link>
-        </div>
-      )}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          成績履歴 & 分析
+        </h1>
+        
+        <HistoryView results={viewData} weaknessAnalysis={weaknessAnalysis} />
+      </div>
     </div>
   );
 }

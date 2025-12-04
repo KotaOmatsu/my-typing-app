@@ -1,0 +1,101 @@
+'use client';
+
+import React, { useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { HistoryResult } from '@/types/typing';
+import HistoryChart from './HistoryChart';
+import HistoryTable from './HistoryTable';
+import WeaknessAnalysisDisplay from './WeaknessAnalysisDisplay';
+import { WeaknessAnalysis } from '@/utils/analysisUtils';
+
+interface HistoryViewProps {
+  results: HistoryResult[];
+  weaknessAnalysis: WeaknessAnalysis;
+}
+
+const TIME_RANGES = [
+  { label: '1週間', value: 'week' },
+  { label: '1ヶ月', value: 'month' },
+  { label: '1年', value: 'year' },
+  { label: '全期間', value: 'all' },
+];
+
+const HistoryView: React.FC<HistoryViewProps> = ({ results, weaknessAnalysis }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentRange = searchParams.get('range') || 'all';
+
+  const handleRangeChange = useCallback((range: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (range === 'all') {
+      params.delete('range');
+    } else {
+      params.set('range', range);
+    }
+    router.push(`/history?${params.toString()}`);
+  }, [router, searchParams]);
+
+  return (
+    <div className="space-y-8">
+      {/* 期間切り替えタブ */}
+      <div className="flex justify-center">
+        <div className="inline-flex bg-gray-100 p-1 rounded-lg">
+          {TIME_RANGES.map((range) => (
+            <button
+              key={range.value}
+              onClick={() => handleRangeChange(range.value)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                currentRange === range.value
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {results.length > 0 ? (
+        <>
+            {/* 苦手分析 */}
+            <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="mb-4 pb-2 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-gray-800">
+                        🎯 苦手分析 <span className="text-sm font-normal text-gray-500 ml-2">({TIME_RANGES.find(r => r.value === currentRange)?.label})</span>
+                    </h2>
+                </div>
+                <WeaknessAnalysisDisplay analysis={weaknessAnalysis} />
+            </section>
+
+            {/* グラフ */}
+            <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="mb-4 pb-2 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-gray-800">📈 成績推移</h2>
+                </div>
+                <div className="h-[400px] w-full">
+                    <HistoryChart results={results} />
+                </div>
+            </section>
+
+            {/* 履歴テーブル */}
+            <section className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                <div className="mb-4 pb-2 border-b border-gray-100">
+                    <h2 className="text-xl font-bold text-gray-800">📝 詳細履歴</h2>
+                </div>
+                <HistoryTable results={results} />
+            </section>
+        </>
+      ) : (
+        <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-dashed border-gray-300">
+          <p className="text-gray-500 text-lg">
+            選択された期間のデータはありません。<br />
+            練習をして記録を作りましょう！
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default HistoryView;
