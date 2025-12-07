@@ -54,7 +54,10 @@ export async function GET() {
     });
 
     // フロントエンドで使いやすい形式に整形 (Course[] の形にする)
-    const favoriteCourses = favorites.map(fav => fav.course);
+    const favoriteCourses = favorites.map(fav => ({
+      ...fav.course,
+      isFavorite: true,
+    }));
 
     return NextResponse.json(favoriteCourses);
   } catch (error) {

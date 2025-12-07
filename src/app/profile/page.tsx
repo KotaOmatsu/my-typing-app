@@ -16,6 +16,7 @@ export default function ProfilePage() {
   const { data: session, status, update } = useSession(); // added update
   const { settings, updateSettings } = useGameSettings();
   const [myCourses, setMyCourses] = useState<Course[]>([]);
+  const [favoriteCourses, setFavoriteCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
@@ -32,22 +33,60 @@ export default function ProfilePage() {
     }
 
     if (status === 'authenticated' && session?.user?.id) {
-      const fetchMyCourses = async () => {
+      const fetchData = async () => {
         try {
-          const res = await fetch(`/api/courses?authorId=${session.user.id}`);
-          if (res.ok) {
-            const data = await res.json();
+          // 並行してデータ取得
+          const [myCoursesRes, favCoursesRes] = await Promise.all([
+            fetch(`/api/courses?authorId=${session.user.id}`),
+            fetch('/api/user/favorites')
+          ]);
+
+          if (myCoursesRes.ok) {
+            const data = await myCoursesRes.json();
             setMyCourses(data);
           }
+          if (favCoursesRes.ok) {
+            const data = await favCoursesRes.json();
+            setFavoriteCourses(data);
+          }
         } catch (error) {
-          console.error('Failed to fetch my courses:', error);
+          console.error('Failed to fetch data:', error);
         } finally {
           setLoading(false);
         }
       };
-      fetchMyCourses();
+      fetchData();
     }
   }, [status, session, router]);
+
+  const handleToggleFavorite = async (courseId: string) => {
+    // お気に入り状態の確認 (お気に入りリストに含まれているか)
+    const isCurrentlyFavorite = favoriteCourses.some(c => c.id === courseId);
+
+    // 1. お気に入りリストの更新 (楽観的)
+    if (isCurrentlyFavorite) {
+      // 削除
+      setFavoriteCourses(prev => prev.filter(c => c.id !== courseId));
+    } else {
+      // 追加 (自分のコースから追加された場合)
+      const courseToAdd = myCourses.find(c => c.id === courseId);
+      if (courseToAdd) {
+        setFavoriteCourses(prev => [{ ...courseToAdd, isFavorite: true }, ...prev]);
+      }
+    }
+
+    // 2. 作成したコースリストの更新 (フラグ反転)
+    setMyCourses(prev => prev.map(c => c.id === courseId ? { ...c, isFavorite: !c.isFavorite } : c));
+
+    try {
+      const res = await fetch(`/api/courses/${courseId}/favorite`, { method: 'POST' });
+      if (!res.ok) throw new Error('Failed to toggle favorite');
+    } catch (error) {
+      console.error(error);
+      alert('お気に入りの更新に失敗しました');
+      // 失敗時はリロードなどを促すのが無難だが、ここでは簡易化
+    }
+  };
 
   const handleCourseSelect = (course: Course) => {
     setSelectedCourse(course);
@@ -240,6 +279,33 @@ export default function ProfilePage() {
                 <CourseCard 
                   course={course} 
                   onSelect={handleCourseSelect} 
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* お気に入りのコース */}
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-12 border-l-4 border-pink-500 pl-4">
+          お気に入りのコース ({favoriteCourses.length})
+        </h2>
+
+        {favoriteCourses.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-lg shadow-sm border-dashed border-2 border-gray-200">
+            <p className="text-gray-500 text-lg mb-4">お気に入りのコースはありません。</p>
+            <Link href="/" className="text-blue-600 hover:underline font-medium">
+              コースを探しに行く
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {favoriteCourses.map((course) => (
+              <div key={course.id} className="relative">
+                <CourseCard 
+                  course={course} 
+                  onSelect={handleCourseSelect} 
+                  onToggleFavorite={handleToggleFavorite}
                 />
               </div>
             ))}
