@@ -42,6 +42,46 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
         )}
       </div>
 
+      {/* 弱点インサイト (新機能) */}
+      {analysis.insights && analysis.insights.length > 0 && (
+        <div className="p-6 bg-gray-50 border-b border-gray-200">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                <span className="mr-2">💡</span> あなたの弱点インサイト (AI分析)
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {analysis.insights.map((insight, i) => {
+                    const severityColor = 
+                        insight.severity === 'High' ? 'border-l-red-500 bg-red-50 text-red-900' :
+                        insight.severity === 'Medium' ? 'border-l-orange-500 bg-orange-50 text-orange-900' :
+                        'border-l-yellow-500 bg-yellow-50 text-yellow-900';
+                    
+                    const badgeColor = 
+                        insight.severity === 'High' ? 'bg-red-200 text-red-800' :
+                        insight.severity === 'Medium' ? 'bg-orange-200 text-orange-800' :
+                        'bg-yellow-200 text-yellow-800';
+
+                    
+                    const badgeText = 
+                        insight.severity === 'High' ? '要改善' :
+                        insight.severity === 'Medium' ? '注意' :
+                        '軽微';
+
+                    return (
+                        <div key={i} className={`p-4 rounded-r-lg border border-gray-200 border-l-4 shadow-sm ${severityColor} bg-white`}>
+                            <div className="flex justify-between items-start mb-2">
+                                <h4 className="font-bold text-base">{insight.title}</h4>
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${badgeColor}`}>
+                                    {badgeText}
+                                </span>
+                            </div>
+                            <p className="text-sm text-gray-600 leading-snug">{insight.description}</p>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-0">
         
         {/* Left: Visual Heatmap (Finger & Keyboard) */}
