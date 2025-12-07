@@ -126,7 +126,7 @@ export async function POST(request: Request) {
 
     // validate text items
     for (const text of texts) {
-      if (!text.display || !text.reading) {
+      if (!text || typeof text !== 'object' || !text.display || !text.reading) {
         return NextResponse.json({ error: 'Invalid text item: missing display or reading' }, { status: 400 });
       }
     }

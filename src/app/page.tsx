@@ -21,6 +21,7 @@ export default function Home() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
 
   useEffect(() => {
+    let ignore = false;
     const fetchCourses = async () => {
       setLoading(true);
       try {
@@ -29,14 +30,14 @@ export default function Home() {
         if (selectedDifficulty !== 'All') params.append('difficulty', selectedDifficulty);
 
         const response = await fetch(`/api/courses?${params.toString()}`);
-        if (response.ok) {
+        if (response.ok && !ignore) {
           const data = await response.json();
           setCourses(data);
         }
       } catch (error) {
         console.error("Failed to fetch courses:", error);
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     };
 
@@ -44,7 +45,10 @@ export default function Home() {
       fetchCourses();
     }, 300);
 
-    return () => clearTimeout(timerId);
+    return () => {
+      clearTimeout(timerId);
+      ignore = true;
+    };
   }, [searchQuery, selectedDifficulty]);
 
   const handleCourseSelect = (course: Course) => {
