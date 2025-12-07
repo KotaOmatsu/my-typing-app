@@ -87,7 +87,31 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(courses);
+    // ログインしている場合、お気に入り情報を付加する
+    const session = await getServerSession(authOptions);
+    let coursesWithFavorite = courses;
+
+    if (session?.user?.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+
+      if (user) {
+        const favorites = await prisma.favorite.findMany({
+          where: { userId: user.id },
+          select: { courseId: true },
+        });
+        const favoriteCourseIds = new Set(favorites.map(f => f.courseId));
+
+        coursesWithFavorite = courses.map(course => ({
+          ...course,
+          isFavorite: favoriteCourseIds.has(course.id),
+        }));
+      }
+    }
+
+    return NextResponse.json(coursesWithFavorite);
   } catch (error) {
     console.error('Failed to fetch courses:', error);
     return NextResponse.json(

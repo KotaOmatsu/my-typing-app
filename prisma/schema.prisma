@@ -47,6 +47,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   typingResults TypingResult[]
+  favorites     Favorite[]
   createdCourses Course[] @relation("CreatedCourses")
 }
 
@@ -74,6 +75,7 @@ model Course {
 
   texts       TypingText[]
   results     TypingResult[]
+  favorites   Favorite[]
 }
 
 model TypingText {
@@ -104,6 +106,20 @@ model TypingResult {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([courseId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
   @@index([userId])
   @@index([courseId])
 }
