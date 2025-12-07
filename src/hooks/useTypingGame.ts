@@ -25,6 +25,7 @@ export const useTypingGame = (courseId?: string) => {
     flashCorrect,
     lastTypedKey,
     mistakes,
+    keyHistory, // Destructure keyHistory
     startTime,
     totalKeystrokes,
     correctKeystrokes,
@@ -184,6 +185,7 @@ export const useTypingGame = (courseId?: string) => {
                 totalKeystrokes: totalKeystrokes,
                 correctKeystrokes: correctKeystrokes,
                 mistakes: mistakes,
+                keyHistory: keyHistory, // Add keyHistory
                 typedText: allTypedText,
                 displayText: allDisplayText,
                 displayUnits: allDisplayUnits,
@@ -203,6 +205,7 @@ export const useTypingGame = (courseId?: string) => {
                     correctKeystrokes: result.correctKeystrokes,
                     text: result.displayText, // DBには表示用テキストを保存
                     mistakeDetails: result.mistakes,
+                    keyHistory: result.keyHistory, // Add keyHistory
                     courseId: courseId, // Added courseId
                 });
             }

@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       correctKeystrokes,
       text,
       mistakeDetails,
+      keyHistory,
       courseId, // Added courseId
     } = body;
 
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
       typeof correctKeystrokes !== 'number' ||
       typeof text !== 'string' ||
       !Array.isArray(mistakeDetails) ||
+      !Array.isArray(keyHistory) ||
       (courseId !== undefined && typeof courseId !== 'string')
     ) {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
         text,
         // Convert mistakeDetails array to a JSON string
         mistakeDetails: JSON.stringify(mistakeDetails),
+        keyHistory: JSON.stringify(keyHistory),
         courseId, // Added courseId
       },
     });

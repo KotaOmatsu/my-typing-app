@@ -1,4 +1,4 @@
-import { Mistake, TypingText } from "@/types/typing";
+import { Mistake, TypingText, KeyLog } from "@/types/typing";
 import { getTypingUnits } from "@/utils/typingUtils";
 
 // --- State, Action, Reducer ---
@@ -15,6 +15,7 @@ export interface GameState {
   correctKeystrokes: number;
   correctKanaUnits: number;
   mistakes: Mistake[];
+  keyHistory: KeyLog[]; // 追加: 全打鍵履歴
   flashCorrect: boolean;
   lastTypedKey: string | null;
   courseTexts: TypingText[];
@@ -46,6 +47,7 @@ export const initialState: GameState = {
   correctKeystrokes: 0,
   correctKanaUnits: 0,
   mistakes: [],
+  keyHistory: [],
   flashCorrect: false,
   lastTypedKey: null,
   courseTexts: [],
@@ -72,7 +74,9 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
         status: 'running',
         startTime: action.payload.startTime,
         lastTypedKey: action.payload.typedKey,
-        totalKeystrokes: 1,
+        // totalKeystrokes: 1, // 削除: PROCESS_KEY_INPUTでカウントされるため、ここでは設定しない
+        // START_GAME自体はキー履歴には追加しない（PROCESS_KEY_INPUTに任せるか、あるいはここで追加するか要確認だが、
+        // 以下のPROCESS_KEY_INPUTで追加する方が確実な情報(isCorrect)を持てるため、useTypingGame側で調整する）
       };
     case 'PROCESS_KEY_INPUT':
       const { typedKey, isCorrect, isExactMatch, buffer, mistake } = action.payload;
@@ -80,6 +84,14 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
         ...state,
         lastTypedKey: typedKey,
         totalKeystrokes: state.totalKeystrokes + 1,
+        keyHistory: [
+          ...state.keyHistory,
+          {
+            key: typedKey,
+            isMistake: !isCorrect,
+            timestamp: Date.now(),
+          },
+        ],
       };
 
       if (isCorrect) {

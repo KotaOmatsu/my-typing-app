@@ -12,6 +12,7 @@ export interface TypingResultPayload {
   correctKeystrokes: number;
   text: string;
   mistakeDetails: object[]; // Array of mistake objects
+  keyHistory: object[]; // Added keyHistory
   courseId?: string; // Added courseId
 }
 

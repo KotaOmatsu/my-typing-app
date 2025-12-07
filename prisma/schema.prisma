@@ -99,6 +99,7 @@ model TypingResult {
   correctKeystrokes  Int
   text               String
   mistakeDetails     String
+  keyHistory         String   @default("[]") // 全キーストローク履歴 (JSON)
   createdAt          DateTime @default(now())
 
   courseId           String?

@@ -9,35 +9,35 @@ export interface Mistake {
   actual: string; // 実際のローマ字入力
   typedKey: string; // 実際にタイプされたキー
   kanaIndex: number; // 文章全体における仮名のインデックス
-  previousInputBuffer?: string; // 誤入力直前の入力バッファ状態
+  previousInputBuffer: string; // ミス直前の入力バッファ
+}
+
+export interface KeyLog {
+  key: string;
+  isMistake: boolean;
+  timestamp: number;
 }
 
 /**
- * 練習用の文章データ構造
- */
-export interface TypingText {
-  id: string;
-  display: string; // 表示用（漢字・カタカナ含む）
-  reading: string; // 判定用（ひらがな）
-}
-
-/**
- * 1回のタイピングゲーム全体の結果
- * localStorageやデータベースに保存される際の型
+ * 1回のタイピングゲームの結果
  */
 export interface TypingResult {
-  accuracy: number; // 正確性 (%)
-  wpm: number; // Words Per Minute
-  score?: number; // 総合スコア
-  mistakes: Mistake[]; // ミスの詳細配列
-  startTime: number; // 開始時刻 (Unixタイムスタンプ)
-  endTime: number; // 終了時刻 (Unixタイムスタンプ)
-  totalKeystrokes: number; // 総打鍵数
-  correctKeystrokes: number; // 正解打鍵数
-  correctKanaUnits: number; // 正解仮名数
-  typedText: string; // 対象となった文章全体（判定用：ひらがな）
-  displayText: string; // 対象となった文章全体（表示用：漢字・カタカナ）
-  displayUnits: string[]; // 表示用に分割された仮名の配列
+  id?: string;
+  wpm: number;
+  accuracy: number;
+  mistakeCount: number;
+  score: number;
+  mistakes: Mistake[];
+  keyHistory: KeyLog[];
+  startTime: number;
+  endTime: number;
+  totalKeystrokes: number;
+  correctKeystrokes: number;
+  correctKanaUnits: number;
+  typedText: string; // 実際にユーザーが入力したローマ字列全体
+  displayText: string; // 問題文
+  displayUnits: DisplayUnit[]; // 問題文の構造データ
+  createdAt?: string;
 }
 
 /**
