@@ -91,9 +91,10 @@ export async function PUT(
 
     // 4. リクエストボディの取得
     const body = await request.json();
-    const { title, description, difficulty, isPublic, texts }: {
+    const { title, description, thumbnail, difficulty, isPublic, texts }: {
       title: string;
       description?: string;
+      thumbnail?: string;
       difficulty?: string;
       isPublic?: boolean;
       texts: TextItem[];
@@ -103,12 +104,20 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
 
+    // validate text items
+    for (const text of texts) {
+      if (!text || typeof text !== 'object' || !text.display || !text.reading) {
+        return NextResponse.json({ error: 'Invalid text item: missing display or reading' }, { status: 400 });
+      }
+    }
+
     // 5. コース更新（テキストは全削除して再作成）
     const updatedCourse = await prisma.course.update({
       where: { id: courseId },
       data: {
         title,
         description,
+        thumbnail,
         difficulty,
         isPublic,
         texts: {

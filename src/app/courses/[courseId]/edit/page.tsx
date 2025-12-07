@@ -30,6 +30,7 @@ export default function EditCoursePage({ params }: { params: { courseId: string 
         setInitialData({
           title: data.title,
           description: data.description || '',
+          thumbnail: data.thumbnail || '',
           difficulty: data.difficulty,
           isPublic: data.isPublic,
           texts: data.texts.map((t: TextItem) => ({ // TextItem 型を明示

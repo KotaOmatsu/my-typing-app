@@ -11,6 +11,7 @@ export interface TextItem {
 export interface CourseFormData {
   title: string;
   description: string;
+  thumbnail?: string;
   difficulty: string;
   isPublic: boolean;
   texts: TextItem[];
@@ -31,6 +32,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
 }) => {
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
+  const [thumbnail, setThumbnail] = useState(initialData?.thumbnail || '');
   const [difficulty, setDifficulty] = useState(initialData?.difficulty || 'Normal');
   const [isPublic, setIsPublic] = useState(initialData?.isPublic ?? true);
   const [texts, setTexts] = useState<TextItem[]>(initialData?.texts || [{ display: '', reading: '' }]);
@@ -41,6 +43,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
     if (initialData) {
       setTitle(initialData.title);
       setDescription(initialData.description);
+      setThumbnail(initialData.thumbnail || '');
       setDifficulty(initialData.difficulty);
       setIsPublic(initialData.isPublic);
       setTexts(initialData.texts);
@@ -90,6 +93,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
       await onSubmit({
         title,
         description,
+        thumbnail,
         difficulty,
         isPublic,
         texts,
@@ -130,6 +134,17 @@ const CourseForm: React.FC<CourseFormProps> = ({
             rows={3}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
             placeholder="コースの説明を入力してください"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">サムネイル画像URL (任意)</label>
+          <input
+            type="text"
+            value={thumbnail}
+            onChange={(e) => setThumbnail(e.target.value)}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
+            placeholder="例: https://example.com/image.jpg"
           />
         </div>
 

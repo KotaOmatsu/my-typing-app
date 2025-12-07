@@ -8,6 +8,7 @@ import { useGameSettings } from "../hooks/useGameSettings";
 import { Course } from "../types/typing"; // Import from types
 import CourseCard from "../components/CourseCard";
 import CourseDetailModal from "../components/CourseDetailModal";
+import CourseFilters from "../components/CourseFilters";
 
 export default function Home() {
   const router = useRouter();
@@ -16,24 +17,39 @@ export default function Home() {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('All');
 
   useEffect(() => {
+    let ignore = false;
     const fetchCourses = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('/api/courses');
-        if (response.ok) {
+        const params = new URLSearchParams();
+        if (searchQuery) params.append('search', searchQuery);
+        if (selectedDifficulty !== 'All') params.append('difficulty', selectedDifficulty);
+
+        const response = await fetch(`/api/courses?${params.toString()}`);
+        if (response.ok && !ignore) {
           const data = await response.json();
           setCourses(data);
         }
       } catch (error) {
         console.error("Failed to fetch courses:", error);
       } finally {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       }
     };
 
-    fetchCourses();
-  }, []);
+    const timerId = setTimeout(() => {
+      fetchCourses();
+    }, 300);
+
+    return () => {
+      clearTimeout(timerId);
+      ignore = true;
+    };
+  }, [searchQuery, selectedDifficulty]);
 
   const handleCourseSelect = (course: Course) => {
     setSelectedCourse(course);
@@ -89,6 +105,16 @@ export default function Home() {
             </Link>
           </div>
         )}
+
+        {/* 検索・フィルター */}
+        <div className="w-full mb-8">
+          <CourseFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedDifficulty={selectedDifficulty}
+            onDifficultyChange={setSelectedDifficulty}
+          />
+        </div>
 
         {loading ? (
           <div className="flex justify-center items-center h-64">

@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const authorId = searchParams.get('authorId');
+    const searchQuery = searchParams.get('search');
+    const difficulty = searchParams.get('difficulty');
 
     let where: Prisma.CourseWhereInput = { isPublic: true }; // 型を明示
 
@@ -33,6 +35,25 @@ export async function GET(request: NextRequest) {
         // 未ログインの場合、公開コースのみ
         where = { authorId, isPublic: true };
       }
+    }
+
+    // 検索クエリがある場合、タイトルまたは説明文で検索
+    if (searchQuery) {
+      where = {
+        ...where,
+        OR: [
+          { title: { contains: searchQuery } },
+          { description: { contains: searchQuery } },
+        ],
+      };
+    }
+
+    // 難易度フィルタがある場合 (All以外)
+    if (difficulty && difficulty !== 'All') {
+      where = {
+        ...where,
+        difficulty: difficulty,
+      };
     }
 
     // prisma.course.findMany() で条件に合うデータを複数取得します
@@ -97,10 +118,17 @@ export async function POST(request: Request) {
 
     // 2. リクエストボディの取得と検証
     const body = await request.json();
-    const { title, description, difficulty, isPublic, texts } = body;
+    const { title, description, thumbnail, difficulty, isPublic, texts } = body;
 
     if (!title || !texts || !Array.isArray(texts) || texts.length === 0) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+    }
+
+    // validate text items
+    for (const text of texts) {
+      if (!text || typeof text !== 'object' || !text.display || !text.reading) {
+        return NextResponse.json({ error: 'Invalid text item: missing display or reading' }, { status: 400 });
+      }
     }
 
     // 3. データベースへの保存
@@ -108,6 +136,7 @@ export async function POST(request: Request) {
       data: {
         title,
         description,
+        thumbnail,
         difficulty: difficulty || 'Normal',
         isPublic: isPublic !== undefined ? isPublic : true,
         authorId: user.id,
