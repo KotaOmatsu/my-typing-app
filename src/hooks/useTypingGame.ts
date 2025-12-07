@@ -214,7 +214,7 @@ export const useTypingGame = (courseId?: string) => {
             // 結果ページへのリダイレクト
             router.push('/result');
         }
-    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits, courseTexts, courseId]);
+    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, keyHistory, currentTextIndex, router, session, typingUnits, courseTexts, courseId]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);

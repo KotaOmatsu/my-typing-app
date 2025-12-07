@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { TypingResult, HistoryResult } from '@/types/typing';
 import { analyzeWeaknesses } from '@/utils/analysisUtils';
 import HistoryView from '@/components/HistoryView';
-import { loadKanaRomajiMap } from '@/lib/romajiMapData';
+import { loadKanaRomajiMapServer } from '@/lib/server/loadMap';
 
 export default async function HistoryPage({
   searchParams,
@@ -14,7 +14,7 @@ export default async function HistoryPage({
   searchParams: { range?: string };
 }) {
   // マップがサーバーサイドでロードされていることを保証
-  await loadKanaRomajiMap();
+  await loadKanaRomajiMapServer();
 
   const session = await getServerSession(authOptions);
 
@@ -79,10 +79,7 @@ export default async function HistoryPage({
     // キー履歴のパース
     let parsedKeyHistory = [];
     try {
-      // @ts-ignore - keyHistory exists in DB but type might not be fully updated in generated client immediately if relying on global type? 
-      // Actually, Prisma Client types are updated by generate.
-      // r is from prisma.typingResult.findMany.
-      // Let's assume r.keyHistory exists (String).
+      // @ts-expect-error r.keyHistory is guaranteed to be string here but Prisma's generated type might not reflect it
       if (r.keyHistory) {
         parsedKeyHistory = JSON.parse(r.keyHistory);
       }

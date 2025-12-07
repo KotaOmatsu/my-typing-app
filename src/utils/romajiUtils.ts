@@ -1,4 +1,4 @@
-import { getRomajiCandidates } from "@/components/KanaRomajiMap";
+import { getRomajiCandidates } from "@/lib/romajiMapData";
 
 // 記号の直接マッピング
 const SYMBOL_MAP: { [key: string]: string } = { "。": ".", "、": ",", "「": "[", "」": "]" };

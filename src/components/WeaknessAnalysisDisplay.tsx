@@ -26,6 +26,29 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
     return 'bg-red-300'; // Intense red for bad areas
   };
 
+  const getSeverityStyles = (severity: 'High' | 'Medium' | 'Low') => {
+    switch (severity) {
+        case 'High':
+            return {
+                card: 'border-l-red-500 bg-red-50 text-red-900',
+                badge: 'bg-red-200 text-red-800',
+                text: '要改善'
+            };
+        case 'Medium':
+            return {
+                card: 'border-l-orange-500 bg-orange-50 text-orange-900',
+                badge: 'bg-orange-200 text-orange-800',
+                text: '注意'
+            };
+        default: // Low
+            return {
+                card: 'border-l-yellow-500 bg-yellow-50 text-yellow-900',
+                badge: 'bg-yellow-200 text-yellow-800',
+                text: '軽微'
+            };
+    }
+  };
+
   const topCategory = analysis.missCategories[0];
 
   return (
@@ -33,7 +56,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
       <div className="p-6 border-b border-gray-200 bg-gray-50">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">タイピング診断</h2>
         <p className="text-lg text-gray-600">
-          あなたの弱点は <span className="font-bold text-red-600">{analysis.worstFinger}指</span> と <span className="font-bold text-red-600">{topCategory?.label || 'その他'}</span> です。
+          あなたの弱点は <span className="font-bold text-red-600">{analysis.worstFinger}</span> と <span className="font-bold text-red-600">{topCategory?.label || 'その他'}</span> です。
         </p>
         {topCategory && (
             <div className="mt-2 p-3 bg-white border border-l-4 border-l-blue-500 rounded text-blue-800 text-sm">
@@ -50,28 +73,14 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {analysis.insights.map((insight, i) => {
-                    const severityColor = 
-                        insight.severity === 'High' ? 'border-l-red-500 bg-red-50 text-red-900' :
-                        insight.severity === 'Medium' ? 'border-l-orange-500 bg-orange-50 text-orange-900' :
-                        'border-l-yellow-500 bg-yellow-50 text-yellow-900';
-                    
-                    const badgeColor = 
-                        insight.severity === 'High' ? 'bg-red-200 text-red-800' :
-                        insight.severity === 'Medium' ? 'bg-orange-200 text-orange-800' :
-                        'bg-yellow-200 text-yellow-800';
-
-                    
-                    const badgeText = 
-                        insight.severity === 'High' ? '要改善' :
-                        insight.severity === 'Medium' ? '注意' :
-                        '軽微';
+                    const styles = getSeverityStyles(insight.severity);
 
                     return (
-                        <div key={i} className={`p-4 rounded-r-lg border border-gray-200 border-l-4 shadow-sm ${severityColor} bg-white`}>
+                        <div key={i} className={`p-4 rounded-r-lg border border-gray-200 border-l-4 shadow-sm ${styles.card} bg-white`}>
                             <div className="flex justify-between items-start mb-2">
                                 <h4 className="font-bold text-base">{insight.title}</h4>
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${badgeColor}`}>
-                                    {badgeText}
+                                <span className={`text-xs font-bold px-2 py-0.5 rounded ${styles.badge}`}>
+                                    {styles.text}
                                 </span>
                             </div>
                             <p className="text-sm text-gray-600 leading-snug">{insight.description}</p>
@@ -92,7 +101,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                 {/* Left Hand: Pinky(0), Ring(1), Middle(2), Index(3), Thumb(4) */}
                 <div className="flex space-x-1 items-end">
                     {analysis.fingerScores.slice(0, 5).map((fs) => { // slice(0,5) for left hand
-                        const heights = { '左小': 12, '左薬': 16, '左中': 20, '左人': 18, '左親': 10 }; // Specific heights for each finger
+                        const heights = { '左小指': 12, '左薬指': 16, '左中指': 20, '左人差し指': 18, '左親指': 10 }; // Specific heights for each finger
                         return (
                             <div key={fs.finger} className="flex flex-col items-center group relative">
                                 <div 
@@ -100,7 +109,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                                     style={{ height: `${(heights[fs.finger as keyof typeof heights] || 10) * 4}px` }} // Use specific height
                                     title={`${fs.finger}: ${fs.missCount} miss`}
                                 ></div>
-                                <span className="text-xs mt-1 text-gray-500">{fs.finger.slice(-1)}</span> {/* 例: 左小 -> 小 */}
+                                {/* <span className="text-xs mt-1 text-gray-500">{fs.finger}</span> */} {/* 一旦テキスト表示しない */}
                             </div>
                         );
                     })}
@@ -109,7 +118,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                 {/* Right Hand: Thumb(5), Index(6), Middle(7), Ring(8), Pinky(9) */}
                 <div className="flex space-x-1 items-end">
                     {analysis.fingerScores.slice(5, 10).map((fs) => { // slice(5,10) for right hand
-                        const heights = { '右親': 10, '右人': 18, '右中': 20, '右薬': 16, '右小': 12 }; // Specific heights for each finger
+                        const heights = { '右親指': 10, '右人差し指': 18, '右中指': 20, '右薬指': 16, '右小指': 12 }; // Specific heights for each finger
                         return (
                             <div key={fs.finger} className="flex flex-col items-center group relative">
                                 <div 
@@ -117,7 +126,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                                     style={{ height: `${(heights[fs.finger as keyof typeof heights] || 10) * 4}px` }} // Use specific height
                                     title={`${fs.finger}: ${fs.missCount} miss`}
                                 ></div>
-                                <span className="text-xs mt-1 text-gray-500">{fs.finger.slice(-1)}</span> {/* 例: 右小 -> 小 */}
+                                {/* <span className="text-xs mt-1 text-gray-500">{fs.finger}</span> */} {/* 一旦テキスト表示しない */}
                             </div>
                         );
                     })}

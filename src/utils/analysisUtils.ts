@@ -1,6 +1,7 @@
 import { Mistake, TypingResult, KeyLog } from "@/types/typing";
 import { getTypingUnits } from "./typingUtils";
 import { getRomajiCandidates } from "@/lib/romajiMapData";
+import { checkRomajiMatch } from "@/utils/romajiUtils";
 
 // --- Interfaces ---
 
@@ -61,13 +62,180 @@ const KEY_LAYOUT: { [key: string]: [number, number, number] } = {
 };
 
 const FINGER_NAMES = [
-  '左小', '左薬', '左中', '左人', '左親', '右親', '右人', '右中', '右薬', '右小'
+  '左小指', '左薬指', '左中指', '左人差し指', '左親指', '右親指', '右人差し指', '右中指', '右薬指', '右小指'
 ];
 
 // 難易度重み (小指・薬指は難しいのでミスを少し許容=0.8、人差し指・中指は簡単なのでミスは重い=1.2)
 const FINGER_DIFFICULTY_WEIGHTS = [0.8, 0.8, 1.2, 1.2, 1.0, 1.0, 1.2, 1.2, 0.8, 0.8];
 
+// インサイト生成の閾値
+const MIN_ATTEMPTS_FOR_INSIGHT = 10;
+const INSIGHT_SCORE_THRESHOLD = 5;
+
 // --- Helper Functions ---
+
+// 0-4: Left, 5-9: Right
+function getHand(fingerIndex: number): 'Left' | 'Right' {
+  return fingerIndex <= 4 ? 'Left' : 'Right';
+}
+
+interface SimulationState {
+  currentKanaIndex: number;
+  inputBuffer: string;
+}
+
+function detectCascadingErrors(units: string[], keyHistory: KeyLog[]) {
+  let normalState: SimulationState = { currentKanaIndex: 0, inputBuffer: '' };
+  let virtualState: SimulationState | null = null;
+  
+  let cascadeCount = 0;
+  let cascadeStartIndex = -1;
+  
+  const detectedCascades: { startIndex: number, length: number }[] = [];
+
+  for (const log of keyHistory) {
+    const key = log.key;
+    
+    // 1. Normal State Simulation
+    let normalHit = false;
+    if (normalState.currentKanaIndex < units.length) {
+      const currentKana = units[normalState.currentKanaIndex];
+      const nextUnit = units[normalState.currentKanaIndex + 1];
+      const newBuffer = normalState.inputBuffer + key;
+      const match = checkRomajiMatch(currentKana, newBuffer, nextUnit);
+      
+      if (match.exact) {
+        normalHit = true;
+        normalState.inputBuffer = ''; // Clear buffer
+        normalState.currentKanaIndex++;
+      } else if (match.partial) {
+        normalHit = true;
+        normalState.inputBuffer = newBuffer;
+      } else {
+        // Miss in normal state: Input buffer reverts (as per game logic)
+      }
+    }
+
+    // 2. Virtual State Simulation (Lookahead)
+    if (virtualState) {
+      if (virtualState.currentKanaIndex < units.length) {
+        const vKana = units[virtualState.currentKanaIndex];
+        const vNext = units[virtualState.currentKanaIndex + 1];
+        const vBuffer = virtualState.inputBuffer + key;
+        const vMatch = checkRomajiMatch(vKana, vBuffer, vNext);
+
+        if (vMatch.exact) {
+          virtualState.inputBuffer = '';
+          virtualState.currentKanaIndex++;
+          cascadeCount++;
+        } else if (vMatch.partial) {
+          virtualState.inputBuffer = vBuffer;
+          cascadeCount++;
+        } else {
+          if (cascadeCount >= 2) {
+            detectedCascades.push({ startIndex: cascadeStartIndex, length: cascadeCount });
+          }
+          virtualState = null;
+          cascadeCount = 0;
+        }
+      } else {
+        if (cascadeCount >= 2) {
+            detectedCascades.push({ startIndex: cascadeStartIndex, length: cascadeCount });
+        }
+        virtualState = null;
+        cascadeCount = 0;
+      }
+    }
+
+    // 3. Forking Logic
+    if (!normalHit && !virtualState) {
+      // A. Intra-Unit Skip (e.g. "ko" -> typed "o", skip "k")
+      // Assume the user skipped the 1st char of a valid romaji representation.
+      const currentKana = units[normalState.currentKanaIndex];
+      const nextUnit = units[normalState.currentKanaIndex + 1];
+      const candidates = getRomajiCandidates(currentKana);
+      
+      for (const cand of candidates) {
+        if (cand.length >= 2) {
+           // Try prepending the first char of this candidate to the typed key
+           const skippedChar = cand[0];
+           // Check if the typed key matches the expectation *if* we had typed the first char
+           // Note: This assumes the typed key is the 2nd char.
+           // e.g. cand="ko", key="o". vBuffer="ko". Match!
+           // e.g. cand="shi", key="h". vBuffer="sh". Match!
+           
+           // Optimization: Check if key actually matches 2nd char to avoid false positives?
+           // checkRomajiMatch handles fuzzy logic, so relying on it is safer.
+           
+           const vBuffer = skippedChar + key;
+           // We pass normalState.inputBuffer? No, we assume skip happened from *current* buffer state?
+           // Usually skip happens from empty buffer state for that char.
+           // If normal buffer has "k" and we type "o", that's normal hit.
+           // Forking only happens if normal missed. So normal buffer is likely partial mismatch or empty.
+           // Let's assume we append to the *skipped* char.
+           // Wait, if I typed partial 's' (buffer='s'), then skipped 'h', typed 'i'.
+           // Input 'i'. Normal 'si'? Match.
+           // If I typed nothing (buffer=''), skipped 'k', typed 'o'.
+           // vBuffer = 'k' + 'o' = 'ko'. Match.
+           
+           // What if buffer has garbage?
+           // The simulation clears buffer on exact match.
+           // So we assume we are starting fresh or from clean state.
+           // Ideally, we use normalState.inputBuffer + skippedChar + key?
+           // If I typed 's' (valid), then skipped 'h', typed 'i'.
+           // Normal: 'si' -> valid? Yes 'si' is valid for 'し'.
+           // So that wouldn't be a miss.
+           
+           // Conclusion: Only handle case where buffer is empty or irrelevant?
+           // Let's stick to: Virtual Buffer = skippedChar + key.
+           const fMatch = checkRomajiMatch(currentKana, vBuffer, nextUnit);
+           
+           if (fMatch.exact || fMatch.partial) {
+             virtualState = {
+               currentKanaIndex: fMatch.exact ? normalState.currentKanaIndex + 1 : normalState.currentKanaIndex,
+               inputBuffer: fMatch.exact ? '' : vBuffer,
+             };
+             cascadeCount = 1;
+             cascadeStartIndex = normalState.currentKanaIndex;
+             break; // Found a fork
+           }
+        }
+      }
+
+      // B. Next Unit Skip (Skip entire current kana)
+      if (!virtualState) {
+        const nextIndex = normalState.currentKanaIndex + 1;
+        if (nextIndex < units.length) {
+          const fKana = units[nextIndex];
+          const fNext = units[nextIndex + 1];
+          const fBuffer = key; 
+          const fMatch = checkRomajiMatch(fKana, fBuffer, fNext);
+          
+          if (fMatch.exact || fMatch.partial) {
+            virtualState = {
+              currentKanaIndex: fMatch.exact ? nextIndex + 1 : nextIndex,
+              inputBuffer: fMatch.exact ? '' : fBuffer,
+            };
+            cascadeCount = 1;
+            cascadeStartIndex = normalState.currentKanaIndex;
+          }
+        }
+      }
+    }
+
+    // 4. Termination by Normal Success
+    if (normalHit && virtualState) {
+        virtualState = null;
+        cascadeCount = 0;
+    }
+  }
+  
+  if (virtualState && cascadeCount >= 2) {
+      detectedCascades.push({ startIndex: cascadeStartIndex, length: cascadeCount });
+  }
+
+  return detectedCascades;
+}
 
 function getDistance(key1: string, key2: string): number {
   const p1 = KEY_LAYOUT[key1];
@@ -81,11 +249,6 @@ function isMirrorKey(key1: string, key2: string): boolean {
   const p2 = KEY_LAYOUT[key2];
   if (!p1 || !p2) return false;
   return (p1[2] + p2[2] === 9) && (p1[0] === p2[0]);
-}
-
-// 0-4: Left, 5-9: Right
-function getHand(fingerIndex: number): 'Left' | 'Right' {
-  return fingerIndex <= 4 ? 'Left' : 'Right';
 }
 
 export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
@@ -109,18 +272,17 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
   let transpositionCount = 0;
   let coordinationCount = 0; // Count of "bad" coordination issues detected in history
 
-  // --- 0. Count Total Attempts (Denominator) ---
+  // --- 0. Count Total Attempts (Denominator) - Correct Keystrokes ---
   results.forEach(result => {
     if (!result.keyHistory) return;
     result.keyHistory.forEach(log => {
-      const key = log.key.toLowerCase();
-      if (KEY_LAYOUT[key]) {
-        // Key Count
-        keyTotalAttempts[key] = (keyTotalAttempts[key] || 0) + 1;
-        
-        // Finger Count
-        const fingerIdx = KEY_LAYOUT[key][2];
-        fingerTotalAttempts[fingerIdx] = (fingerTotalAttempts[fingerIdx] || 0) + 1;
+      if (!log.isMistake) { // Only count correct keystrokes here
+        const key = log.key.toLowerCase();
+        if (KEY_LAYOUT[key]) {
+          keyTotalAttempts[key] = (keyTotalAttempts[key] || 0) + 1;
+          const fingerIdx = KEY_LAYOUT[key][2];
+          fingerTotalAttempts[fingerIdx] = (fingerTotalAttempts[fingerIdx] || 0) + 1;
+        }
       }
     });
   });
@@ -134,6 +296,11 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
     const actualKey = mistake.typedKey.toLowerCase();
 
     if (expectedKey && KEY_LAYOUT[expectedKey]) {
+        // Add Missed Attempts to Denominator
+        keyTotalAttempts[expectedKey] = (keyTotalAttempts[expectedKey] || 0) + 1;
+        const expFingerIdx = KEY_LAYOUT[expectedKey][2];
+        fingerTotalAttempts[expFingerIdx] = (fingerTotalAttempts[expFingerIdx] || 0) + 1;
+
         // Sequence
         const sequencePattern = `${precedingKey} -> ${expectedKey}`;
         sequenceCounts[sequencePattern] = (sequenceCounts[sequencePattern] || 0) + 1;
@@ -142,8 +309,7 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
         missPatternCounts[missPattern] = (missPatternCounts[missPattern] || 0) + 1;
 
         // Stats
-        const fingerIdx = KEY_LAYOUT[expectedKey][2];
-        fingerMissCounts[fingerIdx] = (fingerMissCounts[fingerIdx] || 0) + 1;
+        fingerMissCounts[expFingerIdx] = (fingerMissCounts[expFingerIdx] || 0) + 1;
         keyMissCounts[expectedKey] = (keyMissCounts[expectedKey] || 0) + 1;
 
         // Classification
@@ -157,34 +323,23 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
     }
   });
 
-  // --- 2. Transposition Analysis (Lookahead) ---
+  // --- 2. Transposition Analysis (Cascading Lookahead) ---
   results.forEach(result => {
-    if (!result.mistakes || result.mistakes.length === 0) return;
+    if (!result.keyHistory || result.keyHistory.length === 0) return;
     
-    // テキストをパースして期待される読み（ローマ字）のシーケンスを構築するのはコストが高いので
-    // 簡易的に、現在のkanaIndexの「次」のkanaのローマ字を取得して比較する
-    const units = getTypingUnits(result.text || result.displayText); // displayTextからユニット生成
+    const units = getTypingUnits(result.text || result.displayText);
+    const cascades = detectCascadingErrors(units, result.keyHistory);
     
-    result.mistakes.forEach(mistake => {
-        const currentKanaIndex = mistake.kanaIndex;
-        // 次の文字が存在するか
-        if (currentKanaIndex + 1 < units.length) {
-            const nextKana = units[currentKanaIndex + 1];
-            const nextRomajiCandidates = getRomajiCandidates(nextKana);
-            
-            // 入力されたキーが、次の文字のローマ字の1文字目と一致するか？
-            // 例: tamago -> 't', 'a', 'm', 'a', 'g', 'o'
-            // expected: 'a' (index 3), typed: 'g' (index 4's start)
-            const typedKey = mistake.typedKey.toLowerCase();
-            const isLookahead = nextRomajiCandidates.some(romaji => romaji.toLowerCase().startsWith(typedKey));
-            
-            if (isLookahead) {
-                transpositionCount++;
-                const pattern = `${units[currentKanaIndex]}(${mistake.expected.charAt(0)}) -> ${nextKana}(${typedKey})`;
-                transpositionCounts[pattern] = (transpositionCounts[pattern] || 0) + 1;
-                basicCount--; // Reclassify from Basic to Transposition (adjust count)
-            }
+    cascades.forEach(c => {
+        transpositionCount++; // 1 cascade = 1 transposition error unit
+        // Record the pattern (Which kana was skipped?)
+        if (c.startIndex < units.length) {
+            const skippedKana = units[c.startIndex];
+            const pattern = `${skippedKana} (早とちり連鎖)`;
+            transpositionCounts[pattern] = (transpositionCounts[pattern] || 0) + 1;
         }
+        // Adjust basic count: The mistakes involved in this cascade were counted as 'basic' above.
+        // We can decrease basicCount if we want strict separation, but optional.
     });
   });
 
@@ -203,8 +358,8 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
 
       const prevFinger = KEY_LAYOUT[prevKey][2];
       const currFinger = KEY_LAYOUT[currKey][2];
-      const prevHand = getHand(prevFinger);
-      const currHand = getHand(currFinger);
+      // const prevHand = getHand(prevFinger); // Unused
+      // const currHand = getHand(currFinger); // Unused
 
       // Bad Coordination: Same Finger, Different Key (Slide/Jump)
       if (prevFinger === currFinger && prevKey !== currKey) {
@@ -261,16 +416,16 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
   FINGER_NAMES.forEach((name, idx) => {
     const attempts = fingerTotalAttempts[idx] || 0;
     const misses = fingerMissCounts[idx] || 0;
-    if (attempts > 10) { // 最低施行回数
+    if (attempts > MIN_ATTEMPTS_FOR_INSIGHT) { // 最低施行回数
         const rate = misses / attempts;
         const weight = FINGER_DIFFICULTY_WEIGHTS[idx];
         const score = rate * weight * 100;
         
-        if (score > 5) { // 閾値
+        if (score > INSIGHT_SCORE_THRESHOLD) { // 閾値
             candidates.push({
                 type: 'finger',
                 title: `${name}の精度低下`,
-                description: `${name}でのミス率が${(rate * 100).toFixed(1)}%です。${weight > 1 ? '本来打ちやすい指ですが、' : '動きにくい指ですが、'}意識的にトレーニングが必要です。`,
+                description: `${name}でのミス率が${(Math.min(rate * 100, 100)).toFixed(1)}%です。${weight > 1 ? '本来打ちやすい指ですが、' : '動きにくい指ですが、'}意識的にトレーニングが必要です。`,
                 score: score,
                 severity: score > 15 ? 'High' : score > 10 ? 'Medium' : 'Low'
             });

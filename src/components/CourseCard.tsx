@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image'; // Import Image
 import { Course } from '@/types/typing';
 
 interface CourseCardProps {
@@ -28,10 +29,13 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onSelect, onToggleFavor
     >
       <div className="h-32 bg-gray-200 flex items-center justify-center relative">
         {course.thumbnail ? (
-          <img 
+          <Image 
             src={course.thumbnail} 
             alt={course.title} 
-            className="w-full h-full object-cover"
+            fill 
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" // Example sizes, adjust as needed
+            priority // ここを追加
           />
         ) : (
           <span className="text-gray-400 text-4xl">⌨️</span>
