@@ -72,11 +72,26 @@ export default async function HistoryPage({
         console.error("Failed to parse mistakes for result " + r.id, e);
     }
 
+    // キー履歴のパース
+    let parsedKeyHistory = [];
+    try {
+      // @ts-ignore - keyHistory exists in DB but type might not be fully updated in generated client immediately if relying on global type? 
+      // Actually, Prisma Client types are updated by generate.
+      // r is from prisma.typingResult.findMany.
+      // Let's assume r.keyHistory exists (String).
+      if (r.keyHistory) {
+        parsedKeyHistory = JSON.parse(r.keyHistory);
+      }
+    } catch (e) {
+      console.error("Failed to parse keyHistory for result " + r.id, e);
+    }
+
     analysisData.push({
       wpm: r.wpm,
       accuracy: r.accuracy,
       score: r.score,
       mistakes: parsedMistakes,
+      keyHistory: parsedKeyHistory, // 追加
       startTime: 0,
       endTime: 0,
       totalKeystrokes: r.totalKeystrokes,
@@ -89,7 +104,7 @@ export default async function HistoryPage({
   }
 
   // 苦手分析の実行
-  const weaknessAnalysis = analyzeWeaknesses(analysisData.flatMap((r) => r.mistakes));
+  const weaknessAnalysis = analyzeWeaknesses(analysisData);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

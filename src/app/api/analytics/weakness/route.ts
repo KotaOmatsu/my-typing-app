@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { analyzeWeaknesses } from '@/utils/analysisUtils';
-import { Mistake } from '@/types/typing';
+import { Mistake, TypingResult, KeyLog } from '@/types/typing';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -24,23 +24,51 @@ export async function GET() {
       take: 50,
       select: {
         mistakeDetails: true,
+        keyHistory: true,
+        text: true,
+        wpm: true,
+        accuracy: true,
+        score: true,
+        totalKeystrokes: true,
+        correctKeystrokes: true,
       },
     });
 
-    let allMistakes: Mistake[] = [];
+    const analysisData: TypingResult[] = [];
 
     results.forEach(result => {
       try {
-        const parsed: Mistake[] = JSON.parse(result.mistakeDetails);
-        if (Array.isArray(parsed)) {
-          allMistakes = [...allMistakes, ...parsed];
+        const parsedMistakes: Mistake[] = JSON.parse(result.mistakeDetails);
+        let parsedKeyHistory: KeyLog[] = [];
+        if (result.keyHistory) {
+          parsedKeyHistory = JSON.parse(result.keyHistory);
+        }
+
+        if (Array.isArray(parsedMistakes)) {
+          analysisData.push({
+            // minimal TypingResult for analysis
+            wpm: result.wpm,
+            accuracy: result.accuracy,
+            score: result.score,
+            mistakeCount: parsedMistakes.length,
+            mistakes: parsedMistakes,
+            keyHistory: parsedKeyHistory,
+            startTime: 0,
+            endTime: 0,
+            totalKeystrokes: result.totalKeystrokes,
+            correctKeystrokes: result.correctKeystrokes,
+            correctKanaUnits: 0,
+            typedText: '',
+            displayText: result.text,
+            displayUnits: [],
+          });
         }
       } catch (e) {
-        console.error("Failed to parse mistake details", e);
+        console.error("Failed to parse details", e);
       }
     });
 
-    const analysis = analyzeWeaknesses(allMistakes);
+    const analysis = analyzeWeaknesses(analysisData);
 
     return NextResponse.json(analysis);
   } catch (error) {

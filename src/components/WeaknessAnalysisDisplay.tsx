@@ -8,7 +8,7 @@ interface WeaknessAnalysisDisplayProps {
 }
 
 const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analysis }) => {
-  const [activeTab, setActiveTab] = useState<'patterns' | 'trends'>('patterns');
+  const [activeTab, setActiveTab] = useState<'patterns' | 'trends' | 'advanced'>('patterns');
 
   if (!analysis || analysis.totalMistakes === 0) {
     return (
@@ -109,6 +109,12 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                     ミスパターン
                 </button>
                 <button 
+                    className={`flex-1 py-3 text-sm font-medium ${activeTab === 'advanced' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                    onClick={() => setActiveTab('advanced')}
+                >
+                    高度分析
+                </button>
+                <button 
                     className={`flex-1 py-3 text-sm font-medium ${activeTab === 'trends' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                     onClick={() => setActiveTab('trends')}
                 >
@@ -144,6 +150,48 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                     </div>
                 )}
 
+                {activeTab === 'advanced' && (
+                    <div className="space-y-6">
+                        <div>
+                            <h4 className="text-sm font-bold text-purple-600 mb-2">
+                                運指の連動性 (Same Finger Transitions)
+                            </h4>
+                            <p className="text-xs text-gray-500 mb-2">同じ指で異なるキーを連続打鍵する「同指連打」はミスの元です。</p>
+                            <ul>
+                                {(analysis.fingerTransitionWeaknesses || []).slice(0, 8).map((item, i) => (
+                                    <li key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                                        <span className="font-mono text-sm text-gray-700">{item.pattern}</span>
+                                        <span className="text-sm text-gray-500">{item.count}回</span>
+                                    </li>
+                                ))}
+                                {(!analysis.fingerTransitionWeaknesses || analysis.fingerTransitionWeaknesses.length === 0) && (
+                                    <li className="text-sm text-gray-400 py-2">特に問題は見つかりませんでした。</li>
+                                )}
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="text-sm font-bold text-red-600 mb-2">
+                                順序逆転・早とちり (Lookahead Errors)
+                            </h4>
+                            <p className="text-xs text-gray-500 mb-2">
+                                「tamago」を「tamaog」と打つような、指が思考より先に走ってしまうミスです。
+                                <br />発生率: <strong>{analysis.transpositionErrorRate.toFixed(1)}%</strong> ({analysis.transpositionErrorCount}回)
+                            </p>
+                            <ul>
+                                {(analysis.specificTranspositions || []).slice(0, 8).map((item, i) => (
+                                    <li key={i} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
+                                        <span className="font-mono text-sm text-gray-700">{item.pattern}</span>
+                                        <span className="text-sm text-gray-500">{item.count}回</span>
+                                    </li>
+                                ))}
+                                {(!analysis.specificTranspositions || analysis.specificTranspositions.length === 0) && (
+                                    <li className="text-sm text-gray-400 py-2">特に問題は見つかりませんでした。</li>
+                                )}
+                            </ul>
+                        </div>
+                    </div>
+                )}
+
                 {activeTab === 'trends' && (
                     <div>
                         <h4 className="text-sm font-bold text-gray-700 mb-4">ミス傾向の分類</h4>
@@ -154,7 +202,7 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
                                         <span className="font-bold text-gray-800">{cat.label}</span>
                                         <span className="text-sm font-mono bg-gray-200 px-2 rounded-full">{cat.count}回</span>
                                     </div>
-                                    <p className="text-xs text-gray-500">{cat.type === 'FatFinger' ? '打つべきキーの隣を誤って打鍵しています。指の横移動がスムーズでないか、ホームポジションの意識が低い可能性があります。キーボードのキー間隔を体で覚え、正確な指の動きを心がけましょう。' : cat.type === 'Mirror' ? '左右で同じような位置にあるキーを誤って打鍵しています。脳内でキーの配置が混乱している可能性があります。運指表を確認し、目でキーボードを見ながらゆっくりと打つ練習を繰り返しましょう。' : '特定の傾向がないミスです。まずはホームポジションを確実にし、指を動かす距離が短いキーから練習して基礎的な打鍵精度を高めましょう。'}</p>
+                                    <p className="text-xs text-gray-500">{cat.description}</p>
                                 </div>
                             ))}
                         </div>
