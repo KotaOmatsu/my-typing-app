@@ -1,21 +1,23 @@
-import { Mistake } from "@/types/typing";
+import { Mistake, TypingResult, KeyLog } from "@/types/typing";
+import { getTypingUnits } from "./typingUtils";
+import { getRomajiCandidates } from "@/components/KanaRomajiMap";
 
 // --- Interfaces ---
 
 export interface FingerScore {
   finger: string;
-  score: number; // 0 (perfect) to 100 (bad) based on miss rate relative to total strokes (approx)
+  score: number; // 0 (perfect) to 100 (bad)
   missCount: number;
 }
 
 export interface KeyScore {
   key: string;
-  score: number; // 0 to 100 heatmap intensity
+  score: number; // 0 to 100
   missCount: number;
 }
 
 export interface MissCategory {
-  type: 'FatFinger' | 'Mirror' | 'Basic';
+  type: 'FatFinger' | 'Mirror' | 'Basic' | 'Transposition' | 'Coordination';
   count: number;
   label: string;
   description: string;
@@ -27,15 +29,17 @@ export interface WeaknessAnalysis {
   keyScores: KeyScore[];
   missCategories: MissCategory[];
   sequenceWeaknesses: { pattern: string; count: number }[];
-  missPatterns: { pattern: string; count: number }[]; // "打つべきキー -> 実際に入力したキー"
-  worstFinger: string; // For summary
+  missPatterns: { pattern: string; count: number }[];
+  worstFinger: string;
+  // 新機能用
+  fingerTransitionWeaknesses: { pattern: string; count: number }[];
+  transpositionErrorCount: number;
+  transpositionErrorRate: number;
+  specificTranspositions: { pattern: string; count: number }[];
 }
 
 // --- Constants & Data ---
 
-// Simple layout map for distance/finger calc. 
-// Format: [row, col, finger_index (0=L-Pinky, 9=R-Pinky)]
-// Row 0=Number, 1=Top(Q), 2=Home(A), 3=Bottom(Z)
 const KEY_LAYOUT: { [key: string]: [number, number, number] } = {
   '1': [0, 0, 0], '2': [0, 1, 1], '3': [0, 2, 2], '4': [0, 3, 3], '5': [0, 4, 3],
   '6': [0, 5, 6], '7': [0, 6, 6], '8': [0, 7, 7], '9': [0, 8, 8], '0': [0, 9, 9],
@@ -45,6 +49,7 @@ const KEY_LAYOUT: { [key: string]: [number, number, number] } = {
   'h': [2, 5, 6], 'j': [2, 6, 6], 'k': [2, 7, 7], 'l': [2, 8, 8], ';': [2, 9, 9],
   'z': [3, 0, 0], 'x': [3, 1, 1], 'c': [3, 2, 2], 'v': [3, 3, 3], 'b': [3, 4, 3],
   'n': [3, 5, 6], 'm': [3, 6, 6], ',': [3, 7, 7], '.': [3, 8, 8], '/': [3, 9, 9],
+  '-': [0, 10, 9], // Hyphen (Right Pinky)
 };
 
 const FINGER_NAMES = [
@@ -53,7 +58,6 @@ const FINGER_NAMES = [
 
 // --- Helper Functions ---
 
-// Manhattan distance on keyboard grid
 function getDistance(key1: string, key2: string): number {
   const p1 = KEY_LAYOUT[key1];
   const p2 = KEY_LAYOUT[key2];
@@ -68,18 +72,30 @@ function isMirrorKey(key1: string, key2: string): boolean {
   return (p1[2] + p2[2] === 9) && (p1[0] === p2[0]);
 }
 
-export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
-  const sequenceCounts: { [key: string]: number } = {};
-  const missPatternCounts: { [key: string]: number } = {}; // "Expected -> Actual"
+// 0-4: Left, 5-9: Right
+function getHand(fingerIndex: number): 'Left' | 'Right' {
+  return fingerIndex <= 4 ? 'Left' : 'Right';
+}
+
+export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
+  const allMistakes = results.flatMap(r => r.mistakes);
   
+  const sequenceCounts: { [key: string]: number } = {};
+  const missPatternCounts: { [key: string]: number } = {};
   const fingerMissCounts: { [index: number]: number } = {};
-  const keyMissCounts: { [key: string]: number } = {}; // For heatmap (based on expected key)
+  const keyMissCounts: { [key: string]: number } = {};
+  
+  const transitionCounts: { [key: string]: number } = {};
+  const transpositionCounts: { [key: string]: number } = {};
 
   let fatFingerCount = 0;
   let mirrorCount = 0;
   let basicCount = 0;
+  let transpositionCount = 0;
+  let coordinationCount = 0; // Count of "bad" coordination issues detected in history
 
-  mistakes.forEach(mistake => {
+  // --- 1. Basic Mistake Analysis ---
+  allMistakes.forEach(mistake => {
     const bufferLen = mistake.previousInputBuffer?.length || 0;
     const primaryExpectedPattern = mistake.expected.split('/')[0];
     const expectedKey = primaryExpectedPattern.charAt(bufferLen).toLowerCase(); 
@@ -87,14 +103,14 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
     const actualKey = mistake.typedKey.toLowerCase();
 
     if (expectedKey && KEY_LAYOUT[expectedKey]) {
-        // Counts
+        // Sequence
         const sequencePattern = `${precedingKey} -> ${expectedKey}`;
         sequenceCounts[sequencePattern] = (sequenceCounts[sequencePattern] || 0) + 1;
 
         const missPattern = `${expectedKey} -> ${actualKey}`;
         missPatternCounts[missPattern] = (missPatternCounts[missPattern] || 0) + 1;
 
-        // Finger & Key Scores (Based on Missed Key - "Hard to hit")
+        // Stats
         const fingerIdx = KEY_LAYOUT[expectedKey][2];
         fingerMissCounts[fingerIdx] = (fingerMissCounts[fingerIdx] || 0) + 1;
         keyMissCounts[expectedKey] = (keyMissCounts[expectedKey] || 0) + 1;
@@ -110,14 +126,77 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
     }
   });
 
-  // --- Aggregation ---
+  // --- 2. Transposition Analysis (Lookahead) ---
+  results.forEach(result => {
+    if (!result.mistakes || result.mistakes.length === 0) return;
+    
+    // テキストをパースして期待される読み（ローマ字）のシーケンスを構築するのはコストが高いので
+    // 簡易的に、現在のkanaIndexの「次」のkanaのローマ字を取得して比較する
+    const units = getTypingUnits(result.text || result.displayText); // displayTextからユニット生成
+    
+    result.mistakes.forEach(mistake => {
+        const currentKanaIndex = mistake.kanaIndex;
+        // 次の文字が存在するか
+        if (currentKanaIndex + 1 < units.length) {
+            const nextKana = units[currentKanaIndex + 1];
+            const nextRomajiCandidates = getRomajiCandidates(nextKana);
+            
+            // 入力されたキーが、次の文字のローマ字の1文字目と一致するか？
+            // 例: tamago -> 't', 'a', 'm', 'a', 'g', 'o'
+            // expected: 'a' (index 3), typed: 'g' (index 4's start)
+            const typedKey = mistake.typedKey.toLowerCase();
+            const isLookahead = nextRomajiCandidates.some(romaji => romaji.toLowerCase().startsWith(typedKey));
+            
+            if (isLookahead) {
+                transpositionCount++;
+                const pattern = `${units[currentKanaIndex]}(${mistake.expected.charAt(0)}) -> ${nextKana}(${typedKey})`;
+                transpositionCounts[pattern] = (transpositionCounts[pattern] || 0) + 1;
+                basicCount--; // Reclassify from Basic to Transposition (adjust count)
+            }
+        }
+    });
+  });
 
-  // Helper to sort and slice
+  // --- 3. Finger Coordination Analysis (Key History) ---
+  results.forEach(result => {
+    if (!result.keyHistory || result.keyHistory.length < 2) return;
+
+    for (let i = 1; i < result.keyHistory.length; i++) {
+      const prevLog = result.keyHistory[i - 1];
+      const currLog = result.keyHistory[i];
+      
+      const prevKey = prevLog.key.toLowerCase();
+      const currKey = currLog.key.toLowerCase();
+
+      if (!KEY_LAYOUT[prevKey] || !KEY_LAYOUT[currKey]) continue;
+
+      const prevFinger = KEY_LAYOUT[prevKey][2];
+      const currFinger = KEY_LAYOUT[currKey][2];
+      const prevHand = getHand(prevFinger);
+      const currHand = getHand(currFinger);
+
+      // Bad Coordination: Same Finger, Different Key (Slide/Jump)
+      if (prevFinger === currFinger && prevKey !== currKey) {
+        const pattern = `${FINGER_NAMES[prevFinger]}連打 (${prevKey}→${currKey})`;
+        transitionCounts[pattern] = (transitionCounts[pattern] || 0) + 1;
+        
+        // If this transition resulted in a mistake (currLog.isMistake), count it heavily?
+        // Ideally we count usage frequency vs error frequency.
+        // For now, let's just identify "frequent awkward transitions".
+        // Or "Transitions that led to mistakes".
+        if (currLog.isMistake) {
+             coordinationCount++;
+        }
+      }
+    }
+  });
+
+  // --- Aggregation Helper ---
   const getTop = (counts: { [key: string]: number }, limit: number = 5) => 
     Object.entries(counts)
         .sort(([, a], [, b]) => b - a)
         .slice(0, limit)
-        .map(([key, count]) => ({ pattern: key, count })); // Changed to pattern: key
+        .map(([key, count]) => ({ pattern: key, count }));
 
   // Normalize Scores
   const maxFingerMiss = Math.max(...Object.values(fingerMissCounts), 1);
@@ -135,21 +214,26 @@ export function analyzeWeaknesses(mistakes: Mistake[]): WeaknessAnalysis {
   }));
 
   const missCategories: MissCategory[] = [
-      { type: 'FatFinger' as const, count: fatFingerCount, label: '隣接キー誤打', description: '打つべきキーの隣を誤って打鍵しています。指の横移動がスムーズでないか、ホームポジションの意識が低い可能性があります。キーボードのキー間隔を体で覚え、正確な指の動きを心がけましょう。' },
-      { type: 'Mirror' as const, count: mirrorCount, label: '逆手誤打', description: '左右で同じような位置にあるキーを誤って打鍵しています。脳内でキーの配置が混乱している可能性があります。運指表を確認し、目でキーボードを見ながらゆっくりと打つ練習を繰り返しましょう。' },
-      { type: 'Basic' as const, count: basicCount, label: 'その他', description: '特定の傾向がないミスです。まずはホームポジションを確実にし、指を動かす距離が短いキーから練習して基礎的な打鍵精度を高めましょう。' },
+      { type: 'FatFinger' as const, count: fatFingerCount, label: '隣接キー誤打', description: '打つべきキーの隣を誤って打鍵しています。指の横移動がスムーズでないか、ホームポジションの意識が低い可能性があります。' },
+      { type: 'Mirror' as const, count: mirrorCount, label: '逆手誤打', description: '左右対称の位置にあるキーを間違えています。脳内でキー配置が混乱している可能性があります。' },
+      { type: 'Transposition' as const, count: transpositionCount, label: '順序逆転 (早とちり)', description: '「tamago」を「tamaog」と打つような、次の文字を先に打ってしまうミスです。指が走りすぎています。少しリズムを落としてみましょう。' },
+      { type: 'Coordination' as const, count: coordinationCount, label: '運指の連動性', description: '同じ指での連続打鍵など、物理的に打ちにくい動きでミスが発生しています。手首を柔軟に使うか、打鍵リズムを調整しましょう。' },
+      { type: 'Basic' as const, count: Math.max(0, basicCount), label: 'その他', description: '特定の傾向がないミスです。基礎的な精度を高めましょう。' },
   ].sort((a, b) => b.count - a.count);
 
-  // Fix: Sort a copy to avoid mutating the original array which is needed for ordered heatmap
   const worstFinger = [...fingerScores].sort((a, b) => b.missCount - a.missCount)[0].finger;
 
   return {
-    totalMistakes: mistakes.length,
+    totalMistakes: allMistakes.length,
     sequenceWeaknesses: getTop(sequenceCounts),
     missPatterns: getTop(missPatternCounts),
     fingerScores,
     keyScores,
     missCategories,
-    worstFinger
+    worstFinger,
+    fingerTransitionWeaknesses: getTop(transitionCounts),
+    transpositionErrorCount: transpositionCount,
+    transpositionErrorRate: allMistakes.length > 0 ? (transpositionCount / allMistakes.length) * 100 : 0,
+    specificTranspositions: getTop(transpositionCounts),
   };
 }
