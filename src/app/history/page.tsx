@@ -6,12 +6,16 @@ import { prisma } from '@/lib/prisma';
 import { TypingResult, HistoryResult } from '@/types/typing';
 import { analyzeWeaknesses } from '@/utils/analysisUtils';
 import HistoryView from '@/components/HistoryView';
+import { loadKanaRomajiMap } from '@/lib/romajiMapData';
 
 export default async function HistoryPage({
   searchParams,
 }: {
   searchParams: { range?: string };
 }) {
+  // マップがサーバーサイドでロードされていることを保証
+  await loadKanaRomajiMap();
+
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user?.email) {

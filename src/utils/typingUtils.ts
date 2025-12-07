@@ -1,4 +1,4 @@
-import { getRomajiCandidates } from '../components/KanaRomajiMap';
+import { getRomajiCandidates } from '@/lib/romajiMapData';
 
 // Helper function to break down text into typing units (handling 拗音 and 促音)
 export const getTypingUnits = (text: string): string[] => {

@@ -1,7 +1,8 @@
 import { useEffect, useCallback, useReducer } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { getRomajiCandidates, useKanaRomajiMap } from "../components/KanaRomajiMap";
+import { getRomajiCandidates } from "@/lib/romajiMapData";
+import { useKanaRomajiMap } from "@/hooks/useKanaRomajiMap";
 import { getTypingUnits } from "../utils/typingUtils";
 import { TypingText } from "@/types/typing";
 import { initialState, reducer } from "@/state/typingGameState";

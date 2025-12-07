@@ -1,6 +1,6 @@
 import { Mistake, TypingResult, KeyLog } from "@/types/typing";
 import { getTypingUnits } from "./typingUtils";
-import { getRomajiCandidates } from "@/components/KanaRomajiMap";
+import { getRomajiCandidates } from "@/lib/romajiMapData";
 
 // --- Interfaces ---
 
