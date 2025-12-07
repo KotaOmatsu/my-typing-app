@@ -4,6 +4,13 @@ import { getRomajiCandidates } from "@/lib/romajiMapData";
 
 // --- Interfaces ---
 
+export interface WeaknessInsight {
+  title: string;
+  description: string;
+  severity: 'High' | 'Medium' | 'Low';
+  score: number;
+}
+
 export interface FingerScore {
   finger: string;
   score: number; // 0 (perfect) to 100 (bad)
@@ -36,6 +43,7 @@ export interface WeaknessAnalysis {
   transpositionErrorCount: number;
   transpositionErrorRate: number;
   specificTranspositions: { pattern: string; count: number }[];
+  insights: WeaknessInsight[]; // インサイトを追加
 }
 
 // --- Constants & Data ---
@@ -55,6 +63,9 @@ const KEY_LAYOUT: { [key: string]: [number, number, number] } = {
 const FINGER_NAMES = [
   '左小', '左薬', '左中', '左人', '左親', '右親', '右人', '右中', '右薬', '右小'
 ];
+
+// 難易度重み (小指・薬指は難しいのでミスを少し許容=0.8、人差し指・中指は簡単なのでミスは重い=1.2)
+const FINGER_DIFFICULTY_WEIGHTS = [0.8, 0.8, 1.2, 1.2, 1.0, 1.0, 1.2, 1.2, 0.8, 0.8];
 
 // --- Helper Functions ---
 
@@ -88,11 +99,31 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
   const transitionCounts: { [key: string]: number } = {};
   const transpositionCounts: { [key: string]: number } = {};
 
+  // For Rate Calculation
+  const fingerTotalAttempts: { [index: number]: number } = {};
+  const keyTotalAttempts: { [key: string]: number } = {};
+
   let fatFingerCount = 0;
   let mirrorCount = 0;
   let basicCount = 0;
   let transpositionCount = 0;
   let coordinationCount = 0; // Count of "bad" coordination issues detected in history
+
+  // --- 0. Count Total Attempts (Denominator) ---
+  results.forEach(result => {
+    if (!result.keyHistory) return;
+    result.keyHistory.forEach(log => {
+      const key = log.key.toLowerCase();
+      if (KEY_LAYOUT[key]) {
+        // Key Count
+        keyTotalAttempts[key] = (keyTotalAttempts[key] || 0) + 1;
+        
+        // Finger Count
+        const fingerIdx = KEY_LAYOUT[key][2];
+        fingerTotalAttempts[fingerIdx] = (fingerTotalAttempts[fingerIdx] || 0) + 1;
+      }
+    });
+  });
 
   // --- 1. Basic Mistake Analysis ---
   allMistakes.forEach(mistake => {
@@ -223,6 +254,71 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
 
   const worstFinger = [...fingerScores].sort((a, b) => b.missCount - a.missCount)[0].finger;
 
+  // --- 4. Insight Generation (Weighted Scoring) ---
+  const candidates: { type: string; title: string; description: string; score: number; severity: 'High'|'Medium'|'Low' }[] = [];
+
+  // Finger Insights
+  FINGER_NAMES.forEach((name, idx) => {
+    const attempts = fingerTotalAttempts[idx] || 0;
+    const misses = fingerMissCounts[idx] || 0;
+    if (attempts > 10) { // 最低施行回数
+        const rate = misses / attempts;
+        const weight = FINGER_DIFFICULTY_WEIGHTS[idx];
+        const score = rate * weight * 100;
+        
+        if (score > 5) { // 閾値
+            candidates.push({
+                type: 'finger',
+                title: `${name}の精度低下`,
+                description: `${name}でのミス率が${(rate * 100).toFixed(1)}%です。${weight > 1 ? '本来打ちやすい指ですが、' : '動きにくい指ですが、'}意識的にトレーニングが必要です。`,
+                score: score,
+                severity: score > 15 ? 'High' : score > 10 ? 'Medium' : 'Low'
+            });
+        }
+    }
+  });
+
+  // Transposition Insight
+  if (allMistakes.length > 0) {
+      const transRate = transpositionCount / allMistakes.length;
+      const transScore = transRate * 2.0 * 100; // Weight 2.0 (Bad habit)
+      if (transpositionCount > 2 && transScore > 10) {
+          candidates.push({
+              type: 'transposition',
+              title: '焦りによる順序逆転',
+              description: `全体ミスの${(transRate * 100).toFixed(1)}%が「早とちり」によるものです。指が先行しています。`,
+              score: transScore,
+              severity: transScore > 30 ? 'High' : 'Medium'
+          });
+      }
+  }
+
+  // Coordination Insight
+  if (allMistakes.length > 0) {
+      const coordRate = coordinationCount / allMistakes.length;
+      const coordScore = coordRate * 1.5 * 100; // Weight 1.5 (Efficiency)
+      if (coordinationCount > 2 && coordScore > 10) {
+          candidates.push({
+              type: 'coordination',
+              title: '同指連打の弱点',
+              description: `全体ミスの${(coordRate * 100).toFixed(1)}%が「同じ指での連続打鍵」で発生しています。`,
+              score: coordScore,
+              severity: coordScore > 20 ? 'High' : 'Medium'
+          });
+      }
+  }
+
+  // Sort and Pick Top 3
+  const insights = candidates
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(c => ({
+        title: c.title,
+        description: c.description,
+        severity: c.severity,
+        score: c.score
+    }));
+
   return {
     totalMistakes: allMistakes.length,
     sequenceWeaknesses: getTop(sequenceCounts),
@@ -235,5 +331,6 @@ export function analyzeWeaknesses(results: TypingResult[]): WeaknessAnalysis {
     transpositionErrorCount: transpositionCount,
     transpositionErrorRate: allMistakes.length > 0 ? (transpositionCount / allMistakes.length) * 100 : 0,
     specificTranspositions: getTop(transpositionCounts),
+    insights, // 追加
   };
 }
