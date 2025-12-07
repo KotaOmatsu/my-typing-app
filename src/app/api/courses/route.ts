@@ -118,7 +118,7 @@ export async function POST(request: Request) {
 
     // 2. リクエストボディの取得と検証
     const body = await request.json();
-    const { title, description, difficulty, isPublic, texts } = body;
+    const { title, description, thumbnail, difficulty, isPublic, texts } = body;
 
     if (!title || !texts || !Array.isArray(texts) || texts.length === 0) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
@@ -129,6 +129,7 @@ export async function POST(request: Request) {
       data: {
         title,
         description,
+        thumbnail,
         difficulty: difficulty || 'Normal',
         isPublic: isPublic !== undefined ? isPublic : true,
         authorId: user.id,

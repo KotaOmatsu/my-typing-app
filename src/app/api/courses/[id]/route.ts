@@ -91,9 +91,10 @@ export async function PUT(
 
     // 4. リクエストボディの取得
     const body = await request.json();
-    const { title, description, difficulty, isPublic, texts }: {
+    const { title, description, thumbnail, difficulty, isPublic, texts }: {
       title: string;
       description?: string;
+      thumbnail?: string;
       difficulty?: string;
       isPublic?: boolean;
       texts: TextItem[];
@@ -109,6 +110,7 @@ export async function PUT(
       data: {
         title,
         description,
+        thumbnail,
         difficulty,
         isPublic,
         texts: {
