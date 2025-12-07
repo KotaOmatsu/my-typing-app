@@ -11,6 +11,8 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const authorId = searchParams.get('authorId');
+    const searchQuery = searchParams.get('search');
+    const difficulty = searchParams.get('difficulty');
 
     let where: Prisma.CourseWhereInput = { isPublic: true }; // 型を明示
 
@@ -33,6 +35,25 @@ export async function GET(request: NextRequest) {
         // 未ログインの場合、公開コースのみ
         where = { authorId, isPublic: true };
       }
+    }
+
+    // 検索クエリがある場合、タイトルまたは説明文で検索
+    if (searchQuery) {
+      where = {
+        ...where,
+        OR: [
+          { title: { contains: searchQuery } },
+          { description: { contains: searchQuery } },
+        ],
+      };
+    }
+
+    // 難易度フィルタがある場合 (All以外)
+    if (difficulty && difficulty !== 'All') {
+      where = {
+        ...where,
+        difficulty: difficulty,
+      };
     }
 
     // prisma.course.findMany() で条件に合うデータを複数取得します

@@ -18,9 +18,16 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onSelect }) => {
       className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden cursor-pointer border border-gray-200 flex flex-col h-full"
       onClick={() => onSelect(course)}
     >
-      <div className="h-32 bg-gray-200 flex items-center justify-center">
-        {/* サムネイル画像のプレースホルダー */}
-        <span className="text-gray-400 text-4xl">⌨️</span>
+      <div className="h-32 bg-gray-200 flex items-center justify-center relative">
+        {course.thumbnail ? (
+          <img 
+            src={course.thumbnail} 
+            alt={course.title} 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-gray-400 text-4xl">⌨️</span>
+        )}
       </div>
       <div className="p-4 flex flex-col flex-grow text-left">
         <div className="flex justify-between items-start mb-2">
