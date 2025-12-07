@@ -19,20 +19,46 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   useEffect(() => {
     let ignore = false;
     const fetchCourses = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams();
-        if (searchQuery) params.append('search', searchQuery);
-        if (selectedDifficulty !== 'All') params.append('difficulty', selectedDifficulty);
+        let url = '';
+        if (showFavoritesOnly) {
+          url = '/api/user/favorites';
+        } else {
+          const params = new URLSearchParams();
+          if (searchQuery) params.append('search', searchQuery);
+          if (selectedDifficulty !== 'All') params.append('difficulty', selectedDifficulty);
+          url = `/api/courses?${params.toString()}`;
+        }
 
-        const response = await fetch(`/api/courses?${params.toString()}`);
+        const response = await fetch(url);
         if (response.ok && !ignore) {
           const data = await response.json();
-          setCourses(data);
+          // お気に入りタブでフィルタリングが必要な場合はクライアントサイドで行う
+          // (API側が未対応のため。件数が少なければこれで十分)
+          let filteredData = data;
+          if (showFavoritesOnly) {
+             // 念のためお気に入りフラグを立てておく（APIが返さない場合用）
+             filteredData = filteredData.map((c: Course) => ({ ...c, isFavorite: true }));
+             
+             // クライアントサイドフィルタリング
+             if (searchQuery) {
+               const query = searchQuery.toLowerCase();
+               filteredData = filteredData.filter((c: Course) => 
+                 c.title.toLowerCase().includes(query) || 
+                 (c.description && c.description.toLowerCase().includes(query))
+               );
+             }
+             if (selectedDifficulty !== 'All') {
+               filteredData = filteredData.filter((c: Course) => c.difficulty === selectedDifficulty);
+             }
+          }
+          setCourses(filteredData);
         }
       } catch (error) {
         console.error("Failed to fetch courses:", error);
@@ -41,6 +67,7 @@ export default function Home() {
       }
     };
 
+    // デバウンス処理はお気に入りタブでは不要かもしれないが、統一して適用
     const timerId = setTimeout(() => {
       fetchCourses();
     }, 300);
@@ -49,7 +76,38 @@ export default function Home() {
       clearTimeout(timerId);
       ignore = true;
     };
-  }, [searchQuery, selectedDifficulty]);
+  }, [searchQuery, selectedDifficulty, showFavoritesOnly]);
+
+  const handleToggleFavorite = async (courseId: string) => {
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+
+    const previousCourses = courses;
+
+    // 楽観的UI更新
+    setCourses(prev => {
+      if (showFavoritesOnly) {
+        // お気に入り一覧表示時は、解除されたらリストから消す
+        return prev.filter(c => c.id !== courseId);
+      } else {
+        // 通常一覧時はフラグを反転
+        return prev.map(c => c.id === courseId ? { ...c, isFavorite: !c.isFavorite } : c);
+      }
+    });
+
+    try {
+      const res = await fetch(`/api/courses/${courseId}/favorite`, { method: 'POST' });
+      if (!res.ok) {
+        throw new Error('Failed to toggle favorite');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('お気に入りの更新に失敗しました');
+      setCourses(previousCourses); // エラー時は状態を戻す
+    }
+  };
 
   const handleCourseSelect = (course: Course) => {
     setSelectedCourse(course);
@@ -113,6 +171,8 @@ export default function Home() {
             onSearchChange={setSearchQuery}
             selectedDifficulty={selectedDifficulty}
             onDifficultyChange={setSelectedDifficulty}
+            showFavoritesOnly={showFavoritesOnly}
+            onShowFavoritesOnlyChange={setShowFavoritesOnly}
           />
         </div>
 
@@ -122,13 +182,22 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
-            {courses.map((course) => (
-              <CourseCard 
-                key={course.id} 
-                course={course} 
-                onSelect={handleCourseSelect} 
-              />
-            ))}
+            {courses.length > 0 ? (
+              courses.map((course) => (
+                <CourseCard 
+                  key={course.id} 
+                  course={course} 
+                  onSelect={handleCourseSelect} 
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                {showFavoritesOnly 
+                  ? "お気に入りのコースはまだありません。" 
+                  : "条件に一致するコースは見つかりませんでした。"}
+              </div>
+            )}
           </div>
         )}
       </main>

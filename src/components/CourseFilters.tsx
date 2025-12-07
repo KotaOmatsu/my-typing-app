@@ -5,6 +5,8 @@ interface CourseFiltersProps {
   onSearchChange: (value: string) => void;
   selectedDifficulty: string;
   onDifficultyChange: (value: string) => void;
+  showFavoritesOnly: boolean;
+  onShowFavoritesOnlyChange: (value: boolean) => void;
 }
 
 const CourseFilters: React.FC<CourseFiltersProps> = ({
@@ -12,9 +14,38 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({
   onSearchChange,
   selectedDifficulty,
   onDifficultyChange,
+  showFavoritesOnly,
+  onShowFavoritesOnlyChange,
 }) => {
   return (
     <div className="bg-white p-4 rounded-lg shadow-sm mb-8 border border-gray-100">
+      {/* タブ切り替え (すべて / お気に入り) */}
+      <div className="flex border-b border-gray-200 mb-4">
+        <button
+          className={`py-2 px-4 text-sm font-medium focus:outline-none border-b-2 transition-colors duration-200 ${
+            !showFavoritesOnly
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+          onClick={() => onShowFavoritesOnlyChange(false)}
+        >
+          すべてのコース
+        </button>
+        <button
+          className={`py-2 px-4 text-sm font-medium focus:outline-none border-b-2 transition-colors duration-200 flex items-center ${
+            showFavoritesOnly
+              ? 'border-pink-500 text-pink-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+          onClick={() => onShowFavoritesOnlyChange(true)}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+          </svg>
+          お気に入り
+        </button>
+      </div>
+
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         {/* 検索バー */}
         <div className="relative flex-grow w-full md:w-auto">

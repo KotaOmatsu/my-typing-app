@@ -67,11 +67,12 @@ export interface Course {
   id: string;
   title: string;
   description: string | null;
-  difficulty: string;
-  thumbnail: string | null;
-  authorId: string; // 削除・編集権限チェック用
-  isPublic?: boolean; // マイページでの表示用
-  texts?: TypingText[]; // 詳細取得時のみ含まれる (APIからのレスポンス用)
+  thumbnail?: string | null;
+  difficulty: 'Easy' | 'Normal' | 'Hard' | string;
+  isPublic: boolean;
+  authorId?: string;
+  texts?: TextItem[];
+  isFavorite?: boolean; // お気に入り状態
 }
 
 /**
