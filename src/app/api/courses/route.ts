@@ -124,6 +124,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
 
+    // validate text items
+    for (const text of texts) {
+      if (!text.display || !text.reading) {
+        return NextResponse.json({ error: 'Invalid text item: missing display or reading' }, { status: 400 });
+      }
+    }
+
     // 3. データベースへの保存
     const course = await prisma.course.create({
       data: {
