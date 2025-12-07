@@ -104,6 +104,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
     }
 
+    // validate text items
+    for (const text of texts) {
+      if (!text.display || !text.reading) {
+        return NextResponse.json({ error: 'Invalid text item: missing display or reading' }, { status: 400 });
+      }
+    }
+
     // 5. コース更新（テキストは全削除して再作成）
     const updatedCourse = await prisma.course.update({
       where: { id: courseId },
