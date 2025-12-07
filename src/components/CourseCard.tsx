@@ -43,6 +43,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onSelect, onToggleFavor
             onClick={handleFavoriteClick}
             className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors duration-200 focus:outline-none z-10"
             title={course.isFavorite ? "お気に入り解除" : "お気に入り登録"}
+            aria-label={course.isFavorite ? "お気に入り解除" : "お気に入り登録"}
           >
             <svg 
               xmlns="http://www.w3.org/2000/svg" 

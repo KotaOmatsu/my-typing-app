@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
     // prisma.course.findMany() で条件に合うデータを複数取得します
     const courses = await prisma.course.findMany({
       where,
+      take: 50, // パフォーマンス考慮のため上限を設定
       select: {
         // 必要なフィールドだけを指定して取得（パフォーマンス向上）
         id: true,

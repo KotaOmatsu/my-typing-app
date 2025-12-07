@@ -84,6 +84,8 @@ export default function Home() {
       return;
     }
 
+    const previousCourses = courses;
+
     // 楽観的UI更新
     setCourses(prev => {
       if (showFavoritesOnly) {
@@ -103,7 +105,7 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       alert('お気に入りの更新に失敗しました');
-      // エラー時は再取得するか、状態を戻す処理が必要だが、簡略化のため割愛
+      setCourses(previousCourses); // エラー時は状態を戻す
     }
   };
 

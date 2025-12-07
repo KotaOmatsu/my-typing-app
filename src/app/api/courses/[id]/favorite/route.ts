@@ -27,21 +27,9 @@ export async function POST(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 3. お気に入り状態の確認
-    const existingFavorite = await prisma.favorite.findUnique({
-      where: {
-        userId_courseId: {
-          userId: user.id,
-          courseId: courseId,
-        },
-      },
-    });
-
-    let isFavorite: boolean;
-
-    if (existingFavorite) {
-      // 登録済みの場合は削除 (解除)
-      await prisma.favorite.delete({
+    // 3. お気に入り状態の確認・更新 (トランザクション)
+    const isFavorite = await prisma.$transaction(async (tx) => {
+      const existingFavorite = await tx.favorite.findUnique({
         where: {
           userId_courseId: {
             userId: user.id,
@@ -49,17 +37,29 @@ export async function POST(
           },
         },
       });
-      isFavorite = false;
-    } else {
-      // 未登録の場合は作成 (登録)
-      await prisma.favorite.create({
-        data: {
-          userId: user.id,
-          courseId: courseId,
-        },
-      });
-      isFavorite = true;
-    }
+
+      if (existingFavorite) {
+        // 登録済みの場合は削除 (解除)
+        await tx.favorite.delete({
+          where: {
+            userId_courseId: {
+              userId: user.id,
+              courseId: courseId,
+            },
+          },
+        });
+        return false;
+      } else {
+        // 未登録の場合は作成 (登録)
+        await tx.favorite.create({
+          data: {
+            userId: user.id,
+            courseId: courseId,
+          },
+        });
+        return true;
+      }
+    });
 
     return NextResponse.json({ isFavorite });
 
