@@ -37,19 +37,6 @@ export const useTypingGame = (courseId?: string) => {
     courseTitle,
   } = state;
 
-  // Sound & BGM Management
-  // soundEnabled now controls both. 
-  useEffect(() => {
-    if (status === 'running' && settings.soundEnabled) {
-      soundManager.startBgm();
-    } else {
-      soundManager.stopBgm();
-    }
-    return () => {
-      soundManager.stopBgm();
-    };
-  }, [status, settings.soundEnabled]);
-
   useEffect(() => {
     let isCancelled = false;
 

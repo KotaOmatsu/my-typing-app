@@ -165,7 +165,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   checked={settings.soundEnabled}
                   onChange={(e) => onUpdateSettings({ soundEnabled: e.target.checked })}
                 />
-                <span className="ml-2 text-gray-700">サウンド (SE & BGM)</span>
+                <span className="ml-2 text-gray-700">サウンド (SE)</span>
               </label>
             </div>
 

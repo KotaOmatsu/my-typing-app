@@ -65,12 +65,13 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
           <hr className="my-4 border-gray-200" />
           <h3 className="text-md font-semibold text-gray-600 mb-2">サウンド設定</h3>
 
-          {/* サウンド (SE & BGM) 設定 */}
+          {/* サウンド (SE) 設定 */}
           <div className="flex items-center justify-between">
-            <span className="text-lg text-gray-700">サウンド (SE & BGM)</span>
+            <span className="text-lg text-gray-700">サウンド (SE)</span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
+                name="soundEnabled"
                 className="sr-only peer"
                 checked={settings.soundEnabled}
                 onChange={(e) => onUpdateSettings({ soundEnabled: e.target.checked })}
@@ -88,6 +89,7 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
+                name="realisticMode"
                 className="sr-only peer"
                 checked={settings.realisticMode}
                 onChange={(e) => onUpdateSettings({ realisticMode: e.target.checked })}
@@ -102,6 +104,7 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
+                name="hardcoreMode"
                 className="sr-only peer"
                 checked={settings.hardcoreMode}
                 onChange={(e) => onUpdateSettings({ hardcoreMode: e.target.checked })}

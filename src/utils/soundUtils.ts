@@ -1,8 +1,6 @@
 class SoundManager {
   private audioContext: AudioContext | null = null;
   private masterGain: GainNode | null = null;
-  private bgmOscillators: OscillatorNode[] = [];
-  private isBgmPlaying: boolean = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -121,54 +119,6 @@ class SoundManager {
         osc.start(now + i * 0.15);
         osc.stop(now + i * 0.15 + 0.6);
       });
-  }
-
-  startBgm() {
-    this.initAudio();
-    if (this.isBgmPlaying || !this.audioContext || !this.masterGain) return;
-    this.isBgmPlaying = true;
-    this.playBgmLoop();
-  }
-
-  stopBgm() {
-    this.isBgmPlaying = false;
-    this.bgmOscillators.forEach(osc => {
-        try {
-            osc.stop();
-        } catch (e) {
-            // Ignore if already stopped
-        }
-    });
-    this.bgmOscillators = [];
-  }
-
-  private playBgmLoop() {
-      if (!this.isBgmPlaying || !this.audioContext || !this.masterGain) return;
-
-      // Simple Ambient Loop
-      const osc = this.audioContext.createOscillator();
-      const gain = this.audioContext.createGain();
-      
-      osc.connect(gain);
-      gain.connect(this.masterGain);
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(220, this.audioContext.currentTime); // A3
-      
-      // LFO for some movement
-      const lfo = this.audioContext.createOscillator();
-      lfo.frequency.value = 0.5; // 0.5 Hz
-      const lfoGain = this.audioContext.createGain();
-      lfoGain.gain.value = 50; 
-      lfo.connect(lfoGain);
-      lfoGain.connect(osc.frequency);
-      lfo.start();
-
-      gain.gain.value = 0.05; // Very quiet
-
-      osc.start();
-      this.bgmOscillators.push(osc);
-      this.bgmOscillators.push(lfo); // Keep track to stop later
   }
 }
 
