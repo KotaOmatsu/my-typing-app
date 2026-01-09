@@ -38,6 +38,7 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
+                name="showKana"
                 className="sr-only peer"
                 checked={settings.showKana}
                 onChange={(e) => onUpdateSettings({ showKana: e.target.checked })}
@@ -52,6 +53,7 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
+                name="showRomaji"
                 className="sr-only peer"
                 checked={settings.showRomaji}
                 onChange={(e) => onUpdateSettings({ showRomaji: e.target.checked })}
