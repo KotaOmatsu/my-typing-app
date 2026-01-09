@@ -128,9 +128,9 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
-            {/* プレイ設定 */}
+            {/* プレイ設定 (ガイド) */}
             <div>
-              <h3 className="font-bold text-gray-800 mb-3">プレイ設定</h3>
+              <h3 className="font-bold text-gray-800 mb-3">ガイド設定</h3>
               <div className="space-y-2">
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -152,6 +152,13 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   />
                   <span className="ml-2 text-gray-700">ローマ字ガイド</span>
                 </label>
+              </div>
+            </div>
+
+            {/* サウンド・演出 */}
+            <div>
+              <h3 className="font-bold text-gray-800 mb-3">サウンド・演出</h3>
+              <div className="space-y-2">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
@@ -162,34 +169,44 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   />
                   <span className="ml-2 text-gray-700">サウンド (SE)</span>
                 </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="missEffectEnabled"
+                    className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                    checked={settings.missEffectEnabled}
+                    onChange={(e) => onUpdateSettings({ missEffectEnabled: e.target.checked })}
+                  />
+                  <span className="ml-2 text-gray-700">ミス時の揺れ</span>
+                </label>
               </div>
             </div>
+          </div>
 
+          <div className="border-t pt-4 mt-4">
             {/* モード */}
-            <div>
-              <h3 className="font-bold text-gray-800 mb-3">モード</h3>
-              <div className="space-y-2">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="realisticMode"
-                    className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
-                    checked={settings.realisticMode}
-                    onChange={(e) => onUpdateSettings({ realisticMode: e.target.checked })}
-                  />
-                  <span className="ml-2 text-gray-700">リアル挙動 (修正必須)</span>
-                </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="hardcoreMode"
-                    className="w-5 h-5 text-red-600 rounded focus:ring-red-500"
-                    checked={settings.hardcoreMode}
-                    onChange={(e) => onUpdateSettings({ hardcoreMode: e.target.checked })}
-                  />
-                  <span className="ml-2 text-red-600 font-bold">超高難易度 (即死)</span>
-                </label>
-              </div>
+            <h3 className="font-bold text-gray-800 mb-3">ゲームモード</h3>
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="realisticMode"
+                  className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
+                  checked={settings.realisticMode}
+                  onChange={(e) => onUpdateSettings({ realisticMode: e.target.checked })}
+                />
+                <span className="ml-2 text-gray-700">リアル挙動 (修正必須)</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="hardcoreMode"
+                  className="w-5 h-5 text-red-600 rounded focus:ring-red-500"
+                  checked={settings.hardcoreMode}
+                  onChange={(e) => onUpdateSettings({ hardcoreMode: e.target.checked })}
+                />
+                <span className="ml-2 text-red-600 font-bold">超高難易度 (即死)</span>
+              </label>
             </div>
           </div>
 

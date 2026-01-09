@@ -4,6 +4,7 @@ export interface GameSettings {
   showRomaji: boolean;
   showKana: boolean;
   soundEnabled: boolean;
+  missEffectEnabled: boolean;
   realisticMode: boolean;
   hardcoreMode: boolean;
 }
@@ -12,6 +13,7 @@ const DEFAULT_SETTINGS: GameSettings = {
   showRomaji: true,
   showKana: true,
   soundEnabled: true,
+  missEffectEnabled: true,
   realisticMode: false,
   hardcoreMode: false,
 };

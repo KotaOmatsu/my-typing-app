@@ -125,8 +125,7 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
 
   return (
     <div className={`flex flex-col items-center justify-center w-full relative min-h-[600px]`}>
-      {/* Pass mistakes.length as triggerKey instead of boolean trigger */}
-      <MissEffect triggerKey={mistakes.length} />
+      {settings.missEffectEnabled && <MissEffect triggerKey={mistakes.length} />}
 
       {courseTitle && (
         <h1 className="text-3xl font-bold text-gray-800 mb-4">{courseTitle}</h1>
