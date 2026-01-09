@@ -119,7 +119,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           <input
             type="text"
             name="title"
-            value={title}
+            value={title || ''}
             onChange={(e) => setTitle(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
             placeholder="例: J-POP歌詞タイピング"
@@ -131,7 +131,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           <label className="block text-sm font-medium text-gray-700">説明文</label>
           <textarea
             name="description"
-            value={description}
+            value={description || ''}
             onChange={(e) => setDescription(e.target.value)}
             rows={3}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
@@ -144,7 +144,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
           <input
             type="text"
             name="thumbnail"
-            value={thumbnail}
+            value={thumbnail || ''}
             onChange={(e) => setThumbnail(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
             placeholder="例: https://example.com/image.jpg"
@@ -170,7 +170,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
               type="checkbox"
               id="isPublic"
               name="isPublic"
-              checked={isPublic}
+              checked={!!isPublic}
               onChange={(e) => setIsPublic(e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
@@ -198,7 +198,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 <input
                   type="text"
                   name={`text-display-${index}`}
-                  value={item.display}
+                  value={item.display || ''}
                   onChange={(e) => handleTextChange(index, 'display', e.target.value)}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                   placeholder="表示テキスト (漢字など)"
@@ -207,7 +207,7 @@ const CourseForm: React.FC<CourseFormProps> = ({
                 <input
                   type="text"
                   name={`text-reading-${index}`}
-                  value={item.reading}
+                  value={item.reading || ''}
                   onChange={(e) => handleTextChange(index, 'reading', e.target.value)}
                   className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                   placeholder="読み (ひらがな)"
