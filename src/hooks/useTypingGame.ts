@@ -35,12 +35,12 @@ export const useTypingGame = (courseId?: string) => {
     currentTextIndex,
     courseTexts,
     courseTitle,
-    penaltyBackspacesNeeded
   } = state;
 
-  // BGM Management
+  // Sound & BGM Management
+  // soundEnabled now controls both. 
   useEffect(() => {
-    if (status === 'running' && settings.bgmEnabled) {
+    if (status === 'running' && settings.soundEnabled) {
       soundManager.startBgm();
     } else {
       soundManager.stopBgm();
@@ -48,7 +48,7 @@ export const useTypingGame = (courseId?: string) => {
     return () => {
       soundManager.stopBgm();
     };
-  }, [status, settings.bgmEnabled]);
+  }, [status, settings.soundEnabled]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -267,6 +267,5 @@ export const useTypingGame = (courseId?: string) => {
     currentDisplayText: courseTexts[currentTextIndex]?.display || "",
     courseTitle,
     handleKeyDown,
-    penaltyBackspacesNeeded
   };
 };

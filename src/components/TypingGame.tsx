@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import OnScreenKeyboard from '../components/OnScreenKeyboard';
 import FingerGuide from '../components/FingerGuide';
+import MissEffect from '../components/MissEffect';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { getRecommendedRomaji } from '../utils/romajiUtils';
 import { useGameSettings } from '../hooks/useGameSettings';
@@ -22,10 +23,18 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     lastTypedKey,
     currentDisplayText,
     courseTitle,
-    penaltyBackspacesNeeded
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
+  const [showExplosion, setShowExplosion] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+        setShowExplosion(true);
+        const timer = setTimeout(() => setShowExplosion(false), 500); // Effect duration
+        return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   // Calculate next key for guides
   const nextKey = React.useMemo(() => {
@@ -34,16 +43,11 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
         const nextUnit = typingUnits[currentKanaIndex + 1];
         const recommendedRomaji = getRecommendedRomaji(currentUnit, nextUnit);
         
-        // Find match length to determine next needed key
         let i = 0;
         while (i < inputBuffer.length && i < recommendedRomaji.length && inputBuffer[i] === recommendedRomaji[i]) {
             i++;
         }
         
-        // If buffer has wrong chars (i < inputBuffer.length), next key is Backspace?
-        // But FingerGuide usually shows alphabet. 
-        // If we are in penalty mode or wrong buffer, maybe show nothing or Backspace indication?
-        // For now, if buffer matches prefix, show next char of romaji.
         if (i === inputBuffer.length && i < recommendedRomaji.length) {
              return recommendedRomaji[i];
         }
@@ -83,7 +87,6 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
             <span className="text-2xl font-mono mt-1 h-8 flex">
               {index === currentKanaIndex ? (
                 (() => {
-                    // Logic to split inputBuffer and recommendedRomaji
                     let matchLen = 0;
                     while (matchLen < inputBuffer.length && matchLen < recommendedRomaji.length && inputBuffer[matchLen] === recommendedRomaji[matchLen]) {
                         matchLen++;
@@ -100,13 +103,6 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
                     <span>
                       <span className="text-blue-600">{matchedPart}</span>
                       <span className="text-red-500 bg-red-100">{wrongPart}</span>
-                      
-                      {/* Only show target if we haven't typed wrong stuff over it? 
-                          Actually we should show target as hint. 
-                          If wrongPart exists, user needs to Backspace. 
-                          Target should be visible but maybe separate? 
-                          Or just append it.
-                      */}
                       
                       {nextChar ? (
                         <span className="text-blue-600 font-bold border-b-2 border-blue-600">
@@ -140,17 +136,12 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
 
   return (
     <div className={`flex flex-col items-center justify-center w-full relative min-h-[600px] ${shakeClass}`}>
+      <MissEffect trigger={showExplosion} />
+
       {courseTitle && (
         <h1 className="text-3xl font-bold text-gray-800 mb-4">{courseTitle}</h1>
       )}
       
-      {/* Penalty Overlay or Indicator */}
-      {penaltyBackspacesNeeded > 0 && (
-          <div className="absolute top-10 text-red-600 font-bold text-2xl animate-pulse z-10 bg-white/80 p-2 rounded">
-              Backspace x {penaltyBackspacesNeeded}
-          </div>
-      )}
-
       <div className="mb-4 p-6 bg-white rounded-lg shadow-lg min-w-[600px] flex flex-col items-center justify-center gap-4 transform scale-90 origin-top"> 
         {/* 漢字（表示用テキスト） */}
         <div className="text-5xl font-bold text-gray-800 tracking-wider mb-2"> 

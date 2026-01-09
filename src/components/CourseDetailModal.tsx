@@ -162,16 +162,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   checked={settings.soundEnabled}
                   onChange={(e) => onUpdateSettings({ soundEnabled: e.target.checked })}
                 />
-                <span className="ml-2 text-gray-700">効果音 (SE)</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
-                  checked={settings.bgmEnabled}
-                  onChange={(e) => onUpdateSettings({ bgmEnabled: e.target.checked })}
-                />
-                <span className="ml-2 text-gray-700">BGM</span>
+                <span className="ml-2 text-gray-700">サウンド (SE & BGM)</span>
               </label>
             </div>
 
@@ -185,15 +176,6 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   onChange={(e) => onUpdateSettings({ realisticMode: e.target.checked })}
                 />
                 <span className="ml-2 text-gray-700">リアル挙動 (BackSpace必須)</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
-                  checked={settings.backspacePenalty}
-                  onChange={(e) => onUpdateSettings({ backspacePenalty: e.target.checked })}
-                />
-                <span className="ml-2 text-gray-700">BackSpaceペナルティ</span>
               </label>
                <label className="flex items-center cursor-pointer">
                 <input
