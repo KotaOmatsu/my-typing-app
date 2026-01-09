@@ -133,11 +133,8 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     return <div className="text-xl">Loading typing data...</div>;
   }
 
-  // Hardcore Shake Effect - Use the new aggressive shake class
-  const shakeClass = (settings.hardcoreMode && error) ? 'hardcore-shake' : '';
-
   return (
-    <div className={`flex flex-col items-center justify-center w-full relative min-h-[600px] ${shakeClass}`}>
+    <div className={`flex flex-col items-center justify-center w-full relative min-h-[600px]`}>
       <MissEffect trigger={showExplosion} />
 
       {courseTitle && (
