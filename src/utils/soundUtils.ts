@@ -3,15 +3,7 @@ class SoundManager {
   private masterGain: GainNode | null = null;
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioContextClass) {
-        this.audioContext = new AudioContextClass();
-        this.masterGain = this.audioContext.createGain();
-        this.masterGain.connect(this.audioContext.destination);
-        this.masterGain.gain.value = 0.3; // Global volume
-      }
-    }
+    // Lazy initialization handled in initAudio
   }
 
   private initAudio() {
@@ -21,7 +13,7 @@ class SoundManager {
         this.audioContext = new AudioContextClass();
         this.masterGain = this.audioContext.createGain();
         this.masterGain.connect(this.audioContext.destination);
-        this.masterGain.gain.value = 0.3;
+        this.masterGain.gain.value = 0.3; // Global volume
       }
     }
     if (this.audioContext?.state === 'suspended') {
