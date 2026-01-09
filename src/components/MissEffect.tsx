@@ -1,4 +1,7 @@
+'use client';
+
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface MissEffectProps {
     trigger: boolean;
@@ -8,6 +11,12 @@ type EffectType = 'flash' | 'ripple' | 'shake' | null;
 
 const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
     const [activeEffect, setActiveEffect] = useState<EffectType>(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
     useEffect(() => {
         if (trigger) {
@@ -15,7 +24,6 @@ const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
             const randomEffect = effects[Math.floor(Math.random() * effects.length)];
             setActiveEffect(randomEffect);
 
-            // Reset after animation duration
             const timer = setTimeout(() => {
                 setActiveEffect(null);
             }, 600); 
@@ -37,9 +45,10 @@ const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
         };
     }, [activeEffect]);
 
-    if (!activeEffect) return null;
+    if (!activeEffect || !mounted) return null;
 
-    return (
+    // Use Portal to ensure effects are top-level and not constrained by parent styles
+    return createPortal(
         <>
             {activeEffect === 'flash' && (
                 <div className="fixed inset-0 pointer-events-none z-[9999] flash-screen" aria-hidden="true" />
@@ -48,9 +57,8 @@ const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
             {activeEffect === 'ripple' && (
                 <div className="shockwave-ripple" aria-hidden="true" />
             )}
-            
-            {/* Shake is handled via body class side-effect */}
-        </>
+        </>,
+        document.body
     );
 };
 
