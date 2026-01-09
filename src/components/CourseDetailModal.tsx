@@ -136,6 +136,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  name="showKana"
                   className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                   checked={settings.showKana}
                   onChange={(e) => onUpdateSettings({ showKana: e.target.checked })}
@@ -145,6 +146,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  name="showRomaji"
                   className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
                   checked={settings.showRomaji}
                   onChange={(e) => onUpdateSettings({ showRomaji: e.target.checked })}
@@ -158,6 +160,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  name="soundEnabled"
                   className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
                   checked={settings.soundEnabled}
                   onChange={(e) => onUpdateSettings({ soundEnabled: e.target.checked })}
@@ -171,6 +174,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  name="realisticMode"
                   className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
                   checked={settings.realisticMode}
                   onChange={(e) => onUpdateSettings({ realisticMode: e.target.checked })}
@@ -180,6 +184,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
+                  name="hardcoreMode"
                   className="w-5 h-5 text-red-600 rounded focus:ring-red-500"
                   checked={settings.hardcoreMode}
                   onChange={(e) => onUpdateSettings({ hardcoreMode: e.target.checked })}
