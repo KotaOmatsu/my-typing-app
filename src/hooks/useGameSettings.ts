@@ -3,11 +3,21 @@ import { useState, useEffect } from 'react';
 export interface GameSettings {
   showRomaji: boolean;
   showKana: boolean;
+  soundEnabled: boolean;
+  bgmEnabled: boolean;
+  realisticMode: boolean;
+  backspacePenalty: boolean;
+  hardcoreMode: boolean;
 }
 
 const DEFAULT_SETTINGS: GameSettings = {
   showRomaji: true,
   showKana: true,
+  soundEnabled: true,
+  bgmEnabled: false,
+  realisticMode: false,
+  backspacePenalty: false,
+  hardcoreMode: false,
 };
 
 const SETTINGS_KEY = 'typingGameSettings';

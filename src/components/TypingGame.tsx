@@ -21,7 +21,8 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     flashCorrect,
     lastTypedKey,
     currentDisplayText,
-    courseTitle, // Add courseTitle to destructuring
+    courseTitle,
+    penaltyBackspacesNeeded
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
@@ -32,9 +33,19 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
         const currentUnit = typingUnits[currentKanaIndex];
         const nextUnit = typingUnits[currentKanaIndex + 1];
         const recommendedRomaji = getRecommendedRomaji(currentUnit, nextUnit);
-        const remainingRomaji = recommendedRomaji.slice(inputBuffer.length);
-        if (remainingRomaji.length > 0) {
-            return remainingRomaji[0];
+        
+        // Find match length to determine next needed key
+        let i = 0;
+        while (i < inputBuffer.length && i < recommendedRomaji.length && inputBuffer[i] === recommendedRomaji[i]) {
+            i++;
+        }
+        
+        // If buffer has wrong chars (i < inputBuffer.length), next key is Backspace?
+        // But FingerGuide usually shows alphabet. 
+        // If we are in penalty mode or wrong buffer, maybe show nothing or Backspace indication?
+        // For now, if buffer matches prefix, show next char of romaji.
+        if (i === inputBuffer.length && i < recommendedRomaji.length) {
+             return recommendedRomaji[i];
         }
     }
     return null;
@@ -69,18 +80,34 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
           
           {/* ローマ字ガイド表示 */}
           {settings.showRomaji && (
-            <span className="text-2xl font-mono mt-1 h-8">
+            <span className="text-2xl font-mono mt-1 h-8 flex">
               {index === currentKanaIndex ? (
                 (() => {
-                  const remaining = recommendedRomaji.startsWith(inputBuffer)
-                    ? recommendedRomaji.slice(inputBuffer.length)
-                    : "";
-                  const nextChar = remaining.charAt(0);
-                  const rest = remaining.slice(1);
+                    // Logic to split inputBuffer and recommendedRomaji
+                    let matchLen = 0;
+                    while (matchLen < inputBuffer.length && matchLen < recommendedRomaji.length && inputBuffer[matchLen] === recommendedRomaji[matchLen]) {
+                        matchLen++;
+                    }
+
+                    const matchedPart = inputBuffer.slice(0, matchLen);
+                    const wrongPart = inputBuffer.slice(matchLen);
+                    const remainingTarget = recommendedRomaji.slice(matchLen);
+                    
+                    const nextChar = remainingTarget.charAt(0);
+                    const rest = remainingTarget.slice(1);
 
                   return (
                     <span>
-                      <span className="text-blue-600">{inputBuffer}</span>
+                      <span className="text-blue-600">{matchedPart}</span>
+                      <span className="text-red-500 bg-red-100">{wrongPart}</span>
+                      
+                      {/* Only show target if we haven't typed wrong stuff over it? 
+                          Actually we should show target as hint. 
+                          If wrongPart exists, user needs to Backspace. 
+                          Target should be visible but maybe separate? 
+                          Or just append it.
+                      */}
+                      
                       {nextChar ? (
                         <span className="text-blue-600 font-bold border-b-2 border-blue-600">
                           {nextChar}
@@ -108,14 +135,25 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     return <div className="text-xl">Loading typing data...</div>;
   }
 
+  // Hardcore Shake Effect
+  const shakeClass = (settings.hardcoreMode && error) ? 'shake' : '';
+
   return (
-    <div className="flex flex-col items-center justify-center w-full relative min-h-[600px]"> {/* Added min-h to ensure space */}
+    <div className={`flex flex-col items-center justify-center w-full relative min-h-[600px] ${shakeClass}`}>
       {courseTitle && (
         <h1 className="text-3xl font-bold text-gray-800 mb-4">{courseTitle}</h1>
       )}
-      <div className="mb-4 p-6 bg-white rounded-lg shadow-lg min-w-[600px] flex flex-col items-center justify-center gap-4 transform scale-90 origin-top"> {/* Reduced padding/gap, added scale */}
+      
+      {/* Penalty Overlay or Indicator */}
+      {penaltyBackspacesNeeded > 0 && (
+          <div className="absolute top-10 text-red-600 font-bold text-2xl animate-pulse z-10 bg-white/80 p-2 rounded">
+              Backspace x {penaltyBackspacesNeeded}
+          </div>
+      )}
+
+      <div className="mb-4 p-6 bg-white rounded-lg shadow-lg min-w-[600px] flex flex-col items-center justify-center gap-4 transform scale-90 origin-top"> 
         {/* 漢字（表示用テキスト） */}
-        <div className="text-5xl font-bold text-gray-800 tracking-wider mb-2"> {/* Reduced font size */}
+        <div className="text-5xl font-bold text-gray-800 tracking-wider mb-2"> 
           {currentDisplayText}
         </div>
         {/* ひらがな & ローマ字（入力ガイド） */}
@@ -126,14 +164,14 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
         )}
       </div>
       
-      {error && <p className="text-red-500 text-lg mt-2">入力が間違っています。正しいローマ字を入力してください。</p>}
+      {error && !settings.hardcoreMode && <p className="text-red-500 text-lg mt-2">入力が間違っています。</p>}
       
       {/* キーボード */}
       <div className="flex flex-col items-center gap-4 transform scale-90 origin-top">
         <OnScreenKeyboard lastTypedKey={lastTypedKey} nextKey={nextKey} />
       </div>
 
-      {/* 運指ガイド (Fixed position handled in component, just render it here) */}
+      {/* 運指ガイド */}
       <FingerGuide nextKey={nextKey} />
     </div>
   );

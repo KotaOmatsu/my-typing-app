@@ -7,6 +7,8 @@ import { TypingText } from "@/types/typing";
 import { initialState, reducer } from "@/state/typingGameState";
 import { saveTypingResult } from "@/services/typingResultService";
 import { checkRomajiMatch } from "@/utils/romajiUtils";
+import { useGameSettings } from "./useGameSettings";
+import { soundManager } from "../utils/soundUtils";
 
 // --- Custom Hook ---
 
@@ -14,6 +16,7 @@ export const useTypingGame = (courseId?: string) => {
   const router = useRouter();
   const { data: session } = useSession();
   const isMapLoaded = useKanaRomajiMap();
+  const { settings } = useGameSettings();
 
   const [state, dispatch] = useReducer(reducer, initialState);
   const {
@@ -30,9 +33,22 @@ export const useTypingGame = (courseId?: string) => {
     correctKeystrokes,
     correctKanaUnits,
     currentTextIndex,
-    courseTexts, // Added to state
-    courseTitle // Add courseTitle to destructuring
+    courseTexts,
+    courseTitle,
+    penaltyBackspacesNeeded
   } = state;
+
+  // BGM Management
+  useEffect(() => {
+    if (status === 'running' && settings.bgmEnabled) {
+      soundManager.startBgm();
+    } else {
+      soundManager.stopBgm();
+    }
+    return () => {
+      soundManager.stopBgm();
+    };
+  }, [status, settings.bgmEnabled]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -45,11 +61,11 @@ export const useTypingGame = (courseId?: string) => {
       if (courseId) {
         try {
           const res = await fetch(`/api/courses/${courseId}`);
-          if (isCancelled) return; // Check cancellation after await
+          if (isCancelled) return; 
 
           if (res.ok) {
             const data = await res.json();
-            if (isCancelled) return; // Check cancellation after await
+            if (isCancelled) return; 
 
             if (data.texts && Array.isArray(data.texts) && data.texts.length > 0) {
               texts = data.texts;
@@ -64,9 +80,7 @@ export const useTypingGame = (courseId?: string) => {
         }
       }
 
-      // Fallback if API failed or no courseId
       if (texts.length === 0) {
-        // Minimal fallback to prevent crash
         texts = [{ id: "fallback", display: "読み込みエラー", reading: "よみこみえらー" }];
         dispatch({ type: 'SET_COURSE_TITLE', payload: { title: "デフォルトコース" } });
       }
@@ -97,6 +111,12 @@ export const useTypingGame = (courseId?: string) => {
       return;
     }
 
+    // Handle Backspace
+    if (e.key === "Backspace") {
+        dispatch({ type: 'PROCESS_BACKSPACE', payload: { settings } });
+        return;
+    }
+
     const typedChar = e.key;
     const isTypingKey = /^[a-zA-Z]$/.test(typedChar) || ["-", ",", ".", "[", "]"].includes(typedChar);
     if (!isTypingKey) return;
@@ -114,27 +134,40 @@ export const useTypingGame = (courseId?: string) => {
     const { exact: isExactMatch, partial: isPartialMatch } = checkRomajiMatch(currentKana, newBuffer, nextTypingUnit);
 
     if (isExactMatch) {
+      if (settings.soundEnabled) soundManager.playTypeSound();
+      
       dispatch({ 
         type: 'PROCESS_KEY_INPUT', 
         payload: { 
           typedKey: typedChar, 
           isCorrect: true, 
           isExactMatch: true, 
-          buffer: newBuffer 
+          buffer: newBuffer,
+          settings
         } 
       });
       setTimeout(() => dispatch({ type: 'RESET_FLASH' }), 200);
     } else if (isPartialMatch) {
+      if (settings.soundEnabled) soundManager.playTypeSound();
+
       dispatch({ 
         type: 'PROCESS_KEY_INPUT', 
         payload: { 
           typedKey: typedChar, 
           isCorrect: true, 
           isExactMatch: false, 
-          buffer: newBuffer 
+          buffer: newBuffer,
+          settings
         } 
       });
     } else {
+      if (settings.soundEnabled) soundManager.playMissSound();
+
+      if (settings.hardcoreMode) {
+          dispatch({ type: 'HARDCORE_FAIL' });
+          return;
+      }
+
       const expectedRomajiForError = getRomajiCandidates(currentKana).join("/");
       const precedingCharCount = courseTexts.slice(0, currentTextIndex).map(text => getTypingUnits(text.reading).length).reduce((a, b) => a + b, 0);
       const absoluteKanaIndex = precedingCharCount + currentKanaIndex;
@@ -146,6 +179,7 @@ export const useTypingGame = (courseId?: string) => {
           isCorrect: false, 
           isExactMatch: false, 
           buffer: newBuffer,
+          settings,
           mistake: { 
             char: currentKana, 
             expected: expectedRomajiForError, 
@@ -157,13 +191,15 @@ export const useTypingGame = (courseId?: string) => {
         },
       });
     }
-  }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, router, courseTexts]);
+  }, [status, inputBuffer, typingUnits, currentKanaIndex, currentTextIndex, router, courseTexts, settings]);
 
-    // ゲーム終了時の処理
+    // Game Finished Logic
     useEffect(() => {
         if (status === 'finished' && startTime) {
+            if (settings.soundEnabled) soundManager.playFanfareSound();
+
             const endTime = Date.now();
-            const elapsedTime = Math.max(1, endTime - startTime); // Ensure non-zero duration
+            const elapsedTime = Math.max(1, endTime - startTime); 
             const durationSeconds = elapsedTime / 1000;
 
             const wpm = totalKeystrokes > 0 ? (correctKanaUnits / durationSeconds) * 60 : 0;
@@ -172,7 +208,6 @@ export const useTypingGame = (courseId?: string) => {
                 ? Math.max(0, Math.round(((correctKeystrokes - mistakes.length) / durationSeconds) * 1000))
                 : 0;
 
-            // 全テキストのデータを結合する (courseTextsを使用)
             const allTypedText = courseTexts.map(t => t.reading).join("");
             const allDisplayText = courseTexts.map(t => t.display).join(" ");
             const allDisplayUnits = courseTexts.flatMap(t => getTypingUnits(t.reading));
@@ -189,10 +224,8 @@ export const useTypingGame = (courseId?: string) => {
                 displayUnits: allDisplayUnits,
             };
 
-            // 既存のlocalStorageへの保存
             localStorage.setItem('typingResult', JSON.stringify(result));
 
-            // ログインしている場合のみ、分離したサービス関数を呼び出して結果をDBに保存
             if (session) {
                 saveTypingResult({
                     wpm: result.wpm,
@@ -201,16 +234,18 @@ export const useTypingGame = (courseId?: string) => {
                     score: result.score,
                     totalKeystrokes: result.totalKeystrokes,
                     correctKeystrokes: result.correctKeystrokes,
-                    text: result.displayText, // DBには表示用テキストを保存
+                    text: result.displayText, 
                     mistakeDetails: result.mistakes,
-                    courseId: courseId, // Added courseId
+                    courseId: courseId, 
                 });
             }
 
-            // 結果ページへのリダイレクト
-            router.push('/result');
+            // Delay redirect slightly to hear fanfare
+            setTimeout(() => {
+                router.push('/result');
+            }, 2000);
         }
-    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits, courseTexts, courseId]);
+    }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits, courseTexts, courseId, settings.soundEnabled]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -230,7 +265,8 @@ export const useTypingGame = (courseId?: string) => {
     lastTypedKey,
     mistakes,
     currentDisplayText: courseTexts[currentTextIndex]?.display || "",
-    courseTitle, // Return courseTitle
-    handleKeyDown, // handleKeyDown is still returned for potential future use, though not directly used by TypingGame component anymore
+    courseTitle,
+    handleKeyDown,
+    penaltyBackspacesNeeded
   };
 };
