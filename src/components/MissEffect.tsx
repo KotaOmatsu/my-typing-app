@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import Particles from "@tsparticles/react";
-import { loadSlim } from "tsparticles-slim";
+import { loadFull } from "tsparticles";
 import type { Engine } from "tsparticles-engine";
 
 interface MissEffectProps {
@@ -9,7 +9,7 @@ interface MissEffectProps {
 
 const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
     const particlesInit = useCallback(async (engine: Engine) => {
-        await loadSlim(engine);
+        await loadFull(engine);
     }, []);
 
     if (!trigger) return null;
