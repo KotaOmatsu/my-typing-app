@@ -30,7 +30,6 @@
 
 .flash-screen {
   animation: flash-intense 0.4s ease-out forwards;
-  /* mix-blend-mode removed to ensure visibility on all backgrounds */
 }
 
 /* Violent Shake with Distortion */
@@ -51,26 +50,4 @@
   animation: hardcore-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
   will-change: transform, filter;
   overflow: hidden; /* Prevent scrollbars during shake */
-}
-
-/* Explosive Ripple - High Contrast */
-@keyframes ripple-shock {
-  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 100px; }
-  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; border-width: 0px; }
-}
-
-.shockwave-ripple {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 100vmax;
-    height: 100vmax;
-    border-radius: 50%;
-    border: 50px solid rgba(255, 0, 0, 0.9); /* Solid Red */
-    animation: ripple-shock 0.6s ease-out forwards;
-    pointer-events: none;
-    z-index: 9998;
-    box-sizing: border-box; 
-    transform-origin: center;
-    box-shadow: 0 0 100px rgba(255, 0, 0, 0.8); /* Strong Glow */
 }

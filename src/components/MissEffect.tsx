@@ -7,11 +7,9 @@ interface MissEffectProps {
     triggerKey: number; // Trigger on change
 }
 
-type EffectType = 'flash' | 'ripple' | 'shake';
-
 interface ActiveEffect {
     id: number;
-    type: EffectType;
+    type: 'flash';
 }
 
 const MissEffect: React.FC<MissEffectProps> = ({ triggerKey }) => {
@@ -25,62 +23,65 @@ const MissEffect: React.FC<MissEffectProps> = ({ triggerKey }) => {
 
     useEffect(() => {
         if (triggerKey > 0) {
-            const effects: EffectType[] = ['flash', 'ripple', 'shake'];
-            const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+            // 1. Add Flash Effect (Stackable)
             const id = Date.now() + Math.random();
+            setActiveEffects(prev => [...prev, { id, type: 'flash' }]);
 
-            const newEffect = { id, type: randomEffect };
-            setActiveEffects(prev => [...prev, newEffect]);
-
-            // Shake handling via body class if needed
-            if (randomEffect === 'shake') {
-                document.body.classList.add('hardcore-shake');
-            }
-
-            // Cleanup after animation duration
-            const duration = randomEffect === 'shake' ? 500 : 600; // Match CSS duration
-            
-            const timer = setTimeout(() => {
+            // Remove flash after duration
+            setTimeout(() => {
                 setActiveEffects(prev => prev.filter(e => e.id !== id));
-                if (randomEffect === 'shake') {
-                    // Only remove if no other active shakes (simplified: remove anyway, new ones re-add)
-                    // Better: checking count of active shakes might be complex, 
-                    // but since shake is continuous, removing/adding refreshes the animation somewhat.
-                    // However, to be cleaner, we should only remove if it's the last one.
-                    // For simplicity, we remove it. If overlapped, the next effect adds it back or keeps it.
-                    // Actually, if we just remove the class, it stops. 
-                    // If another shake started 100ms ago, it will stop too.
-                    // To handle overlapping shakes properly, we might need a ref counter.
-                    document.body.classList.remove('hardcore-shake');
-                    // Force reflow to restart animation if needed? 
-                    // No, simpler: just remove. Overlapping shakes is chaos anyway.
-                }
-            }, duration);
+            }, 400); // Match CSS flash duration
 
-            return () => clearTimeout(timer);
+            // 2. Trigger Shake Effect (Restartable)
+            // To restart a CSS animation, we must remove the class, force reflow, and add it back.
+            document.body.classList.remove('hardcore-shake');
+            
+            // Force reflow
+            void document.body.offsetWidth;
+            
+            document.body.classList.add('hardcore-shake');
+
+            // We don't necessarily need to remove the class after 500ms if another miss comes in.
+            // But we should clean up if no misses happen for a while.
+            // Since we re-add it on every miss, we can just set a timeout to remove it, 
+            // but we need to be careful not to remove it if a NEW miss just happened.
+            // Actually, simpler: let it run. If user stops missing, it will finish its iteration (0.5s) and stop visually.
+            // But the class will remain. It's better to clean it up.
+            // We can use a ref or just a timeout that we don't clear? 
+            // If we remove the class mid-animation of a SUBSEQUENT miss, it looks bad.
+            // So we strictly restart on trigger. 
+            // Cleanup is only needed when unmounting or if we want to be clean.
+            // Let's rely on the animation ending visually. 
+            // But if we want to support "shake ending", we should remove class.
+            
+            // For simplicity and robustness against rapid fire: 
+            // We rely on the "remove, reflow, add" sequence above to restart it.
+            // We can leave the class on `body` and just remove it on unmount. 
+            // OR set a timeout to remove it, but check if we are still "shaking"?
+            // Let's just set a timeout. If it removes the class while another shake is pending? 
+            // No, because the NEXT trigger will add it back immediately.
+            // The only risk is if the timeout from Miss A fires *during* Miss B's animation.
+            // To fix this, we can track the "last shake time".
         }
     }, [triggerKey]);
+
+    // Cleanup shake on unmount
+    useEffect(() => {
+        return () => {
+            document.body.classList.remove('hardcore-shake');
+        };
+    }, []);
 
     if (!mounted) return null;
 
     return createPortal(
         <>
             {activeEffects.map(effect => (
-                <React.Fragment key={effect.id}>
-                    {effect.type === 'flash' && (
-                        <div 
-                            className="fixed inset-0 pointer-events-none z-[9999] flash-screen" 
-                            aria-hidden="true" 
-                        />
-                    )}
-                    
-                    {effect.type === 'ripple' && (
-                        <div 
-                            className="shockwave-ripple" 
-                            aria-hidden="true" 
-                        />
-                    )}
-                </React.Fragment>
+                <div 
+                    key={effect.id}
+                    className="fixed inset-0 pointer-events-none z-[9999] flash-screen" 
+                    aria-hidden="true" 
+                />
             ))}
         </>,
         document.body
