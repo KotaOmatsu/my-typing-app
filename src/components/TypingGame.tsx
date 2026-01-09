@@ -23,20 +23,10 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     lastTypedKey,
     currentDisplayText,
     courseTitle,
+    mistakes, // Destructure mistakes to use its length as trigger
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
-  const [showExplosion, setShowExplosion] = useState(false);
-
-  useEffect(() => {
-    if (error) {
-        setShowExplosion(true);
-        // Reset trigger state quickly so it can re-trigger on next error if rapid
-        // MissEffect handles its own animation duration internally
-        const timer = setTimeout(() => setShowExplosion(false), 100); 
-        return () => clearTimeout(timer);
-    }
-  }, [error]);
 
   // Calculate next key for guides
   const nextKey = React.useMemo(() => {
@@ -135,7 +125,8 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
 
   return (
     <div className={`flex flex-col items-center justify-center w-full relative min-h-[600px]`}>
-      <MissEffect trigger={showExplosion} />
+      {/* Pass mistakes.length as triggerKey instead of boolean trigger */}
+      <MissEffect triggerKey={mistakes.length} />
 
       {courseTitle && (
         <h1 className="text-3xl font-bold text-gray-800 mb-4">{courseTitle}</h1>

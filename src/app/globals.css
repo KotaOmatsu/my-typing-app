@@ -21,16 +21,16 @@
   animation-iteration-count: infinite; 
 }
 
-/* Super Intense Flash */
+/* Super Intense Flash - Simplified for Visibility */
 @keyframes flash-intense {
   0% { background-color: #ffffff; opacity: 1; } /* Blinding White */
-  20% { background-color: #ff0000; opacity: 0.8; } /* Bright Red */
+  30% { background-color: #ff0000; opacity: 0.8; } /* Bright Red */
   100% { background-color: transparent; opacity: 0; }
 }
 
 .flash-screen {
   animation: flash-intense 0.4s ease-out forwards;
-  mix-blend-mode: hard-light; /* Makes colors burn/contrast more */
+  /* mix-blend-mode removed to ensure visibility on all backgrounds */
 }
 
 /* Violent Shake with Distortion */
@@ -50,12 +50,13 @@
 .hardcore-shake {
   animation: hardcore-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
   will-change: transform, filter;
+  overflow: hidden; /* Prevent scrollbars during shake */
 }
 
-/* Explosive Ripple */
+/* Explosive Ripple - High Contrast */
 @keyframes ripple-shock {
-  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 200px; }
-  100% { transform: translate(-50%, -50%) scale(5); opacity: 0; border-width: 0px; }
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 100px; }
+  100% { transform: translate(-50%, -50%) scale(4); opacity: 0; border-width: 0px; }
 }
 
 .shockwave-ripple {
@@ -65,11 +66,11 @@
     width: 100vmax;
     height: 100vmax;
     border-radius: 50%;
-    border: 50px solid rgba(255, 50, 50, 0.8); /* Brighter Red */
-    animation: ripple-shock 0.5s ease-out forwards;
+    border: 50px solid rgba(255, 0, 0, 0.9); /* Solid Red */
+    animation: ripple-shock 0.6s ease-out forwards;
     pointer-events: none;
     z-index: 9998;
     box-sizing: border-box; 
     transform-origin: center;
-    box-shadow: 0 0 50px rgba(255, 0, 0, 0.8); /* Glow effect */
+    box-shadow: 0 0 100px rgba(255, 0, 0, 0.8); /* Strong Glow */
 }

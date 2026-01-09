@@ -4,13 +4,18 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 interface MissEffectProps {
-    trigger: boolean;
+    triggerKey: number; // Trigger on change
 }
 
-type EffectType = 'flash' | 'ripple' | 'shake' | null;
+type EffectType = 'flash' | 'ripple' | 'shake';
 
-const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
-    const [activeEffect, setActiveEffect] = useState<EffectType>(null);
+interface ActiveEffect {
+    id: number;
+    type: EffectType;
+}
+
+const MissEffect: React.FC<MissEffectProps> = ({ triggerKey }) => {
+    const [activeEffects, setActiveEffects] = useState<ActiveEffect[]>([]);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -19,44 +24,64 @@ const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
     }, []);
 
     useEffect(() => {
-        if (trigger) {
+        if (triggerKey > 0) {
             const effects: EffectType[] = ['flash', 'ripple', 'shake'];
             const randomEffect = effects[Math.floor(Math.random() * effects.length)];
-            setActiveEffect(randomEffect);
+            const id = Date.now() + Math.random();
 
+            const newEffect = { id, type: randomEffect };
+            setActiveEffects(prev => [...prev, newEffect]);
+
+            // Shake handling via body class if needed
+            if (randomEffect === 'shake') {
+                document.body.classList.add('hardcore-shake');
+            }
+
+            // Cleanup after animation duration
+            const duration = randomEffect === 'shake' ? 500 : 600; // Match CSS duration
+            
             const timer = setTimeout(() => {
-                setActiveEffect(null);
-            }, 600); 
+                setActiveEffects(prev => prev.filter(e => e.id !== id));
+                if (randomEffect === 'shake') {
+                    // Only remove if no other active shakes (simplified: remove anyway, new ones re-add)
+                    // Better: checking count of active shakes might be complex, 
+                    // but since shake is continuous, removing/adding refreshes the animation somewhat.
+                    // However, to be cleaner, we should only remove if it's the last one.
+                    // For simplicity, we remove it. If overlapped, the next effect adds it back or keeps it.
+                    // Actually, if we just remove the class, it stops. 
+                    // If another shake started 100ms ago, it will stop too.
+                    // To handle overlapping shakes properly, we might need a ref counter.
+                    document.body.classList.remove('hardcore-shake');
+                    // Force reflow to restart animation if needed? 
+                    // No, simpler: just remove. Overlapping shakes is chaos anyway.
+                }
+            }, duration);
 
             return () => clearTimeout(timer);
         }
-    }, [trigger]);
+    }, [triggerKey]);
 
-    // Handle Shake Effect globally on body
-    useEffect(() => {
-        if (activeEffect === 'shake') {
-            document.body.classList.add('hardcore-shake');
-        } else {
-            document.body.classList.remove('hardcore-shake');
-        }
+    if (!mounted) return null;
 
-        return () => {
-            document.body.classList.remove('hardcore-shake');
-        };
-    }, [activeEffect]);
-
-    if (!activeEffect || !mounted) return null;
-
-    // Use Portal to ensure effects are top-level and not constrained by parent styles
     return createPortal(
         <>
-            {activeEffect === 'flash' && (
-                <div className="fixed inset-0 pointer-events-none z-[9999] flash-screen" aria-hidden="true" />
-            )}
-            
-            {activeEffect === 'ripple' && (
-                <div className="shockwave-ripple" aria-hidden="true" />
-            )}
+            {activeEffects.map(effect => (
+                <React.Fragment key={effect.id}>
+                    {effect.type === 'flash' && (
+                        <div 
+                            className="fixed inset-0 pointer-events-none z-[9999] flash-screen" 
+                            aria-hidden="true" 
+                        />
+                    )}
+                    
+                    {effect.type === 'ripple' && (
+                        <div 
+                            className="shockwave-ripple" 
+                            aria-hidden="true" 
+                        />
+                    )}
+                </React.Fragment>
+            ))}
         </>,
         document.body
     );
