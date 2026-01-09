@@ -127,10 +127,12 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
             </ul>
           </div>
 
-          {/* 設定エリア (簡易版) */}
+          {/* 設定エリア */}
           <div className="border-t pt-4">
             <h3 className="font-bold text-gray-800 mb-3">プレイ設定</h3>
-            <div className="flex gap-6">
+            
+            {/* ガイド設定 */}
+            <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4">
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -138,7 +140,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   checked={settings.showKana}
                   onChange={(e) => onUpdateSettings({ showKana: e.target.checked })}
                 />
-                <span className="ml-2 text-gray-700">かなガイドを表示</span>
+                <span className="ml-2 text-gray-700">かなガイド</span>
               </label>
               <label className="flex items-center cursor-pointer">
                 <input
@@ -147,7 +149,60 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                   checked={settings.showRomaji}
                   onChange={(e) => onUpdateSettings({ showRomaji: e.target.checked })}
                 />
-                <span className="ml-2 text-gray-700">ローマ字ガイドを表示</span>
+                <span className="ml-2 text-gray-700">ローマ字ガイド</span>
+              </label>
+            </div>
+
+            {/* サウンド設定 */}
+            <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4">
+               <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                  checked={settings.soundEnabled}
+                  onChange={(e) => onUpdateSettings({ soundEnabled: e.target.checked })}
+                />
+                <span className="ml-2 text-gray-700">効果音 (SE)</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                  checked={settings.bgmEnabled}
+                  onChange={(e) => onUpdateSettings({ bgmEnabled: e.target.checked })}
+                />
+                <span className="ml-2 text-gray-700">BGM</span>
+              </label>
+            </div>
+
+            {/* ゲームモード設定 */}
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+               <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
+                  checked={settings.realisticMode}
+                  onChange={(e) => onUpdateSettings({ realisticMode: e.target.checked })}
+                />
+                <span className="ml-2 text-gray-700">リアル挙動 (BackSpace必須)</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
+                  checked={settings.backspacePenalty}
+                  onChange={(e) => onUpdateSettings({ backspacePenalty: e.target.checked })}
+                />
+                <span className="ml-2 text-gray-700">BackSpaceペナルティ</span>
+              </label>
+               <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="w-5 h-5 text-red-600 rounded focus:ring-red-500"
+                  checked={settings.hardcoreMode}
+                  onChange={(e) => onUpdateSettings({ hardcoreMode: e.target.checked })}
+                />
+                <span className="ml-2 text-red-600 font-bold">超高難易度 (即死)</span>
               </label>
             </div>
           </div>
