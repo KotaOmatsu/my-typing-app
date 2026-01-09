@@ -31,7 +31,9 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   useEffect(() => {
     if (error) {
         setShowExplosion(true);
-        const timer = setTimeout(() => setShowExplosion(false), 500); // Effect duration
+        // Reset trigger state quickly so it can re-trigger on next error if rapid
+        // MissEffect handles its own animation duration internally
+        const timer = setTimeout(() => setShowExplosion(false), 100); 
         return () => clearTimeout(timer);
     }
   }, [error]);
@@ -131,8 +133,8 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     return <div className="text-xl">Loading typing data...</div>;
   }
 
-  // Hardcore Shake Effect
-  const shakeClass = (settings.hardcoreMode && error) ? 'shake' : '';
+  // Hardcore Shake Effect - Use the new aggressive shake class
+  const shakeClass = (settings.hardcoreMode && error) ? 'hardcore-shake' : '';
 
   return (
     <div className={`flex flex-col items-center justify-center w-full relative min-h-[600px] ${shakeClass}`}>

@@ -20,3 +20,49 @@
   animation: shake 0.5s;
   animation-iteration-count: infinite; 
 }
+
+@keyframes hardcore-shake {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); }
+  10% { transform: translate(-15px, -15px) rotate(-5deg) scale(1.05); filter: blur(2px); }
+  20% { transform: translate(15px, 15px) rotate(5deg) scale(1.05); filter: blur(0px); }
+  30% { transform: translate(-15px, 15px) rotate(-5deg) scale(1.05); filter: blur(2px); }
+  40% { transform: translate(15px, -15px) rotate(5deg) scale(1.05); filter: blur(0px); }
+  50% { transform: translate(-10px, 0px) rotate(-5deg) scale(1.05); }
+  60% { transform: translate(10px, 0px) rotate(5deg) scale(1.05); }
+  70% { transform: translate(0px, 10px) rotate(0deg) scale(1); }
+  80% { transform: translate(0px, -10px) rotate(0deg) scale(1); }
+  100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+}
+
+.hardcore-shake {
+  animation: hardcore-shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes flash-red {
+  0% { background-color: rgba(255, 0, 0, 0.8); }
+  100% { background-color: transparent; }
+}
+
+.flash-screen {
+  animation: flash-red 0.5s ease-out forwards;
+}
+
+@keyframes ripple-expand {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 50px; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; border-width: 0px; }
+}
+
+.shockwave-ripple {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 100vmax;
+    height: 100vmax;
+    border-radius: 50%;
+    border: 50px solid rgba(255, 0, 0, 0.5);
+    animation: ripple-expand 0.6s ease-out forwards;
+    pointer-events: none;
+    z-index: 9998;
+    box-sizing: border-box; 
+    transform-origin: center;
+}
