@@ -21,17 +21,6 @@
   animation-iteration-count: infinite; 
 }
 
-/* Super Intense Flash - Simplified for Visibility */
-@keyframes flash-intense {
-  0% { background-color: #ffffff; opacity: 1; } /* Blinding White */
-  30% { background-color: #ff0000; opacity: 0.8; } /* Bright Red */
-  100% { background-color: transparent; opacity: 0; }
-}
-
-.flash-screen {
-  animation: flash-intense 0.4s ease-out forwards;
-}
-
 /* Violent Shake with Distortion */
 @keyframes hardcore-shake {
   0% { transform: translate(0, 0) rotate(0deg) scale(1); filter: hue-rotate(0deg) blur(0px); }
