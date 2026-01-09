@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import Particles, { initParticlesEngine, useParticles } from "@tsparticles/react";
 import { loadFull } from "tsparticles";
-import type { Container, Engine } from "@tsparticles/engine"; // Correct type import for v3
+import type { Container, Engine } from "@tsparticles/engine"; 
 
 interface MissEffectProps {
     trigger: boolean;
@@ -26,7 +26,9 @@ const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
     useEffect(() => {
         if (trigger && containerRef.current) {
             // Manually add an emitter for explosion effect
-            containerRef.current.addEmitter({
+            // Cast to any because addEmitter might be missing from the base Container type definition
+            // depending on loaded plugins, but it is available at runtime if emitters plugin is loaded via loadFull
+            (containerRef.current as any).addEmitter({
                 direction: "none",
                 life: {
                     count: 1,
@@ -35,7 +37,7 @@ const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
                 },
                 rate: {
                     delay: 0,
-                    quantity: 50, // More particles
+                    quantity: 50, 
                 },
                 size: {
                     width: 0,
@@ -63,12 +65,12 @@ const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
                         value: 0
                     },
                     opacity: {
-                         value: { min: 0.3, max: 1 }, // Random opacity
+                         value: { min: 0.3, max: 1 }, 
                          animation: {
                              enable: true,
                              speed: 3,
                              sync: false,
-                             destroy: "min" // Fade out
+                             destroy: "min" 
                          }
                     },
                     shape: {
@@ -92,20 +94,16 @@ const MissEffect: React.FC<MissEffectProps> = ({ trigger }) => {
             id="tsparticles-miss"
             particlesLoaded={particlesLoaded}
             options={{
-                fullScreen: { enable: true, zIndex: 1000 }, // Higher zIndex
+                fullScreen: { enable: true, zIndex: 1000 }, 
                 fpsLimit: 120,
                 particles: {
                     number: {
-                        value: 0, // Start empty
+                        value: 0, 
                     },
                 },
-                // We don't define emitters here, we add them dynamically
             }}
         />
     );
 };
-
-// Helper for React state
-import React from 'react';
 
 export default MissEffect;
