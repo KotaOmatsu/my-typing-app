@@ -121,8 +121,6 @@ export const useTypingGame = (courseId?: string) => {
     const { exact: isExactMatch, partial: isPartialMatch } = checkRomajiMatch(currentKana, newBuffer, nextTypingUnit);
 
     if (isExactMatch) {
-      if (settings.soundEnabled) soundManager.playTypeSound();
-      
       dispatch({ 
         type: 'PROCESS_KEY_INPUT', 
         payload: { 
@@ -135,8 +133,6 @@ export const useTypingGame = (courseId?: string) => {
       });
       setTimeout(() => dispatch({ type: 'RESET_FLASH' }), 200);
     } else if (isPartialMatch) {
-      if (settings.soundEnabled) soundManager.playTypeSound();
-
       dispatch({ 
         type: 'PROCESS_KEY_INPUT', 
         payload: { 
@@ -148,7 +144,7 @@ export const useTypingGame = (courseId?: string) => {
         } 
       });
     } else {
-      if (settings.soundEnabled) soundManager.playMissSound();
+      soundManager.playMissSound();
 
       if (settings.hardcoreMode) {
           dispatch({ type: 'HARDCORE_FAIL' });
@@ -183,10 +179,8 @@ export const useTypingGame = (courseId?: string) => {
     // Game Finished Logic
     useEffect(() => {
         if (status === 'finished' && startTime) {
-            if (settings.soundEnabled) soundManager.playFanfareSound();
-
             const endTime = Date.now();
-            const elapsedTime = Math.max(1, endTime - startTime); 
+            const elapsedTime = Math.max(1, endTime - startTime);  
             const durationSeconds = elapsedTime / 1000;
 
             const wpm = totalKeystrokes > 0 ? (correctKanaUnits / durationSeconds) * 60 : 0;

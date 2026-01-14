@@ -35,19 +35,6 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
           {/* ガイド設定 */}
           <h3 className="text-md font-semibold text-gray-600 mb-2">ガイド</h3>
           <div className="flex items-center justify-between">
-            <span className="text-lg text-gray-700">かなガイド</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="showKana"
-                className="sr-only peer"
-                checked={settings.showKana}
-                onChange={(e) => onUpdateSettings({ showKana: e.target.checked })}
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-          <div className="flex items-center justify-between">
             <span className="text-lg text-gray-700">ローマ字ガイド</span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -62,47 +49,11 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
           </div>
 
           <hr className="my-4 border-gray-200" />
-          
-          {/* サウンド設定 */}
-          <h3 className="text-md font-semibold text-gray-600 mb-2">サウンド</h3>
-          <div className="flex items-center justify-between">
-            <span className="text-lg text-gray-700">効果音 (SE)</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="soundEnabled"
-                className="sr-only peer"
-                checked={settings.soundEnabled}
-                onChange={(e) => onUpdateSettings({ soundEnabled: e.target.checked })}
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-            </label>
-          </div>
-
-          <hr className="my-4 border-gray-200" />
-
-          {/* アニメーション設定 */}
-          <h3 className="text-md font-semibold text-gray-600 mb-2">アニメーション</h3>
-          <div className="flex items-center justify-between">
-            <span className="text-lg text-gray-700">ミス時の揺れ</span>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                name="missEffectEnabled"
-                className="sr-only peer"
-                checked={settings.missEffectEnabled}
-                onChange={(e) => onUpdateSettings({ missEffectEnabled: e.target.checked })}
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-            </label>
-          </div>
-
-          <hr className="my-4 border-gray-200" />
 
           {/* ゲームモード設定 */}
           <h3 className="text-md font-semibold text-gray-600 mb-2">モード</h3>
           <div className="flex items-center justify-between">
-            <span className="text-lg text-gray-700">リアル挙動 (修正必須)</span>
+            <span className="text-lg text-gray-700">リアルモード</span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -115,7 +66,7 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
             </label>
           </div>
           <div className="flex items-center justify-between mt-4">
-            <span className="text-lg text-red-600 font-bold">超高難易度 (即死)</span>
+            <span className="text-lg text-red-600 font-bold">間違えたら最初からモード</span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
