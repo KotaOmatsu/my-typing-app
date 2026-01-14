@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import OnScreenKeyboard from '../components/OnScreenKeyboard';
 import FingerGuide from '../components/FingerGuide';
-import MissEffect from '../components/MissEffect';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { getRecommendedRomaji } from '../utils/romajiUtils';
 import { useGameSettings } from '../hooks/useGameSettings';
+import { Card } from '@/components/ui/card';
 
 interface TypingGameProps {
   courseId: string;
@@ -14,19 +14,29 @@ interface TypingGameProps {
 
 const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   const {
-    isMapLoaded,
     typingUnits,
     currentKanaIndex,
     inputBuffer,
     error,
     flashCorrect,
-    lastTypedKey,
     currentDisplayText,
-    courseTitle,
-    mistakes, // Destructure mistakes to use its length as trigger
+    mistakes,
+    totalKeystrokes,
+    correctKeystrokes,
+    lastTypedKey,
+    currentTextIndex,
+    courseTexts,
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
+
+  // Live Stats Calculation
+  const stats = useMemo(() => {
+    const accuracy = totalKeystrokes > 0 
+      ? Math.round((correctKeystrokes / totalKeystrokes) * 100) 
+      : 100;
+    return { accuracy };
+  }, [totalKeystrokes, correctKeystrokes]);
 
   // Calculate next key for guides
   const nextKey = React.useMemo(() => {
@@ -49,34 +59,31 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
 
   const renderText = () => {
     return typingUnits.map((unit, index) => {
-      let color = 'text-gray-400'; // 未入力
+      let color = 'text-muted-foreground/40'; // Untyped
       let bgColor = '';
 
       if (index < currentKanaIndex) {
-        color = 'text-green-500'; // 入力済み
+        color = 'text-primary'; // Typed
       } else if (index === currentKanaIndex) {
-        color = error ? 'text-red-500' : 'text-blue-600'; // 現在入力中
+        color = error ? 'text-destructive' : 'text-foreground'; // Current
         if (flashCorrect) {
-          bgColor = 'bg-yellow-200'; // 正解時のフラッシュ
+          bgColor = 'bg-accent'; // Flash
         }
       }
       
-      // ローマ字ガイドの取得
       const nextUnit = typingUnits[index + 1];
       const recommendedRomaji = getRecommendedRomaji(unit, nextUnit);
 
       return (
         <div key={index} className="flex flex-col items-center mx-1">
-          {/* ひらがな表示 */}
           {settings.showKana && (
-            <span className={`text-3xl font-bold ${color} ${bgColor}`}>
+            <span className={`text-2xl font-bold ${color} ${bgColor} transition-colors duration-100`}>
               {unit}
             </span>
           )}
           
-          {/* ローマ字ガイド表示 */}
           {settings.showRomaji && (
-            <span className="text-2xl font-mono mt-1 h-8 flex">
+            <span className="text-lg font-mono mt-1 h-6 flex">
               {index === currentKanaIndex ? (
                 (() => {
                     let matchLen = 0;
@@ -93,24 +100,22 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
 
                   return (
                     <span>
-                      <span className="text-blue-600">{matchedPart}</span>
-                      <span className="text-red-500 bg-red-100">{wrongPart}</span>
+                      <span className="text-primary">{matchedPart}</span>
+                      <span className="text-destructive bg-destructive/10">{wrongPart}</span>
                       
                       {nextChar ? (
-                        <span className="text-blue-600 font-bold border-b-2 border-blue-600">
+                        <span className="text-foreground font-bold border-b-2 border-primary">
                           {nextChar}
                         </span>
                       ) : null}
-                      <span className="text-gray-300">{rest}</span>
+                      <span className="text-muted-foreground/30">{rest}</span>
                     </span>
                   );
                 })()
               ) : index < currentKanaIndex ? (
-                // 入力済みの文字は薄く表示するか、非表示にする
-                <span className="text-green-500 opacity-50">{recommendedRomaji}</span>
+                <span className="text-primary/30">{recommendedRomaji}</span>
               ) : (
-                // 未入力の文字
-                <span className="text-gray-300">{recommendedRomaji}</span>
+                <span className="text-muted-foreground/20">{recommendedRomaji}</span>
               )}
             </span>
           )}
@@ -120,39 +125,63 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   };
 
   if (!isMapLoaded || !isSettingsLoaded) {
-    return <div className="text-xl">Loading typing data...</div>;
+    return <div className="text-xl p-8">Loading...</div>;
   }
 
   return (
-    <div className={`flex flex-col items-center justify-center w-full relative min-h-[600px]`}>
-      {settings.missEffectEnabled && <MissEffect triggerKey={mistakes.length} />}
-
-      {courseTitle && (
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">{courseTitle}</h1>
-      )}
+    <div className="flex flex-col items-center justify-start w-full min-h-0 py-1 gap-1">
       
-      <div className="mb-4 p-6 bg-white rounded-lg shadow-lg min-w-[600px] flex flex-col items-center justify-center gap-4 transform scale-90 origin-top"> 
-        {/* 漢字（表示用テキスト） */}
-        <div className="text-5xl font-bold text-gray-800 tracking-wider mb-2"> 
+      {/* Top Stats Bar */}
+      <div className="flex w-full max-w-xl justify-center gap-4 px-4">
+        <Card className="flex-1 p-2 flex flex-col items-center justify-center bg-card/50 shadow-sm border-t-2 border-t-primary">
+           <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">正確率</span>
+           <span className="text-xl font-bold text-foreground">{stats.accuracy}%</span>
+        </Card>
+        
+        <Card className="flex-1 p-2 flex flex-col items-center justify-center bg-card/50 shadow-sm border-t-2 border-t-destructive">
+           <span className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">ミス数</span>
+           <span className="text-xl font-bold text-foreground">{mistakes.length}</span>
+        </Card>
+      </div>
+
+      {/* Status/Error Message (Replacing Title) */}
+      <div className="h-4 flex items-center justify-center">
+        {error && !settings.hardcoreMode && (
+          <span className="text-destructive font-extrabold animate-pulse text-xs tracking-widest">Miss!</span>
+        )}
+      </div>
+
+      {/* Typing Area */}
+      <Card className="w-full max-w-4xl py-4 px-6 flex flex-col items-center justify-center bg-background shadow-md border-border min-h-[140px] relative"> 
+        {/* Kanji / Display Text */}
+        <div className="text-3xl font-black text-foreground/90 tracking-wider mb-2 text-center"> 
           {currentDisplayText}
         </div>
-        {/* ひらがな & ローマ字（入力ガイド） */}
+
+        {/* Kana & Romaji Guides */}
         {(settings.showKana || settings.showRomaji) && (
-          <div className="flex flex-wrap justify-center">
+          <div className="flex flex-wrap justify-center items-end">
             {renderText()}
           </div>
         )}
-      </div>
+
+        {/* Page Number */}
+        {courseTexts.length > 1 && (
+          <div className="absolute bottom-2 right-3 text-xs text-muted-foreground/50 font-mono">
+            {currentTextIndex + 1} / {courseTexts.length}
+          </div>
+        )}
+      </Card>
       
-      {error && !settings.hardcoreMode && <p className="text-red-500 text-lg mt-2">入力が間違っています。</p>}
-      
-      {/* キーボード */}
-      <div className="flex flex-col items-center gap-4 transform scale-90 origin-top">
+      {/* Keyboard */}
+      <div className="flex flex-col items-center transform scale-[0.8] origin-top mt-[-15px]">
         <OnScreenKeyboard lastTypedKey={lastTypedKey} nextKey={nextKey} />
       </div>
 
-      {/* 運指ガイド */}
-      <FingerGuide nextKey={nextKey} />
+      {/* Finger Guide - Emerging from bottom */}
+      <div className="fixed bottom-0 left-0 w-full pointer-events-none z-10 flex justify-center items-end opacity-80 overflow-hidden h-32">
+        <FingerGuide nextKey={nextKey} />
+      </div>
     </div>
   );
 };

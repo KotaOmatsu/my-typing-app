@@ -4,11 +4,8 @@ import ResultDisplay from '@/components/ResultDisplay';
 
 export default function ResultPage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 py-2">
-      <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
-        {/* <h1 className="text-4xl font-bold text-gray-800 mb-6">
-          結果
-        </h1> */}
+    <div className="flex flex-col items-center justify-center w-full h-[calc(100vh-64px)] overflow-hidden bg-gray-100">
+      <main className="flex flex-col items-center justify-center w-full h-full px-4 text-center">
         <ResultDisplay />
       </main>
     </div>

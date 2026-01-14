@@ -78,7 +78,7 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
         status: 'running',
         startTime: action.payload.startTime,
         lastTypedKey: action.payload.typedKey,
-        totalKeystrokes: 1,
+        totalKeystrokes: 0,
       };
     case 'PROCESS_KEY_INPUT':
       const { typedKey, isCorrect, isExactMatch, buffer, mistake, settings } = action.payload;
@@ -90,11 +90,11 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
       };
 
       if (isCorrect) {
+        newState.correctKeystrokes = state.correctKeystrokes + 1;
         newState.error = false;
         newState.inputBuffer = buffer;
 
         if (isExactMatch) {
-          newState.correctKeystrokes = state.correctKeystrokes + buffer.length; // Use buffer length, as it includes previous chars
           newState.correctKanaUnits = state.correctKanaUnits + 1;
           newState.inputBuffer = ""; // Clear buffer on completion
           newState.flashCorrect = true;
@@ -130,8 +130,6 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
       return newState;
 
     case 'PROCESS_BACKSPACE':
-        const { settings: bsSettings } = action.payload;
-        
         // Backspace behavior
         if (state.inputBuffer.length > 0) {
              return {

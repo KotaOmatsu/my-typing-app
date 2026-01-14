@@ -198,6 +198,7 @@ export const useTypingGame = (courseId?: string) => {
             const allTypedText = courseTexts.map(t => t.reading).join("");
             const allDisplayText = courseTexts.map(t => t.display).join(" ");
             const allDisplayUnits = courseTexts.flatMap(t => getTypingUnits(t.reading));
+            const textLengths = courseTexts.map(t => getTypingUnits(t.reading).length);
 
             const result = {
                 wpm: wpm,
@@ -209,6 +210,10 @@ export const useTypingGame = (courseId?: string) => {
                 typedText: allTypedText,
                 displayText: allDisplayText,
                 displayUnits: allDisplayUnits,
+                textLengths: textLengths,
+                // Add startTime and endTime for potential future use in result display
+                startTime: startTime, 
+                endTime: endTime,
             };
 
             localStorage.setItem('typingResult', JSON.stringify(result));
@@ -254,5 +259,12 @@ export const useTypingGame = (courseId?: string) => {
     currentDisplayText: courseTexts[currentTextIndex]?.display || "",
     courseTitle,
     handleKeyDown,
+    // Live Stats
+    startTime,
+    totalKeystrokes,
+    correctKeystrokes,
+    // Page number
+    currentTextIndex,
+    courseTexts,
   };
 };

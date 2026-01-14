@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { Course } from '@/types/typing';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,10 +36,11 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onSelect, onToggleFavor
     >
       <div className="h-32 bg-muted flex items-center justify-center relative">
         {course.thumbnail ? (
-          <img 
+          <Image 
             src={course.thumbnail} 
             alt={course.title} 
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         ) : (
           <span className="text-muted-foreground text-4xl">⌨️</span>

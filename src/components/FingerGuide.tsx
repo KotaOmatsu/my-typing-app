@@ -10,42 +10,37 @@ interface FingerGuideProps {
 const FingerGuide: React.FC<FingerGuideProps> = ({ nextKey }) => {
   const activeFinger: FingerName | null = nextKey ? KEY_TO_FINGER[nextKey.toLowerCase()] || null : null;
 
-  const renderFinger = (finger: FingerName, height: string, rotate: string = 'rotate-0', translate: string = 'translate-y-0') => {
+  const renderFinger = (finger: FingerName, height: string, rotate: string = 'rotate-0') => {
     const isActive = activeFinger === finger;
-    // Shared styles for fingers
-    const baseStyle = `w-10 rounded-t-xl border-2 border-gray-400 transition-colors duration-150 mx-1 shadow-sm relative top-1`; // 'top-1' to push slightly down to hide bottom border potentially if container clipped, or just aesthetic
-    const activeStyle = `bg-blue-400 border-blue-500 transform -translate-y-4 z-10 shadow-md`; // Highlight moves up more
-    const inactiveStyle = `bg-gray-100`;
+    const baseStyle = `w-10 rounded-t-xl border-2 transition-all duration-150 mx-1 relative`;
+    const activeStyle = `bg-blue-400 border-blue-500 transform -translate-y-2 z-10 shadow-lg`;
+    const inactiveStyle = `bg-gray-100 border-gray-400`;
 
     return (
       <div 
-        className={`${baseStyle} ${height} ${rotate} ${isActive ? activeStyle : inactiveStyle} ${!isActive ? translate : ''}`}
+        className={`${baseStyle} ${height} ${rotate} ${isActive ? activeStyle : inactiveStyle}`}
       ></div>
     );
   };
 
   return (
-    <div className="fixed bottom-0 left-0 w-full flex justify-center items-end pointer-events-none pb-0 z-50 opacity-90">
-       {/* Container fixed to bottom */}
-      <div className="flex justify-center items-end space-x-24 select-none translate-y-2"> {/* Space between hands */}
-        
-        {/* Left Hand */}
-        <div className="flex items-end">
-          {renderFinger('left-pinky', 'h-24', '-rotate-12', 'translate-y-4')}
-          {renderFinger('left-ring', 'h-32', '-rotate-6', 'translate-y-1')}
-          {renderFinger('left-middle', 'h-36', 'rotate-0', 'translate-y-0')}
-          {renderFinger('left-index', 'h-32', 'rotate-6', 'translate-y-1')}
-          {renderFinger('left-thumb', 'h-20', 'rotate-12', 'translate-y-6')}
-        </div>
+    <div className="flex justify-center items-end space-x-20 select-none translate-y-4">
+      {/* Left Hand */}
+      <div className="flex items-end">
+        {renderFinger('left-pinky', 'h-20', '-rotate-12')}
+        {renderFinger('left-ring', 'h-28', '-rotate-6')}
+        {renderFinger('left-middle', 'h-32', 'rotate-0')}
+        {renderFinger('left-index', 'h-28', 'rotate-6')}
+        {renderFinger('left-thumb', 'h-16', 'rotate-12')}
+      </div>
 
-        {/* Right Hand */}
-        <div className="flex items-end">
-          {renderFinger('right-thumb', 'h-20', '-rotate-12', 'translate-y-6')}
-          {renderFinger('right-index', 'h-32', '-rotate-6', 'translate-y-1')}
-          {renderFinger('right-middle', 'h-36', 'rotate-0', 'translate-y-0')}
-          {renderFinger('right-ring', 'h-32', 'rotate-6', 'translate-y-1')}
-          {renderFinger('right-pinky', 'h-24', 'rotate-12', 'translate-y-4')}
-        </div>
+      {/* Right Hand */}
+      <div className="flex items-end">
+        {renderFinger('right-thumb', 'h-16', '-rotate-12')}
+        {renderFinger('right-index', 'h-28', '-rotate-6')}
+        {renderFinger('right-middle', 'h-32', 'rotate-0')}
+        {renderFinger('right-ring', 'h-28', 'rotate-6')}
+        {renderFinger('right-pinky', 'h-20', 'rotate-12')}
       </div>
     </div>
   );
