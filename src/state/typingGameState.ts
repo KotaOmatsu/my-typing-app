@@ -145,7 +145,6 @@ export const reducer = (state: GameState, action: GameAction): GameState => {
             ...initialState,
             status: 'running', 
             startTime: state.startTime, 
-            typingUnits: state.typingUnits, 
             courseTexts: state.courseTexts,
             currentTextIndex: 0,
             typingUnits: getTypingUnits(state.courseTexts[0]?.reading || ""),
