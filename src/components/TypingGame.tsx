@@ -14,6 +14,7 @@ interface TypingGameProps {
 
 const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
   const {
+    isMapLoaded,
     typingUnits,
     currentKanaIndex,
     inputBuffer,
