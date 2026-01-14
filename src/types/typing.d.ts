@@ -38,6 +38,7 @@ export interface TypingResult {
   typedText: string; // 対象となった文章全体（判定用：ひらがな）
   displayText: string; // 対象となった文章全体（表示用：漢字・カタカナ）
   displayUnits: string[]; // 表示用に分割された仮名の配列
+  textLengths?: number[]; // 各文章の長さ（仮名単位数）の配列。改行表示に使用。
 }
 
 /**

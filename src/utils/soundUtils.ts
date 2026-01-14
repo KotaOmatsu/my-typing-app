@@ -8,7 +8,8 @@ class SoundManager {
 
   private initAudio() {
     if (!this.audioContext && typeof window !== 'undefined') {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || 
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioContextClass) {
         this.audioContext = new AudioContextClass();
         this.masterGain = this.audioContext.createGain();
