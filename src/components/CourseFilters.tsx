@@ -18,14 +18,14 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({
   onShowFavoritesOnlyChange,
 }) => {
   return (
-    <div className="bg-white p-4 rounded-lg shadow-sm mb-8 border border-gray-100">
+    <div className="bg-card p-4 rounded-sm shadow-sm mb-8 border border-border">
       {/* タブ切り替え (すべて / お気に入り) */}
-      <div className="flex border-b border-gray-200 mb-4">
+      <div className="flex border-b border-border mb-4">
         <button
           className={`py-2 px-4 text-sm font-medium focus:outline-none border-b-2 transition-colors duration-200 ${
             !showFavoritesOnly
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-primary text-foreground font-bold'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
           }`}
           onClick={() => onShowFavoritesOnlyChange(false)}
         >
@@ -34,8 +34,8 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({
         <button
           className={`py-2 px-4 text-sm font-medium focus:outline-none border-b-2 transition-colors duration-200 flex items-center ${
             showFavoritesOnly
-              ? 'border-pink-500 text-pink-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              ? 'border-primary text-foreground font-bold'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
           }`}
           onClick={() => onShowFavoritesOnlyChange(true)}
         >
@@ -51,15 +51,15 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({
         <div className="relative flex-grow w-full md:w-auto">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             {/* 検索アイコン (SVG) */}
-            <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <input
             type="text"
             name="searchQuery"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-            placeholder="コースを検索 (タイトル、説明文)..."
+            className="block w-full pl-10 pr-3 py-2 border border-input rounded-sm leading-5 bg-background placeholder-muted-foreground focus:outline-none focus:placeholder-muted-foreground/70 focus:ring-1 focus:ring-ring focus:border-primary sm:text-sm transition duration-150 ease-in-out font-mono"
+            placeholder="コースを検索..."
             value={searchQuery || ''}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -67,19 +67,19 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({
 
         {/* 難易度フィルター */}
         <div className="flex items-center space-x-2 w-full md:w-auto">
-          <label htmlFor="difficulty" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-            難易度:
+          <label htmlFor="difficulty" className="text-sm font-medium text-foreground whitespace-nowrap font-mono tracking-widest text-xs uppercase">
+            Difficulty:
           </label>
           <select
             id="difficulty"
-            className="block w-full md:w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+            className="block w-full md:w-48 pl-3 pr-10 py-2 text-base border-input bg-background focus:outline-none focus:ring-ring focus:border-primary sm:text-sm rounded-sm"
             value={selectedDifficulty}
             onChange={(e) => onDifficultyChange(e.target.value)}
           >
-            <option value="All">すべて</option>
-            <option value="Easy">Easy</option>
-            <option value="Normal">Normal</option>
-            <option value="Hard">Hard</option>
+            <option value="All">ALL</option>
+            <option value="Easy">EASY</option>
+            <option value="Normal">NORMAL</option>
+            <option value="Hard">HARD</option>
           </select>
         </div>
       </div>

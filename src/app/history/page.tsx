@@ -92,10 +92,10 @@ export default async function HistoryPage({
   const weaknessAnalysis = analyzeWeaknesses(analysisData.flatMap((r) => r.mistakes));
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-background py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-          成績履歴 & 分析
+        <h1 className="text-3xl font-bold font-mono text-foreground mb-12 text-center uppercase tracking-widest border-b border-border pb-4">
+          Session History & Analysis
         </h1>
         
         <HistoryView results={viewData} weaknessAnalysis={weaknessAnalysis} />
