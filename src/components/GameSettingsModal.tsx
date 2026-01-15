@@ -72,7 +72,7 @@ const GameSettingsModal: React.FC<GameSettingsModalProps> = ({
             </label>
           </div>
           <div className="flex items-center justify-between mt-4">
-            <span className="text-lg text-red-600 font-bold">間違えたら最初からモード</span>
+            <span className="text-lg text-gray-700">間違えたら最初からモード</span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"

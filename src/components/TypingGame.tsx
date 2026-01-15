@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import OnScreenKeyboard from '../components/OnScreenKeyboard';
 import FingerGuide from '../components/FingerGuide';
 import ProgressiveBlackout from '../components/ProgressiveBlackout';
@@ -29,6 +29,7 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     currentTextIndex,
     courseTexts,
     resetToStart,
+    handleKeyDown,
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
@@ -59,6 +60,14 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     }
     return null;
   }, [typingUnits, currentKanaIndex, inputBuffer]);
+
+  // Attach keydown listener
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   const renderText = () => {
     return typingUnits.map((unit, index) => {
