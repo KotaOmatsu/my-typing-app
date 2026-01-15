@@ -180,7 +180,7 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
                     });
                   }}
                 />
-                <span className="ml-2 text-red-600 font-bold">間違えたら最初からモード</span>
+                <span className="ml-2 text-gray-700">間違えたら最初からモード</span>
               </label>
             </div>
           </div>

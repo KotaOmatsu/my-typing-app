@@ -38,6 +38,8 @@ export type GameAction =
     } }
   | { type: 'PROCESS_BACKSPACE'; payload: { settings: { realisticMode: boolean } } }
   | { type: 'HARDCORE_FAIL' }
+  | { type: 'FINISH_GAME' }
+  | { type: 'RESET_TO_START' }
   | { type: 'RESET_FLASH' };
 
 export const initialState: GameState = {
@@ -60,6 +62,21 @@ export const initialState: GameState = {
 
 export const reducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
+    case 'FINISH_GAME':
+      return {
+        ...state,
+        status: 'finished',
+      };
+    case 'RESET_TO_START':
+      return {
+        ...state,
+        currentTextIndex: 0,
+        currentKanaIndex: 0,
+        typingUnits: getTypingUnits(state.courseTexts[0]?.reading || ""),
+        inputBuffer: "",
+        error: false,
+        // Keep stats (mistakes, startTime, etc.)
+      };
     case 'MAP_LOADED':
       return {
         ...state,

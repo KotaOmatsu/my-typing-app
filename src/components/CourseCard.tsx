@@ -40,6 +40,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onSelect, onToggleFavor
             src={course.thumbnail} 
             alt={course.title} 
             fill
+            unoptimized
             className="object-cover"
           />
         ) : (

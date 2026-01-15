@@ -141,28 +141,13 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-gray-50 py-2 relative">
       <main className="flex flex-col items-center w-full flex-1 px-4 md:px-20 text-center max-w-7xl mx-auto">
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-          練習コースを選択
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-12 mb-4">
+          正確性を極めるタイピング練習
         </h1>
 
-        <p className="text-xl text-gray-600 mb-8">
-          自分のレベルや目的に合ったコースを選んで練習を始めましょう。
+        <p className="text-lg text-gray-600 mb-12 max-w-2xl">
+          10回のミスで最初からやり直し。正確性を極めるためのタイピング練習。
         </p>
-
-        {/* コース作成ボタン (ログイン時のみ表示) */}
-        {session && (
-          <div className="mb-12">
-            <Link
-              href="/courses/create"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150"
-            >
-              <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              オリジナルコースを作成
-            </Link>
-          </div>
-        )}
 
         {/* 検索・フィルター */}
         <div className="w-full mb-8">
@@ -198,6 +183,21 @@ export default function Home() {
                   : "条件に一致するコースは見つかりませんでした。"}
               </div>
             )}
+          </div>
+        )}
+
+        {/* コース作成ボタン (ログイン時のみ表示) - ページ下部へ移動 */}
+        {session && (
+          <div className="mt-16 mb-12">
+            <Link
+              href="/courses/create"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150"
+            >
+              <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              オリジナルコースを作成
+            </Link>
           </div>
         )}
       </main>
