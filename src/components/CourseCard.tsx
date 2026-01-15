@@ -87,7 +87,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onSelect, onToggleFavor
 
       <CardFooter className="p-4 pt-0 justify-end">
          <span className="text-primary text-sm font-semibold group-hover:underline">
-          選択する →
+          SELECT →
         </span>
       </CardFooter>
     </Card>
