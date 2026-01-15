@@ -233,12 +233,13 @@ export const useTypingGame = (courseId?: string) => {
         }
     }, [status, startTime, totalKeystrokes, correctKeystrokes, correctKanaUnits, mistakes, currentTextIndex, router, session, typingUnits, courseTexts, courseId, settings.soundEnabled]);
 
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyDown]);
+  const finishGame = useCallback(() => {
+    dispatch({ type: 'FINISH_GAME' });
+  }, []);
+
+  const resetToStart = useCallback(() => {
+    dispatch({ type: 'RESET_TO_START' });
+  }, []);
 
   return {
     isMapLoaded: status !== 'loading',
@@ -253,6 +254,8 @@ export const useTypingGame = (courseId?: string) => {
     currentDisplayText: courseTexts[currentTextIndex]?.display || "",
     courseTitle,
     handleKeyDown,
+    finishGame,
+    resetToStart,
     // Live Stats
     startTime,
     totalKeystrokes,

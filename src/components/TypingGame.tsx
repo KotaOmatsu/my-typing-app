@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import OnScreenKeyboard from '../components/OnScreenKeyboard';
 import FingerGuide from '../components/FingerGuide';
+import ProgressiveBlackout from '../components/ProgressiveBlackout';
 import { useTypingGame } from '../hooks/useTypingGame';
 import { getRecommendedRomaji } from '../utils/romajiUtils';
 import { useGameSettings } from '../hooks/useGameSettings';
@@ -27,6 +28,7 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
     lastTypedKey,
     currentTextIndex,
     courseTexts,
+    resetToStart,
   } = useTypingGame(courseId);
 
   const { settings, isSettingsLoaded } = useGameSettings();
@@ -133,6 +135,7 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
 
   return (
     <div className="flex flex-col items-center justify-start w-full min-h-0 py-1 gap-1">
+      <ProgressiveBlackout mistakeCount={mistakes.length} onBlackoutComplete={resetToStart} />
       
       {/* Top Stats Bar */}
       <div className="flex w-full max-w-xl justify-center gap-4 px-4">
