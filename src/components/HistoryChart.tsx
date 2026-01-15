@@ -31,7 +31,7 @@ export default function HistoryChart({ results }: HistoryChartProps) {
     .reverse(); // 時系列で表示するために配列を逆順にする
 
   return (
-    <div className="w-full h-80 bg-white p-4 rounded-lg shadow-md">
+    <div className="w-full h-80">
       <ResponsiveContainer>
         <LineChart
           data={chartData}
@@ -42,16 +42,19 @@ export default function HistoryChart({ results }: HistoryChartProps) {
             bottom: 30,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" />
-          <YAxis yAxisId="wpm" label={{ value: 'WPM', angle: -90, position: 'insideLeft' }} stroke="#8884d8" />
-          <YAxis yAxisId="accuracy" orientation="right" label={{ value: '正解率 (%)', angle: 90, position: 'insideRight' }} stroke="#82ca9d" domain={[0, 100]} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} />
+          <YAxis yAxisId="wpm" label={{ value: 'WPM', angle: -90, position: 'insideLeft', fill: 'hsl(var(--foreground))', fontSize: 12 }} stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
+          <YAxis yAxisId="accuracy" orientation="right" label={{ value: 'ACCURACY (%)', angle: 90, position: 'insideRight', fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} stroke="hsl(var(--muted-foreground))" domain={[0, 100]} fontSize={12} tickLine={false} axisLine={false} />
           
-          <Tooltip />
-          <Legend />
+          <Tooltip 
+            contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '2px', fontSize: '12px', color: 'hsl(var(--card-foreground))' }}
+            itemStyle={{ fontSize: '12px' }}
+          />
+          <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
           
-          <Line yAxisId="wpm" type="monotone" dataKey="WPM" stroke="#8884d8" activeDot={{ r: 8 }} />
-          <Line yAxisId="accuracy" type="monotone" dataKey="正解率" stroke="#82ca9d" />
+          <Line yAxisId="wpm" type="monotone" dataKey="WPM" stroke="hsl(var(--primary))" strokeWidth={2} activeDot={{ r: 4, fill: 'hsl(var(--primary))' }} dot={false} />
+          <Line yAxisId="accuracy" type="monotone" dataKey="正解率" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: 'hsl(var(--muted-foreground))' }} />
         </LineChart>
       </ResponsiveContainer>
     </div>

@@ -6,9 +6,9 @@ import LoginStatus from './LoginStatus';
 
 const Header: React.FC = () => {
   return (
-    <header className="w-full p-4 flex justify-between items-center shadow-sm bg-white z-50">
-      <Link href="/" className="text-xl font-bold text-gray-800 ml-4 hover:text-gray-600 transition">
-        Typing App
+    <header className="w-full py-4 px-6 flex justify-between items-center border-b border-border bg-background/80 backdrop-blur-sm z-50 sticky top-0">
+      <Link href="/" className="text-xl font-bold font-mono tracking-tight text-foreground hover:text-muted-foreground transition-colors">
+        PRECISION TYPING
       </Link>
       <LoginStatus />
     </header>

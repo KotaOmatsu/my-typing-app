@@ -142,7 +142,7 @@ export default function Home() {
     <div className="flex flex-col items-center justify-start min-h-screen bg-gray-50 py-2 relative">
       <main className="flex flex-col items-center w-full flex-1 px-4 md:px-20 text-center max-w-7xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mt-12 mb-4">
-          正確性を極めるタイピング練習
+          正確性を極めるタイピング練習サイト
         </h1>
 
         <p className="text-lg text-gray-600 mb-12 max-w-2xl">
@@ -191,12 +191,12 @@ export default function Home() {
           <div className="mt-16 mb-12">
             <Link
               href="/courses/create"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring transition duration-150"
             >
               <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              オリジナルコースを作成
+              CREATE ORIGINAL COURSE
             </Link>
           </div>
         )}

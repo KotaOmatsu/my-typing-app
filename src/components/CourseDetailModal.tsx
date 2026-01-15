@@ -91,196 +91,195 @@ const CourseDetailModal: React.FC<CourseDetailModalProps> = ({
   // next-authの型拡張が必要な場合がある
   const isAuthor = session?.user?.id === course.authorId;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* ヘッダー */}
-        <div className="bg-blue-600 p-6 text-white flex justify-between items-start">
-          <div>
-            <span className="inline-block bg-blue-800 text-xs font-semibold px-2 py-1 rounded mb-2">
-              {course.difficulty}
-            </span>
-            <h2 className="text-3xl font-bold">{course.title}</h2>
-          </div>
-          <button onClick={onClose} className="text-blue-200 hover:text-white" aria-label="閉じる">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* コンテンツ */}
-        <div className="p-6 overflow-y-auto">
-          <p className="text-gray-700 text-lg mb-6 leading-relaxed">
-            {course.description}
-          </p>
-
-          <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-            <h3 className="font-bold text-gray-800 mb-2">収録テキスト例:</h3>
-            <ul className="list-disc list-inside text-gray-600 space-y-1">
-              {course.texts?.slice(0, 3).map((text) => (
-                <li key={text.id} className="truncate">
-                  {text.display}
-                </li>
-              ))}
-              {(course.texts?.length || 0) > 3 && <li className="list-none text-gray-400 ml-5">...他 {(course.texts?.length || 0)} 件</li>}
-            </ul>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t pt-4">
-            {/* プレイ設定 (ガイド) */}
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+        <div className="bg-background rounded-sm shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] border border-border">
+          {/* ヘッダー */}
+          <div className="p-6 border-b border-border flex justify-between items-start bg-card/50">
             <div>
-              <h3 className="font-bold text-gray-800 mb-3">ガイド設定</h3>
-              <div className="space-y-2">
+              <span className="inline-block bg-primary text-primary-foreground text-xs font-mono px-2 py-1 rounded-sm mb-2 uppercase tracking-widest">
+                {course.difficulty}
+              </span>
+              <h2 className="text-2xl font-bold text-foreground tracking-tight">{course.title}</h2>
+            </div>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="閉じる">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+  
+          {/* コンテンツ */}
+          <div className="p-6 overflow-y-auto bg-background">
+            <p className="text-muted-foreground text-sm mb-6 leading-relaxed font-mono">
+              {course.description}
+            </p>
+  
+            <div className="bg-muted/30 rounded-sm p-4 mb-6 border border-border">
+              <h3 className="font-bold text-foreground text-xs uppercase tracking-widest mb-2">収録テキスト例:</h3>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 font-mono text-xs">
+                {course.texts?.slice(0, 3).map((text) => (
+                  <li key={text.id} className="truncate">
+                    {text.display}
+                  </li>
+                ))}
+                {(course.texts?.length || 0) > 3 && <li className="list-none opacity-50 ml-5">...他 {(course.texts?.length || 0)} 件</li>}
+              </ul>
+            </div>
+  
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-border pt-4">
+              {/* プレイ設定 (ガイド) */}
+              <div>
+                <h3 className="font-bold text-foreground text-xs uppercase tracking-widest mb-3">ガイド設定</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="showRomaji"
+                      className="w-4 h-4 text-primary rounded-sm focus:ring-ring border-input"
+                      checked={!!settings.showRomaji}
+                      onChange={(e) => onUpdateSettings({ showRomaji: e.target.checked })}
+                    />
+                    <span className="ml-2 text-sm text-muted-foreground">ローマ字ガイド</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+  
+            <div className="border-t border-border pt-4 mt-4">
+              {/* モード */}
+              <h3 className="font-bold text-foreground text-xs uppercase tracking-widest mb-3">ゲームモード</h3>
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    name="showRomaji"
-                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                    checked={!!settings.showRomaji}
-                    onChange={(e) => onUpdateSettings({ showRomaji: e.target.checked })}
+                    name="realisticMode"
+                    className="w-4 h-4 text-primary rounded-sm focus:ring-ring border-input"
+                    checked={!!settings.realisticMode}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      onUpdateSettings({
+                        realisticMode: isChecked,
+                        hardcoreMode: isChecked ? false : settings.hardcoreMode
+                      });
+                    }}
                   />
-                  <span className="ml-2 text-gray-700">ローマ字ガイド</span>
+                  <span className="ml-2 text-sm text-muted-foreground">リアルモード</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="hardcoreMode"
+                    className="w-4 h-4 text-primary rounded-sm focus:ring-ring border-input"
+                    checked={!!settings.hardcoreMode}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked;
+                      onUpdateSettings({
+                        hardcoreMode: isChecked,
+                        realisticMode: isChecked ? false : settings.realisticMode
+                      });
+                    }}
+                  />
+                  <span className="ml-2 text-sm text-muted-foreground">間違えたら最初からモード</span>
                 </label>
               </div>
             </div>
-          </div>
-
-          <div className="border-t pt-4 mt-4">
-            {/* モード */}
-            <h3 className="font-bold text-gray-800 mb-3">ゲームモード</h3>
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="realisticMode"
-                  className="w-5 h-5 text-orange-600 rounded focus:ring-orange-500"
-                  checked={!!settings.realisticMode}
-                  onChange={(e) => {
-                    const isChecked = e.target.checked;
-                    onUpdateSettings({ 
-                      realisticMode: isChecked,
-                      hardcoreMode: isChecked ? false : settings.hardcoreMode
-                    });
-                  }}
-                />
-                <span className="ml-2 text-gray-700">リアルモード</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="hardcoreMode"
-                  className="w-5 h-5 text-red-600 rounded focus:ring-red-500"
-                  checked={!!settings.hardcoreMode}
-                  onChange={(e) => {
-                    const isChecked = e.target.checked;
-                    onUpdateSettings({ 
-                      hardcoreMode: isChecked,
-                      realisticMode: isChecked ? false : settings.realisticMode
-                    });
-                  }}
-                />
-                <span className="ml-2 text-gray-700">間違えたら最初からモード</span>
-              </label>
-            </div>
-          </div>
-
-          {/* 区切り線と余白 */}
-          <div className="mt-8 border-t border-gray-200 pt-6"></div>
-
-          {/* ランキングエリア */}
-          <div className="mb-6">
-            <h3 className="font-bold text-gray-800 mb-3 flex items-center">
-              <span className="mr-2">🏆</span> トップランキング
-            </h3>
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              {isLoadingRanking ? (
-                <div className="p-4 text-center text-gray-500">読み込み中...</div>
-              ) : rankings.length > 0 ? (
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 text-gray-500">
-                    <tr>
-                      <th className="px-4 py-2 text-left w-16">順位</th>
-                      <th className="px-4 py-2 text-left">ユーザー</th>
-                      <th className="px-4 py-2 text-right">スコア</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {rankings.map((rank, index) => (
-                      <tr key={rank.id} className={index < 3 ? 'bg-yellow-50/50' : ''}>
-                        <td className="px-4 py-2 font-bold text-gray-600">
-                          {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
-                        </td>
-                        <td className="px-4 py-2 flex items-center gap-2">
-                          <div className="relative w-6 h-6 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                            {rank.user.image ? (
-                              <Image 
-                                src={rank.user.image} 
-                                alt={rank.user.name || 'User'} 
-                                fill
-                                className="object-cover"
-                              />
-                            ) : (
-                              <span className="flex items-center justify-center h-full w-full text-xs text-gray-500">?</span>
-                            )}
-                          </div>
-                          <span className="truncate max-w-[120px] sm:max-w-[200px]">
-                            {rank.user.name || '名無しさん'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-right font-mono font-semibold text-blue-600">
-                          {rank.score.toLocaleString()}
-                        </td>
+  
+            {/* 区切り線と余白 */}
+            <div className="mt-8 border-t border-border pt-6"></div>
+  
+            {/* ランキングエリア */}
+            <div className="mb-6">
+              <h3 className="font-bold text-foreground text-xs uppercase tracking-widest mb-3 flex items-center">
+                <span className="mr-2">🏆</span> トップランキング
+              </h3>
+              <div className="bg-card border border-border rounded-sm overflow-hidden">
+                {isLoadingRanking ? (
+                  <div className="p-4 text-center text-muted-foreground text-xs font-mono">LOADING_DATA...</div>
+                ) : rankings.length > 0 ? (
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted text-muted-foreground text-xs uppercase">
+                      <tr>
+                        <th className="px-4 py-2 text-left w-16 font-medium">Rank</th>
+                        <th className="px-4 py-2 text-left font-medium">User</th>
+                        <th className="px-4 py-2 text-right font-medium">Score</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  まだランキングデータがありません。挑戦して1位を目指そう！
-                </div>
-              )}
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {rankings.map((rank, index) => (
+                        <tr key={rank.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="px-4 py-2 font-mono text-muted-foreground">
+                            {index + 1}
+                          </td>
+                          <td className="px-4 py-2 flex items-center gap-2">
+                            <div className="relative w-6 h-6 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                              {rank.user.image ? (
+                                <Image 
+                                  src={rank.user.image} 
+                                  alt={rank.user.name || 'User'} 
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <span className="flex items-center justify-center h-full w-full text-xs text-muted-foreground">?</span>
+                              )}
+                            </div>
+                            <span className="truncate max-w-[120px] sm:max-w-[200px] text-foreground font-mono text-xs">
+                              {rank.user.name || 'ANONYMOUS'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-right font-mono font-bold text-foreground">
+                            {rank.score.toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-4 text-center text-muted-foreground text-xs font-mono">
+                    NO_DATA_AVAILABLE
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* フッターアクション */}
-        <div className="bg-gray-50 p-4 flex justify-end gap-3 border-t">
-          {isAuthor && (
-            <div className="mr-auto flex gap-2">
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="px-4 py-2 text-red-600 border border-red-200 bg-red-50 hover:bg-red-100 rounded-lg transition text-sm font-bold"
-              >
-                {isDeleting ? '削除中...' : '削除'}
-              </button>
-              {onEdit && (
+  
+          {/* フッターアクション */}
+          <div className="bg-muted/20 p-4 flex justify-end gap-3 border-t border-border">
+            {isAuthor && (
+              <div className="mr-auto flex gap-2">
                 <button
-                  onClick={() => onEdit(course.id)}
-                  className="px-4 py-2 text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-lg transition text-sm font-bold"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-destructive border border-border bg-background hover:bg-destructive/10 rounded-sm transition text-xs font-mono uppercase tracking-widest"
                 >
-                  編集
+                  {isDeleting ? 'DELETING...' : 'DELETE'}
                 </button>
-              )}
-            </div>
-          )}
-          <button
-            onClick={onClose}
-            className="px-6 py-3 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition"
-          >
-            キャンセル
-          </button>
-          <button
-            onClick={() => onStart(course.id)}
-            className="px-8 py-3 bg-blue-600 text-white text-xl font-bold rounded-lg shadow hover:bg-blue-700 transform hover:-translate-y-0.5 transition duration-200"
-          >
-            練習スタート
-          </button>
+                {onEdit && (
+                  <button
+                    onClick={() => onEdit(course.id)}
+                    className="px-4 py-2 text-foreground border border-border bg-background hover:bg-muted rounded-sm transition text-xs font-mono uppercase tracking-widest"
+                  >
+                    EDIT
+                  </button>
+                )}
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="px-6 py-3 text-muted-foreground font-medium hover:text-foreground hover:bg-muted/50 rounded-sm transition text-xs font-mono uppercase tracking-widest"
+            >
+              CANCEL
+            </button>
+            <button
+              onClick={() => onStart(course.id)}
+              className="px-8 py-3 bg-primary text-primary-foreground text-sm font-bold rounded-sm shadow-sm hover:bg-primary/90 transition duration-200 uppercase tracking-widest"
+            >
+              START SESSION
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
-
+    );
+  };
 export default CourseDetailModal;
