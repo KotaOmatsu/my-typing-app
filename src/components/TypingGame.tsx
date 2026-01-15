@@ -102,13 +102,15 @@ const TypingGame: React.FC<TypingGameProps> = ({ courseId }) => {
                   return (
                     <span>
                       <span className="text-primary">{matchedPart}</span>
-                      <span className="text-destructive bg-destructive/10">{wrongPart}</span>
                       
                       {nextChar ? (
                         <span className="text-foreground font-bold border-b-2 border-primary">
                           {nextChar}
                         </span>
                       ) : null}
+
+                      <span className="text-destructive bg-destructive/10">{wrongPart}</span>
+                      
                       <span className="text-muted-foreground/30">{rest}</span>
                     </span>
                   );
