@@ -33,7 +33,7 @@ export default function LoginStatus() {
           <Link href="/history">HISTORY</Link>
         </Button>
         <Button asChild variant="default" size="sm">
-          <Link href="/profile">PROFILE</Link>
+          <Link href="/profile">MY PAGE</Link>
         </Button>
         <Button 
           variant="ghost" 
