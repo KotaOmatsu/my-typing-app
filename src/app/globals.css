@@ -78,6 +78,10 @@
 }
 
 /* Custom Utilities if needed */
+.shake {
+  animation: hardcore-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
 .hardcore-shake {
   animation: hardcore-shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
   will-change: transform, filter;

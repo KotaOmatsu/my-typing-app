@@ -165,10 +165,10 @@ const WeaknessAnalysisDisplay: React.FC<WeaknessAnalysisDisplayProps> = ({ analy
 const Key = ({ char, score }: { char: string, score: number }) => {
     // Color scale: Muted -> Red
     let bgColor = 'bg-card text-muted-foreground';
-    if (score > 0) bgColor = 'bg-red-50 text-foreground';
-    if (score > 30) bgColor = 'bg-red-200 text-foreground';
-    if (score > 60) bgColor = 'bg-red-400 text-white';
-    if (score > 80) bgColor = 'bg-red-600 text-white';
+    if (score > 0) bgColor = 'bg-red-50 text-red-900 dark:bg-red-900/20 dark:text-red-100';
+    if (score > 30) bgColor = 'bg-red-200 text-red-950 dark:bg-red-800/40 dark:text-red-50';
+    if (score > 60) bgColor = 'bg-red-400 text-white dark:bg-red-700 dark:text-white';
+    if (score > 80) bgColor = 'bg-red-600 text-white dark:bg-red-600 dark:text-white';
 
     return (
         <div className={`aspect-square flex items-center justify-center border border-border rounded-sm ${bgColor} font-mono uppercase font-bold shadow-sm text-[10px] transition-colors`}>

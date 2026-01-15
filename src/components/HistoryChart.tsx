@@ -42,19 +42,19 @@ export default function HistoryChart({ results }: HistoryChartProps) {
             bottom: 30,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e5e5" />
-          <XAxis dataKey="date" stroke="#737373" fontSize={12} tickLine={false} />
-          <YAxis yAxisId="wpm" label={{ value: 'WPM', angle: -90, position: 'insideLeft', fill: '#171717', fontSize: 12 }} stroke="#171717" fontSize={12} tickLine={false} axisLine={false} />
-          <YAxis yAxisId="accuracy" orientation="right" label={{ value: 'ACCURACY (%)', angle: 90, position: 'insideRight', fill: '#a3a3a3', fontSize: 12 }} stroke="#a3a3a3" domain={[0, 100]} fontSize={12} tickLine={false} axisLine={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} />
+          <YAxis yAxisId="wpm" label={{ value: 'WPM', angle: -90, position: 'insideLeft', fill: 'hsl(var(--foreground))', fontSize: 12 }} stroke="hsl(var(--foreground))" fontSize={12} tickLine={false} axisLine={false} />
+          <YAxis yAxisId="accuracy" orientation="right" label={{ value: 'ACCURACY (%)', angle: 90, position: 'insideRight', fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} stroke="hsl(var(--muted-foreground))" domain={[0, 100]} fontSize={12} tickLine={false} axisLine={false} />
           
           <Tooltip 
-            contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e5e5', borderRadius: '2px', fontSize: '12px' }}
+            contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '2px', fontSize: '12px', color: 'hsl(var(--card-foreground))' }}
             itemStyle={{ fontSize: '12px' }}
           />
           <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
           
-          <Line yAxisId="wpm" type="monotone" dataKey="WPM" stroke="#171717" strokeWidth={2} activeDot={{ r: 4, fill: '#171717' }} dot={false} />
-          <Line yAxisId="accuracy" type="monotone" dataKey="正解率" stroke="#a3a3a3" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#a3a3a3' }} />
+          <Line yAxisId="wpm" type="monotone" dataKey="WPM" stroke="hsl(var(--primary))" strokeWidth={2} activeDot={{ r: 4, fill: 'hsl(var(--primary))' }} dot={false} />
+          <Line yAxisId="accuracy" type="monotone" dataKey="正解率" stroke="hsl(var(--muted-foreground))" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: 'hsl(var(--muted-foreground))' }} />
         </LineChart>
       </ResponsiveContainer>
     </div>
